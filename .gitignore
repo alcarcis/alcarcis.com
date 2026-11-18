@@ -8,6 +8,13 @@ dist/
 # Source assets kept out of the repository (fonts, CV sources)
 assets-src/
 
+# Fontshare fonts: the licence forbids distributing them through a repository;
+# `pnpm fonts` downloads and verifies them (scripts/fonts/manifest.ts)
+/src/assets/fonts/chillax/Chillax-Variable.woff2
+/src/assets/fonts/general-sans/GeneralSans-Variable.woff2
+/src/assets/fonts/chillax/.*.tmp
+/src/assets/fonts/general-sans/.*.tmp
+
 # Environment files
 .env
 .env.*
