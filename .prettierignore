@@ -1,0 +1,12 @@
+# Build output and generated files
+dist/
+.astro/
+node_modules/
+pnpm-lock.yaml
+
+# Source assets and static files
+assets-src/
+public/
+
+# Prose docs keep their authors' formatting
+*.md
