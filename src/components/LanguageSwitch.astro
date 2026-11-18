@@ -48,10 +48,13 @@ const options = locales.map((optionLocale) => ({
         href={option.href}
         hreflang={option.locale}
         lang={option.locale}
-        aria-label={option.name}
         aria-current={option.isCurrent ? "page" : undefined}
       >
-        {option.code}
+        <span>{option.code}</span>
+        <span
+          class="visually-hidden"
+          lang={option.locale}
+        >{` ${option.name}`}</span>
       </a>
     </Fragment>
   ))}

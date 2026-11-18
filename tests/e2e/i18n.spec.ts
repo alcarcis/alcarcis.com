@@ -15,12 +15,11 @@ async function expectCurrentLanguage(
 ): Promise<void> {
   const languageSwitch = homePage.languageSwitch(locale.languageSwitchName);
   await expect(homePage.document).toHaveAttribute("lang", locale.language.lang);
-  await expect(languageSwitch.option(locale.language.name)).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
   await expect(
-    languageSwitch.option(locale.switchTarget.name),
+    languageSwitch.option(locale.language.accessibleName),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(
+    languageSwitch.option(locale.switchTarget.accessibleName),
   ).not.toHaveAttribute("aria-current");
 }
 
@@ -47,14 +46,16 @@ for (const locale of localeCases) {
       await expectCurrentLanguage(homePage, locale);
     });
 
-    test("names every language option in that language and links to its page", async ({
+    test("shows every language option as its code, names it in that language and links to its page", async ({
       homePage,
     }) => {
       const languageSwitch = homePage.languageSwitch(locale.languageSwitchName);
 
       for (const option of languageOptions) {
-        const link = languageSwitch.option(option.name);
-        await expect(link).toHaveText(option.code);
+        const link = languageSwitch.option(option.accessibleName);
+        await expect(
+          languageSwitch.visibleLabel(option.accessibleName),
+        ).toHaveText(option.code);
         await expect(link).toHaveAttribute("href", option.path);
         await expect(link).toHaveAttribute("hreflang", option.lang);
         await expect(link).toHaveAttribute("lang", option.lang);
@@ -90,7 +91,7 @@ test("the language switch takes a visitor from English to Spanish and back", asy
   await test.step("switch to Spanish", async () => {
     await homePage
       .languageSwitch(englishPage.languageSwitchName)
-      .switchTo(spanishPage.language.name);
+      .switchTo(spanishPage.language.accessibleName);
     await expect(page).toHaveURL(spanishPage.language.path);
     await expectCurrentLanguage(homePage, spanishPage);
   });
@@ -98,7 +99,7 @@ test("the language switch takes a visitor from English to Spanish and back", asy
   await test.step("switch back to English", async () => {
     await homePage
       .languageSwitch(spanishPage.languageSwitchName)
-      .switchTo(englishPage.language.name);
+      .switchTo(englishPage.language.accessibleName);
     await expect(page).toHaveURL(englishPage.language.path);
     await expectCurrentLanguage(homePage, englishPage);
   });

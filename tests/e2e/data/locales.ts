@@ -1,6 +1,7 @@
 export interface LanguageOption {
   readonly name: string;
   readonly code: string;
+  readonly accessibleName: string;
   readonly lang: string;
   readonly path: string;
 }
@@ -22,6 +23,7 @@ export interface AlternateLink {
 const english: LanguageOption = {
   name: "English",
   code: "EN",
+  accessibleName: "EN English",
   lang: "en",
   path: "/",
 };
@@ -29,6 +31,7 @@ const english: LanguageOption = {
 const spanish: LanguageOption = {
   name: "Español",
   code: "ES",
+  accessibleName: "ES Español",
   lang: "es",
   path: "/es/",
 };

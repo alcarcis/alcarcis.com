@@ -10,11 +10,15 @@ export class LanguageSwitch {
     });
   }
 
-  option(languageName: string): Locator {
-    return this.region.getByRole("link", { name: languageName, exact: true });
+  option(optionName: string): Locator {
+    return this.region.getByRole("link", { name: optionName, exact: true });
   }
 
-  async switchTo(languageName: string): Promise<void> {
-    await this.option(languageName).click();
+  visibleLabel(optionName: string): Locator {
+    return this.option(optionName).locator(":scope > :not(.visually-hidden)");
+  }
+
+  async switchTo(optionName: string): Promise<void> {
+    await this.option(optionName).click();
   }
 }
