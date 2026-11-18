@@ -22,9 +22,17 @@ export default defineConfig(
     "public/",
     "test-results/",
     "playwright-report/",
+    ".lighthouseci/",
     ...localExcludes,
   ]),
   js.configs.recommended,
   tseslint.configs.recommended,
   eslintPluginAstro.configs.recommended,
+  {
+    files: ["**/*.cjs"],
+    languageOptions: {
+      sourceType: "commonjs",
+      globals: { module: "readonly" },
+    },
+  },
 );

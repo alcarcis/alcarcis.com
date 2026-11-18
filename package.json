@@ -18,14 +18,18 @@
     "format:check": "prettier --check . --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .git/info/exclude",
     "test:unit": "node --test \"tests/unit/**/*.test.ts\"",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "test:lighthouse": "lhci autorun",
+    "verify": "pnpm format:check && pnpm lint && pnpm check && pnpm test:unit && pnpm build && pnpm test:e2e && pnpm test:lighthouse"
   },
   "dependencies": {
     "astro": "^7.4.12"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
+    "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^10.0.1",
+    "@lhci/cli": "^0.16.1",
     "@playwright/test": "^1.65.1",
     "@types/node": "^26.6.6",
     "eslint": "^10.15.0",
