@@ -1,0 +1,98 @@
+---
+import {
+  languages,
+  locales,
+  localizedPath,
+  useTranslations,
+  type Locale,
+} from "../i18n/ui";
+
+interface Props {
+  locale: Locale;
+  path?: string;
+}
+
+const { locale, path = "" } = Astro.props;
+const t = useTranslations(locale);
+
+const options = locales.map((optionLocale) => ({
+  locale: optionLocale,
+  href: localizedPath(optionLocale, path),
+  isCurrent: optionLocale === locale,
+  ...languages[optionLocale],
+}));
+---
+
+<nav class="language-switch" aria-label={t("languageSwitch.label")}>
+  <svg
+    class="globe"
+    width="16"
+    height="16"
+    viewBox="0 0 20 20"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.5"
+    aria-hidden="true"
+  >
+    <circle cx="10" cy="10" r="7.25"></circle>
+    <path d="M2.75 10h14.5M10 2.75c2 2 3 4.4 3 7.25s-1 5.25-3 7.25c-2-2-3-4.4-3-7.25s1-5.25 3-7.25Z"></path>
+  </svg>
+  {options.map((option, index) => (
+    <Fragment>
+      {index > 0 && (
+        <span class="separator" aria-hidden="true">
+          /
+        </span>
+      )}
+      <a
+        href={option.href}
+        hreflang={option.locale}
+        lang={option.locale}
+        aria-label={option.name}
+        aria-current={option.isCurrent ? "page" : undefined}
+      >
+        {option.code}
+      </a>
+    </Fragment>
+  ))}
+</nav>
+
+<style>
+  .language-switch {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: var(--type-ui-size);
+    line-height: var(--type-ui-leading);
+    letter-spacing: var(--type-ui-tracking);
+  }
+
+  .globe {
+    flex: none;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: var(--target-min);
+    min-block-size: var(--target-min);
+    color: var(--muted);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--text);
+      text-decoration: underline;
+    }
+
+    &[aria-current="page"] {
+      color: var(--text);
+      text-decoration: underline;
+      text-decoration-color: var(--link);
+      text-decoration-thickness: 2px;
+      text-underline-offset: 7px;
+    }
+  }
+</style>

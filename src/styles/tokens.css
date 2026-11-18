@@ -1,0 +1,151 @@
+/*
+ * Design tokens.
+ *
+ * Light (graphite ink on ivory-paper) is the base. Dark (copper ink on graphite)
+ * follows the system preference, and <html data-theme="light|dark"> pins either
+ * theme. The dark set appears twice on purpose: a media query and an attribute
+ * selector cannot share one rule, and the theme must not depend on style queries.
+ */
+
+:root {
+  /* Brand palette */
+  --brand-graphite: #141414;
+  --brand-tile: #1e1c1a;
+  --brand-line: #2e2a27;
+  --brand-copper: #c8875a;
+  --brand-copper-soft: #e3c2a4;
+  --brand-ivory: #f4efe9;
+  --brand-muted: #a79f97;
+  --brand-pass-green: #6fd18c;
+  --brand-ivory-paper: #fbfaf7;
+
+  /* Light-theme inks that keep text at WCAG AA on ivory-paper */
+  --ink-copper: #8a5530;
+  --ink-secondary: #5c554f;
+  --ink-pass: #2e7d4f;
+
+  /* Supporting neutrals for surfaces and dotted rules */
+  --paper-panel: #f3efe8;
+  --paper-rule: #e6e0d8;
+  --paper-dots: #c4baae;
+  --graphite-dots: #4a433c;
+
+  /* Light theme */
+  --ground: var(--brand-ivory-paper);
+  --panel: var(--paper-panel);
+  --rule: var(--paper-rule);
+  --dots: var(--paper-dots);
+  --text: var(--brand-graphite);
+  --muted: var(--ink-secondary);
+  --link: var(--ink-copper);
+  --eyebrow: var(--ink-copper);
+  --fill: var(--brand-copper);
+  --fill-hover: var(--brand-copper-soft);
+  --on-fill: var(--brand-graphite);
+  --code-keyword: var(--ink-secondary);
+  --code-string: var(--ink-copper);
+  --code-function: var(--brand-graphite);
+  --code-punctuation: var(--ink-secondary);
+  --pass: var(--ink-pass);
+  --focus: var(--brand-graphite);
+  --selection-background: var(--brand-copper-soft);
+  --selection-text: var(--brand-graphite);
+  color-scheme: light;
+
+  /* Type */
+  --type-ui-size: 0.8125rem;
+  --type-ui-leading: calc(24 / 13);
+  --type-ui-tracking: 0.01em;
+  --type-body-size: 1.0625rem;
+  --type-body-leading: calc(28 / 17);
+  --type-lead-size: 1.375rem;
+  --type-lead-leading: calc(32 / 22);
+  --type-headline-size: clamp(3rem, 0.25rem + 6.1vw, 6rem);
+  --type-headline-leading: 0.98;
+  --type-headline-tracking: -0.03em;
+  --type-display-line-size: clamp(1.875rem, 0.25rem + 2.9vw, 2.875rem);
+  --type-display-line-leading: 1.1;
+  --type-display-line-tracking: -0.02em;
+
+  /* Grid and spacing: one 4px unit, in rem so it follows the reader's text size */
+  --grid-unit: 0.25rem;
+  --space-1: calc(var(--grid-unit) * 1);
+  --space-2: calc(var(--grid-unit) * 2);
+  --space-3: calc(var(--grid-unit) * 3);
+  --space-4: calc(var(--grid-unit) * 4);
+  --space-5: calc(var(--grid-unit) * 5);
+  --space-6: calc(var(--grid-unit) * 6);
+  --space-7: calc(var(--grid-unit) * 7);
+  --space-8: calc(var(--grid-unit) * 8);
+  --space-10: calc(var(--grid-unit) * 10);
+  --space-12: calc(var(--grid-unit) * 12);
+  --space-14: calc(var(--grid-unit) * 14);
+  --space-16: calc(var(--grid-unit) * 16);
+  --space-18: calc(var(--grid-unit) * 18);
+  --space-22: calc(var(--grid-unit) * 22);
+  --space-24: calc(var(--grid-unit) * 24);
+
+  /* Layout */
+  --page-max-width: 84rem;
+  --gutter: var(--space-12);
+  --header-height: var(--space-16);
+  --target-min: 2.5rem;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-quick: 0.2s;
+
+  /* Dotted rule: spaced dots, the page's divider */
+  --dotted-rule: radial-gradient(circle, var(--dots) 0.9px, transparent 1.3px) 0
+    50% / 6px 3px repeat-x;
+}
+
+@media (width < 60em) {
+  :root {
+    --gutter: var(--space-4);
+    --header-height: var(--space-14);
+    --target-min: 2.75rem;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: var(--brand-graphite);
+    --panel: var(--brand-tile);
+    --rule: var(--brand-line);
+    --dots: var(--graphite-dots);
+    --text: var(--brand-ivory);
+    --muted: var(--brand-muted);
+    --link: var(--brand-copper);
+    --eyebrow: var(--brand-copper-soft);
+    --code-keyword: var(--brand-muted);
+    --code-string: var(--brand-copper-soft);
+    --code-function: var(--brand-ivory);
+    --code-punctuation: var(--brand-muted);
+    --pass: var(--brand-pass-green);
+    --focus: var(--brand-copper-soft);
+    --selection-background: var(--brand-copper);
+    --selection-text: var(--brand-graphite);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground: var(--brand-graphite);
+  --panel: var(--brand-tile);
+  --rule: var(--brand-line);
+  --dots: var(--graphite-dots);
+  --text: var(--brand-ivory);
+  --muted: var(--brand-muted);
+  --link: var(--brand-copper);
+  --eyebrow: var(--brand-copper-soft);
+  --code-keyword: var(--brand-muted);
+  --code-string: var(--brand-copper-soft);
+  --code-function: var(--brand-ivory);
+  --code-punctuation: var(--brand-muted);
+  --pass: var(--brand-pass-green);
+  --focus: var(--brand-copper-soft);
+  --selection-background: var(--brand-copper);
+  --selection-text: var(--brand-graphite);
+  color-scheme: dark;
+}

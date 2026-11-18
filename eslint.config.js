@@ -20,6 +20,8 @@ export default defineConfig(
     "node_modules/",
     "assets-src/",
     "public/",
+    "test-results/",
+    "playwright-report/",
     ...localExcludes,
   ]),
   js.configs.recommended,

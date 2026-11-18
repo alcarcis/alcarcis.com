@@ -1,0 +1,86 @@
+---
+import "../styles/tokens.css";
+import "../styles/base.css";
+import { Font } from "astro:assets";
+import LanguageSwitch from "../components/LanguageSwitch.astro";
+import {
+  defaultLocale,
+  locales,
+  localizedUrl,
+  useTranslations,
+  type Locale,
+} from "../i18n/ui";
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description: string;
+  path?: string;
+}
+
+const { locale, title, description, path = "" } = Astro.props;
+const t = useTranslations(locale);
+
+const canonicalUrl = localizedUrl(locale, path);
+const alternateLinks = [
+  ...locales.map((hreflang) => ({
+    hreflang,
+    href: localizedUrl(hreflang, path),
+  })),
+  { hreflang: "x-default", href: localizedUrl(defaultLocale, path) },
+];
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <script is:inline>
+      try {
+        const theme = localStorage.getItem("theme");
+        if (theme === "light" || theme === "dark") {
+          document.documentElement.dataset.theme = theme;
+          document
+            .querySelector('meta[name="color-scheme"]')
+            ?.setAttribute("content", theme);
+        }
+      } catch {
+        // Storage can be blocked; the system preference decides the theme then.
+      }
+    </script>
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    {alternateLinks.map(({ hreflang, href }) => (
+      <link rel="alternate" hreflang={hreflang} href={href} />
+    ))}
+    <Font cssVariable="--font-display" preload />
+    <Font cssVariable="--font-body" />
+    <Font cssVariable="--font-mono" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">
+      {t("a11y.skipToContent")}
+    </a>
+    <header class="site-header">
+      <LanguageSwitch locale={locale} path={path} />
+    </header>
+    <main id="main">
+      <slot />
+    </main>
+  </body>
+</html>
+
+<style>
+  .site-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    max-inline-size: var(--page-max-width);
+    min-block-size: var(--header-height);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+</style>
