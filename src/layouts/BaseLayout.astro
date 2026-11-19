@@ -1,7 +1,8 @@
 ---
 import "../styles/tokens.css";
 import "../styles/base.css";
-import { Font } from "astro:assets";
+import { Font, getImage } from "astro:assets";
+import profilePhoto from "../assets/profile.jpg";
 import Footer from "../components/Footer.astro";
 import GlyphField from "../components/GlyphField.astro";
 import ReadingProgress from "../components/ReadingProgress.astro";
@@ -13,7 +14,9 @@ import {
   shareImages,
   touchIcon,
 } from "../lib/seo";
+import { personJsonLd, serializeJsonLd } from "../lib/structured-data";
 import { themeStorageKey } from "../lib/theme";
+import { owner, profiles, structuredProfile } from "../site";
 import {
   defaultLocale,
   locales,
@@ -43,6 +46,21 @@ const absoluteUrl = (href: string): string => new URL(href, homeUrl).href;
 
 const shareImage = shareImages[locale];
 const otherLocales = locales.filter((other) => other !== locale);
+
+// The About photo at a size search engines accept for a person's image.
+const personPhoto = await getImage({
+  src: profilePhoto,
+  width: 720,
+  format: "jpg",
+});
+const person = personJsonLd({
+  name: owner.name,
+  jobTitle: structuredProfile.jobTitle,
+  url: homeUrl,
+  image: absoluteUrl(personPhoto.src),
+  sameAs: [profiles.linkedIn, profiles.gitHub],
+  knowsAbout: structuredProfile.knowsAbout,
+});
 ---
 
 <!doctype html>
@@ -91,6 +109,11 @@ const otherLocales = locales.filter((other) => other !== locale);
     <meta property="og:image:height" content={String(shareImageSize.height)} />
     <meta property="og:image:alt" content={shareImage.alt} />
     <meta name="twitter:card" content="summary_large_image" />
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={serializeJsonLd(person)}
+    />
     <Font cssVariable="--font-display" preload />
     <Font cssVariable="--font-body" preload />
     <Font cssVariable="--font-mono" />

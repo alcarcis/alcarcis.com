@@ -1,3 +1,4 @@
+import { profileUrls } from "./externalLinks";
 import {
   alternateLinks,
   englishPage,
@@ -96,6 +97,23 @@ export const seoCases: readonly SeoCase[] = [
     }),
   },
 ];
+
+/**
+ * The owner as structured data. The job title lives only here, never on the page (Q24):
+ * the portfolio is not labelled by the current title (D34).
+ */
+export const expectedPerson = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": `${siteOrigin}/#person`,
+  name: "Carlos Alcalá",
+  jobTitle: "QA Specialist",
+  url: `${siteOrigin}/`,
+  sameAs: [profileUrls.linkedIn, profileUrls.gitHub],
+  knowsAbout: ["Quality Engineering", "Test Automation", "Agentic QA", "CI/CD"],
+} as const;
+
+export const hiddenJobTitle = expectedPerson.jobTitle;
 
 export interface SitemapEntry {
   readonly loc: string;

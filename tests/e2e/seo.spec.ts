@@ -1,8 +1,10 @@
 import type { APIRequestContext } from "@playwright/test";
 import { Sitemap, SeoMeta } from "./components/SeoMeta";
 import {
+  expectedPerson,
   expectedRobots,
   expectedSitemap,
+  hiddenJobTitle,
   seoCases,
   shareImageMaxBytes,
   shareImageSize,
@@ -85,6 +87,29 @@ for (const seo of seoCases) {
       expect(image.contentType).toMatch(/^image\/png(;|$)/);
       expect(pngSize(image.bytes)).toEqual(shareImageSize);
       expect(image.bytes.byteLength).toBeLessThan(shareImageMaxBytes);
+    });
+
+    test("describes its owner as a schema.org Person", async ({
+      page,
+      request,
+    }) => {
+      const meta = new SeoMeta(page);
+
+      await expect(meta.structuredData).toHaveCount(1);
+      const [person] = await meta.structuredDataObjects();
+
+      expect(person).toMatchObject(expectedPerson);
+      const { image } = person as { image?: unknown };
+      expect(typeof image, "the Person names a photo").toBe("string");
+      const photo = await fetchFromSite(request, String(image));
+      expect(photo.contentType).toMatch(/^image\/(jpeg|webp|avif)(;|$)/);
+    });
+
+    test("keeps the job title out of everything a visitor sees", async ({
+      page,
+    }) => {
+      await expect(page).not.toHaveTitle(new RegExp(hiddenJobTitle));
+      await expect(page.locator("body")).not.toContainText(hiddenJobTitle);
     });
 
     test("declares a 180×180 PNG touch icon that loads", async ({
