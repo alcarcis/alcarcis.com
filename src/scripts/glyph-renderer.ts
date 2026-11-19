@@ -16,6 +16,7 @@ import {
   quietRect,
   resetLayers,
   sizeGrid,
+  unsizeGrid,
   type Grid,
 } from "./glyphs/cells";
 import { measureQuiet, renderField, sizeField } from "./glyphs/field";
@@ -23,6 +24,11 @@ import { drawSteps, setBand, setReducedMotion } from "./glyphs/scene";
 
 export interface GlyphScene {
   draw(sceneTime: number): void;
+}
+
+interface SceneLayer extends GlyphScene {
+  /** Fits the grid and its canvas to the box at the current cell size, then redraws the run's frame. */
+  resize(): void;
 }
 
 /* Boot in short idle slices so no single task blocks input for long. */
@@ -43,7 +49,24 @@ function gridFontReady(): Promise<unknown> {
   return Promise.race([fontLoad, new Promise((r) => setTimeout(r, 1500))]);
 }
 
-function mountScene(box: HTMLElement): ((t: number) => void) | null {
+/* Undoes one step of the mount if the mount is called off (it failed, or its first draw did). */
+const onAbort = (signal: AbortSignal, undo: () => void): void =>
+  signal.addEventListener("abort", undo, { once: true });
+
+/* The pixel ratio changes when the window moves to another screen or the page zooms, and a
+   resize event need not come with it. The query matches one ratio, so each change re-arms it. */
+function onPixelRatioChange(callback: () => void, signal: AbortSignal): void {
+  matchMedia(`(resolution: ${devicePixelRatio}dppx)`).addEventListener(
+    "change",
+    () => {
+      callback();
+      onPixelRatioChange(callback, signal);
+    },
+    { once: true, signal },
+  );
+}
+
+function mountScene(box: HTMLElement, signal: AbortSignal): SceneLayer | null {
   const canvas = box.querySelector<HTMLCanvasElement>("[data-scene-canvas]");
   const grid = canvas && makeGrid(canvas);
   if (!canvas || !grid) return null;
@@ -51,7 +74,9 @@ function mountScene(box: HTMLElement): ((t: number) => void) | null {
     box.querySelector("[data-scene-label]"),
     box.querySelector("[data-scene-caption]"),
   ];
-  let sceneTime = 0;
+  /* The scene time of the frame on the canvas; none until the run draws its first, so the text
+     frame shows until then. A resize or a redraw only repeats a frame the run asked for. */
+  let sceneTime: number | null = null;
 
   const size = (): boolean => {
     const w = box.clientWidth;
@@ -92,28 +117,52 @@ function mountScene(box: HTMLElement): ((t: number) => void) | null {
     resetLayers(grid);
     drawSteps(grid, t);
     blit(grid);
-    box.dataset["drawn"] = "";
+    box.dataset["drawn"] = String(t);
+  };
+
+  const redraw = (): void => {
+    if (sceneTime !== null) draw(sceneTime);
+  };
+
+  const resize = (): void => {
+    if (size()) redraw();
   };
 
   if (!size()) return null;
-  new ResizeObserver(() => {
-    if (size()) draw(sceneTime);
-  }).observe(box);
-  addEventListener("glyphs:redraw", () => {
-    grid.full = true;
-    draw(sceneTime);
+  const observer = new ResizeObserver(resize);
+  observer.observe(box);
+  addEventListener(
+    "glyphs:redraw",
+    () => {
+      grid.full = true;
+      redraw();
+    },
+    { signal },
+  );
+  onAbort(signal, () => {
+    observer.disconnect();
+    unsizeGrid(grid);
+    canvas.style.left = "";
+    canvas.style.top = "";
+    delete box.dataset["drawn"];
   });
-  return draw;
+  return { draw, resize };
 }
 
+/**
+ * Mounts the scene and the grain. Aborting the signal takes down everything the mount put up,
+ * however far it got: listeners, observers, timers and both canvases, and the text frame shows.
+ */
 export async function mountGlyphLayers(
   instrument: HTMLElement | null,
   reducedMotion: MediaQueryList,
+  signal: AbortSignal,
 ): Promise<GlyphScene | null> {
   await gridFontReady();
   await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
   measureFont();
   measureCells();
+  const measuredRatio = devicePixelRatio;
   setReducedMotion(reducedMotion.matches);
   await slice();
   buildAtlas();
@@ -121,7 +170,7 @@ export async function mountGlyphLayers(
 
   // The scene first: it is the part in view, and the run may already be playing.
   const sceneBox = instrument?.querySelector<HTMLElement>("[data-scene]");
-  const drawScene = sceneBox ? mountScene(sceneBox) : null;
+  const scene = sceneBox ? mountScene(sceneBox, signal) : null;
   await slice();
 
   const fieldCanvas = document.querySelector<HTMLCanvasElement>(
@@ -129,12 +178,13 @@ export async function mountGlyphLayers(
   );
   const field: Grid | null = fieldCanvas && makeGrid(fieldCanvas);
   if (field) {
+    onAbort(signal, () => unsizeGrid(field));
     sizeField(field);
     await slice();
     measureQuiet();
     await slice();
     renderField(field);
-    wireField(field);
+    wireField(field, signal);
   }
 
   const redrawAll = (): void => {
@@ -151,31 +201,48 @@ export async function mountGlyphLayers(
     buildAtlas();
     redrawAll();
   };
-  new MutationObserver(onThemeChange).observe(document.documentElement, {
+  const themeObserver = new MutationObserver(onThemeChange);
+  themeObserver.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ["data-theme"],
   });
+  onAbort(signal, () => themeObserver.disconnect());
   matchMedia("(prefers-color-scheme: dark)").addEventListener(
     "change",
     onThemeChange,
+    { signal },
   );
-  reducedMotion.addEventListener("change", (event) => {
-    setReducedMotion(event.matches);
-    redrawAll();
-  });
+  reducedMotion.addEventListener(
+    "change",
+    (event) => {
+      setReducedMotion(event.matches);
+      redrawAll();
+    },
+    { signal },
+  );
 
-  let resizeTimer = 0;
-  addEventListener("resize", () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(() => {
-      if (measureCells()) buildAtlas();
+  /* A new pixel ratio changes the device cell: the atlas and both grids follow, the scene's too,
+     whose own observer sees only CSS size changes. A plain resize changes the grain's grid. */
+  let relayoutTimer = 0;
+  const relayout = (): void => {
+    clearTimeout(relayoutTimer);
+    relayoutTimer = window.setTimeout(() => {
+      if (measureCells()) {
+        buildAtlas();
+        scene?.resize();
+      }
       if (field) sizeField(field);
       measureQuiet();
       redrawAll();
     }, 120);
-  });
+  };
+  onAbort(signal, () => clearTimeout(relayoutTimer));
+  addEventListener("resize", relayout, { signal });
+  onPixelRatioChange(relayout, signal);
+  // A ratio change during the idle slices above came before the watcher: catch up on it.
+  if (devicePixelRatio !== measuredRatio) relayout();
 
-  return drawScene ? { draw: drawScene } : null;
+  return scene;
 }
 
 /* ---------- the grain: redrawn only when the page scrolls or its layout changes ---------- */
@@ -191,24 +258,34 @@ function requestFieldFrame(): void {
   });
 }
 
-function wireField(field: Grid): void {
+function wireField(field: Grid, signal: AbortSignal): void {
   fieldGrid = field;
-  addEventListener("scroll", requestFieldFrame, { passive: true });
-  document.addEventListener("visibilitychange", requestFieldFrame);
+  addEventListener("scroll", requestFieldFrame, { passive: true, signal });
+  document.addEventListener("visibilitychange", requestFieldFrame, { signal });
 
   let layoutFrame = 0;
   const relayout = (): void => {
-    if (layoutFrame) return;
+    if (layoutFrame || signal.aborted) return;
     layoutFrame = requestAnimationFrame(() => {
       layoutFrame = 0;
       measureQuiet();
       requestFieldFrame();
     });
   };
-  new ResizeObserver(relayout).observe(document.body);
+  const observer = new ResizeObserver(relayout);
+  observer.observe(document.body);
   // A section content-visibility starts or stops rendering needs its text measured again.
   for (const section of document.querySelectorAll("main > section")) {
-    section.addEventListener("contentvisibilityautostatechange", relayout);
+    section.addEventListener("contentvisibilityautostatechange", relayout, {
+      signal,
+    });
   }
   void document.fonts.ready.then(relayout);
+  onAbort(signal, () => {
+    observer.disconnect();
+    cancelAnimationFrame(layoutFrame);
+    cancelAnimationFrame(fieldFrame);
+    fieldFrame = 0;
+    fieldGrid = null;
+  });
 }

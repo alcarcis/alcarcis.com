@@ -1,4 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
+import { GlyphField } from "../components/GlyphField";
 import { Hero } from "../components/Hero";
 import { LanguageSwitch } from "../components/LanguageSwitch";
 import { ReadingProgress } from "../components/ReadingProgress";
@@ -17,6 +18,7 @@ export class HomePage {
   readonly mainHeading: Locator;
   readonly seo: SeoLinks;
   readonly readingProgress: ReadingProgress;
+  readonly glyphField: GlyphField;
 
   constructor(private readonly page: Page) {
     this.document = page.locator("html");
@@ -24,6 +26,7 @@ export class HomePage {
     this.mainHeading = this.main.getByRole("heading", { level: 1 });
     this.seo = new SeoLinks(page);
     this.readingProgress = new ReadingProgress(page);
+    this.glyphField = new GlyphField(page);
   }
 
   async open(

@@ -8,8 +8,17 @@
 /** Scene seconds at which each stage's step completes. */
 export const beats = [1.2, 2.5, 3.8, 6.1, 6.9] as const;
 export const sceneEnd = 7.2;
-/** In ci/cd the fix merges 1.3 s into the step; the renderer opens the gate on the same offset. */
-export const fixAt = beats[2] + 1.3;
+/** The stage whose gate catches a defect and lets it through once its fix merges. */
+export const ciCdStage = 3;
+/** Seconds into the ci/cd step at which the fix merges; the scene's gate opens from then. */
+export const fixDelay = 1.3;
+
+/** Scene seconds at which a stage's step begins: when the step before it completes. */
+export const stepStart = (stage: number): number =>
+  stage > 0 ? (beats[stage - 1] ?? 0) : 0;
+
+/** Scene seconds at which the fix merges; the page switches the ci/cd caption then. */
+export const fixAt = stepStart(ciCdStage) + fixDelay;
 
 const typingStepMs = 30;
 const charsPerStep = 3;
@@ -77,7 +86,8 @@ export function runFrameAt(
     stages,
     caption: {
       stage: captioned,
-      fixed: captioned === 3 && passed === 3 && sceneTime >= fixAt,
+      fixed:
+        captioned === ciCdStage && passed === ciCdStage && sceneTime >= fixAt,
     },
     rowsRevealed: sceneTime >= sceneEnd,
     done: elapsedMs >= sceneStartMs + sceneEnd * 1000 + finishDelayMs,

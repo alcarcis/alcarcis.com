@@ -4,11 +4,24 @@
  */
 
 const RAMP = " .:-=+*#%@";
-/* The scene's glyphs: drawing symbols, then the characters its notes are typed in. Geist Mono
-   has no '✓' or '●'; the canvas draws them from the next font in the stack, clipped to a cell. */
+/**
+ * What the scene draws in the pass ink: a tick on a criterion or a test, a commit, the gate and
+ * the run's verdict. The atlas holds exactly these glyphs in that ink.
+ */
+export const CHECK_GLYPHS = {
+  tick: "✓",
+  commit: "●",
+  gate: "║",
+  verdict: "PASSED",
+} as const;
+const checkGlyphs = [...new Set(Object.values(CHECK_GLYPHS).join(""))].join("");
+/* The scene's glyphs: drawing symbols, the characters its notes are typed in, and the pass
+   ink's. Geist Mono has no '✓' or '●'; the canvas draws them from the next font in the stack,
+   clipped to a cell. */
 const SYM = [
   ...new Set(
-    "\\/|()@#%┌┐└┘│─║●✓_~'[].,-=:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+    "\\/|()@#%┌┐└┘│─║●✓_~'[].,-=:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" +
+      checkGlyphs,
   ),
 ];
 const SYM0 = RAMP.length;
@@ -33,9 +46,14 @@ const THEMES: Record<Theme, { inks: string[]; alpha: number[] }> = {
   },
 };
 /* Only the symbols each ink draws: grain none; text and marks every glyph; passes their own. */
-const SYM_INK = ["", SYM.join(""), SYM.join(""), "✓●║PASED"];
+const SYM_INK = ["", SYM.join(""), SYM.join(""), checkGlyphs];
 
-const root = document.documentElement;
+/** The glyph an atlas symbol index stands for; "" for none. */
+export const glyphAt = (sym: number): string => SYM[sym - SYM0] ?? "";
+
+/** Whether the atlas holds glyph s in the given ink. */
+export const inAtlas = (ink: Ink, s: string): boolean =>
+  s !== "" && (SYM_INK[ink] ?? "").includes(s);
 
 export const clamp = (v: number, a: number, b: number): number =>
   v < a ? a : v > b ? b : v;
@@ -61,11 +79,15 @@ function seeded(seed: number): () => number {
   };
 }
 
+/* Read when asked, not at load, so the grid and the scene also run outside a page. */
+const rootStyle = (): CSSStyleDeclaration =>
+  getComputedStyle(document.documentElement);
+
 export const currentTheme = (): Theme =>
-  getComputedStyle(root).colorScheme === "dark" ? "dark" : "light";
+  rootStyle().colorScheme === "dark" ? "dark" : "light";
 
 const token = (name: string): string =>
-  getComputedStyle(root).getPropertyValue(name).trim();
+  rootStyle().getPropertyValue(name).trim();
 
 /* ---------- cell metrics and the shared atlas ---------- */
 
@@ -225,6 +247,15 @@ export function sizeGrid(
     }
   }
   g.val.set(g.grain);
+}
+
+/** Takes a grid back to before it was sized: an empty canvas, and nothing for it to draw. */
+export function unsizeGrid(g: Grid): void {
+  g.N = 0;
+  g.canvas.width = 0;
+  g.canvas.height = 0;
+  g.canvas.style.width = "";
+  g.canvas.style.height = "";
 }
 
 export function resetLayers(g: Grid): void {

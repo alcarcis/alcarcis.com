@@ -1,5 +1,10 @@
 import { expect, type Clock, type Locator } from "@playwright/test";
-import { runStatus, specSource, stageNames } from "../data/instrument";
+import {
+  runStatus,
+  sceneVerdict,
+  specSource,
+  stageNames,
+} from "../data/instrument";
 import type { InstrumentCopy, StageStateNames } from "../data/locales";
 
 export type StageState = keyof StageStateNames;
@@ -13,6 +18,20 @@ export interface RunSnapshot {
   readonly caption: string;
   readonly captionShown: boolean;
 }
+
+/** Backing-store pixels per CSS pixel of a canvas, across and down. */
+export interface CanvasScale {
+  readonly across: number;
+  readonly down: number;
+}
+
+/** How often the clock moves on while waiting for the renderer. */
+const rendererStepMs = 100;
+/**
+ * Shorter than one of the renderer's idle slices, 50 ms on the test's clock while timers are
+ * pending, so the clock stops between two steps of its boot.
+ */
+const bootStepMs = 10;
 
 export class Instrument {
   readonly region: Locator;
@@ -29,8 +48,11 @@ export class Instrument {
    * it has no role to find it by.
    */
   readonly typedCode: Locator;
-  /** The scene's box; the renderer marks it once it has drawn. */
+  /** The scene's box; the renderer marks it with the scene time of the run's frame it drew. */
   readonly scene: Locator;
+  /** The scene's last frame in text: it shows between runs until the renderer has drawn. */
+  readonly textFrame: Locator;
+  readonly sceneCanvas: Locator;
 
   constructor(
     scope: Locator,
@@ -62,6 +84,8 @@ export class Instrument {
     this.announcement = this.region.getByRole("status");
     this.typedCode = this.region.locator("[data-spec]");
     this.scene = this.region.locator("[data-scene]");
+    this.textFrame = this.scene.getByText(sceneVerdict, { exact: true });
+    this.sceneCanvas = this.scene.locator("canvas");
   }
 
   /** The value a data row shows next to its term, such as COMMIT. */
@@ -111,6 +135,83 @@ export class Instrument {
   /** The run's state hook: waiting, playing, paused or final. */
   async expectRunState(state: string): Promise<void> {
     await expect(this.region).toHaveAttribute("data-run-state", state);
+  }
+
+  /** The renderer loads once the page is idle, on the test's clock; this moves it on until then. */
+  async waitForSceneDrawn(clock: Clock): Promise<void> {
+    await expect
+      .poll(async () => {
+        await clock.runFor(rendererStepMs);
+        return this.scene.getAttribute("data-drawn");
+      })
+      .not.toBeNull();
+  }
+
+  /**
+   * Moves the clock on in short steps until the renderer has sized the scene canvas. It stops
+   * there: the renderer still has the grain to boot, in idle slices, before it is done.
+   */
+  async waitForSceneSized(clock: Clock): Promise<void> {
+    await expect
+      .poll(
+        async () => {
+          await clock.runFor(bootStepMs);
+          return this.sceneCanvas.evaluate(
+            (canvas: HTMLCanvasElement) => canvas.width,
+          );
+        },
+        { intervals: [0] },
+      )
+      .toBeGreaterThan(0);
+  }
+
+  /** Waits until the browser has reported the scene box's size, so the renderer's observer has run too. */
+  async settleSceneObservers(): Promise<void> {
+    await this.scene.evaluate(
+      (box) =>
+        new Promise<void>((resolve) => {
+          const observer = new ResizeObserver(() => {
+            observer.disconnect();
+            resolve();
+          });
+          observer.observe(box);
+        }),
+    );
+  }
+
+  async sceneCanvasScale(): Promise<CanvasScale> {
+    return this.sceneCanvas.evaluate((canvas: HTMLCanvasElement) => {
+      const box = canvas.getBoundingClientRect();
+      return {
+        across: canvas.width / box.width,
+        down: canvas.height / box.height,
+      };
+    });
+  }
+
+  async height(): Promise<number> {
+    return this.region.evaluate(
+      (instrument) => instrument.getBoundingClientRect().height,
+    );
+  }
+
+  /**
+   * Scrolls until the instrument's top `pixels` show at the bottom of the viewport, then waits
+   * for the browser to report its new intersection, so the page's own observers have run too.
+   */
+  async scrollToShow(pixels: number): Promise<void> {
+    await this.region.evaluate(async (instrument, shown) => {
+      const top = instrument.getBoundingClientRect().top + window.scrollY;
+      const view = document.documentElement.clientHeight;
+      window.scrollTo({ top: top - (view - shown), behavior: "instant" });
+      await new Promise<void>((resolve) => {
+        const observer = new IntersectionObserver(() => {
+          observer.disconnect();
+          resolve();
+        });
+        observer.observe(instrument);
+      });
+    }, pixels);
   }
 
   async snapshot(): Promise<RunSnapshot> {

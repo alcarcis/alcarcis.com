@@ -36,6 +36,74 @@ export async function scrollToBottom(page: Page): Promise<void> {
   );
 }
 
+/**
+ * Changes the device pixel ratio and keeps the viewport's CSS size, as moving the window to a
+ * denser screen does: no resize event, and `(resolution)` media queries change. Chromium only:
+ * it goes through the DevTools protocol, whose ratio override does not evaluate media queries
+ * again by itself. A change of emulated media type does, so the screen type is set and cleared.
+ */
+export async function setDevicePixelRatio(
+  page: Page,
+  ratio: number,
+): Promise<void> {
+  const viewport = page.viewportSize();
+  if (!viewport)
+    throw new Error("A device pixel ratio needs a fixed viewport.");
+  const session = await page.context().newCDPSession(page);
+  await session.send("Emulation.setDeviceMetricsOverride", {
+    ...viewport,
+    deviceScaleFactor: ratio,
+    mobile: false,
+  });
+  for (const media of ["screen", ""]) {
+    await session.send("Emulation.setEmulatedMedia", { media });
+  }
+}
+
+/** What a page without MutationObserver throws when a script builds one. */
+export const missingMutationObserver = "MutationObserver is not available";
+
+/** Removes MutationObserver before the page's scripts run, as a browser without it would. */
+export async function removeMutationObserver(page: Page): Promise<void> {
+  await page.addInitScript((message) => {
+    Object.defineProperty(window, "MutationObserver", {
+      configurable: true,
+      value: class {
+        constructor() {
+          throw new Error(message);
+        }
+      },
+    });
+  }, missingMutationObserver);
+}
+
+/**
+ * The types of the event listeners registered on window and on document, sorted. Chromium
+ * only: it reads them through the DevTools protocol.
+ */
+export async function windowAndDocumentListeners(
+  page: Page,
+): Promise<string[]> {
+  const session = await page.context().newCDPSession(page);
+  try {
+    const types: string[] = [];
+    for (const target of ["window", "document"]) {
+      const { result } = await session.send("Runtime.evaluate", {
+        expression: target,
+      });
+      if (!result.objectId) throw new Error(`No remote object for ${target}.`);
+      const { listeners } = await session.send(
+        "DOMDebugger.getEventListeners",
+        { objectId: result.objectId },
+      );
+      types.push(...listeners.map(({ type }) => `${target} ${type}`));
+    }
+    return types.sort();
+  } finally {
+    await session.detach();
+  }
+}
+
 export async function scrollToTop(page: Page): Promise<void> {
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
 }
