@@ -1,0 +1,10 @@
+# Cloudflare Pages response headers.
+# Keep the pages.dev addresses out of search results: the production
+# alias (alcarcis-com.pages.dev) and every deployment or branch alias
+# under it. The custom domain does not match these rules, so
+# alcarcis.com stays indexable.
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+
+https://:version.:project.pages.dev/*
+  X-Robots-Tag: noindex
