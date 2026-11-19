@@ -46,9 +46,26 @@ describe("resolveCommit", () => {
     assert.equal(resolveCommit(env, gitHead), "9a8b7c6");
   });
 
-  it("is unknown when no source names a commit", () => {
+  it("is unknown when git names no commit either", () => {
     const { env } = sources();
 
-    assert.equal(resolveCommit(env, failing("not a git repository")), null);
+    assert.equal(
+      resolveCommit(env, () => "fatal: not a commit\n"),
+      null,
+    );
+  });
+
+  it("passes git's failure on when no variable names the commit", () => {
+    const { env } = sources();
+
+    assert.throws(() => resolveCommit(env, failing("not a git repository")), {
+      message: "not a git repository",
+    });
+  });
+
+  it("does not run git when a variable names the commit", () => {
+    const { env } = sources({ env: { GITHUB_SHA: gitHubSha } });
+
+    assert.equal(resolveCommit(env, failing("git must not run")), "9a8b7c6");
   });
 });

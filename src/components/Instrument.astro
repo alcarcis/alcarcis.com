@@ -1,8 +1,9 @@
 ---
 import RerunIcon from "../assets/icons/rerun.svg";
 import { useTranslations, type Locale } from "../i18n/ui";
+import { minimumCategoryScore } from "../../scripts/quality-budget";
 import { buildInfo } from "../lib/build-info";
-import { breakOnlyBetween } from "../lib/typography";
+import { instrumentRows } from "../lib/instrument-rows";
 
 interface Props {
   locale: Locale;
@@ -54,20 +55,8 @@ const specText = spec
    production signal, then the run's verdict. 33 cells, as the renderer draws it. */
 const signal = "_.-~'~-.".repeat(3);
 
-const info = buildInfo();
-const testCount =
-  info.tests === null
-    ? null
-    : `${info.tests} playwright ${info.tests === 1 ? "test" : "tests"}`;
-const dataRows = [
-  { term: "COMMIT", value: info.commit },
-  { term: "BUILT", value: info.built, datetime: info.built },
-  { term: "TESTS", value: testCount },
-  {
-    term: "BUDGET",
-    value: breakOnlyBetween("lighthouse ≥ 95 · axe 0 violations"),
-  },
-].filter((row) => row.value !== null);
+/* One row per fact the build could read; the budget states what lighthouserc.cjs enforces. */
+const dataRows = instrumentRows(buildInfo(), minimumCategoryScore);
 
 /* What the run script writes as the scene plays, in this page's language. */
 const runCopy = {
@@ -140,7 +129,7 @@ const runCopy = {
       {t("instrument.sceneLabel")}
     </span>
     {/* Spaces are explicit: the HTML compressor drops whitespace at line breaks. */}
-    <p class="scene-still" data-scene-still>
+    <p class="scene-still">
       <span>
         <span class="signal">{signal}</span>
         {"   "}

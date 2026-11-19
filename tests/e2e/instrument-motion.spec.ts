@@ -1,5 +1,5 @@
 import { emptyLine, fullLine } from "./components/ReadingProgress";
-import { specSource, stageNames } from "./data/instrument";
+import { runStatus, specSource, stageNames } from "./data/instrument";
 import { englishPage, localeCases } from "./data/locales";
 import { expect, test } from "./fixtures";
 import {
@@ -25,7 +25,7 @@ for (const locale of localeCases) {
       frozenClock,
     }) => {
       const { instrument } = homePage.hero(locale);
-      await expect(instrument.status).toHaveText("Running");
+      await expect(instrument.status).toHaveText(runStatus.running);
       await expect(instrument.skip).toBeVisible();
 
       await frozenClock.runFor(700);
@@ -94,7 +94,7 @@ for (const locale of localeCases) {
       await instrument.skip.click();
 
       await instrument.rerun.click();
-      await expect(instrument.status).toHaveText("Running");
+      await expect(instrument.status).toHaveText(runStatus.running);
       await expect(instrument.rerun).toHaveAttribute("aria-disabled", "true");
       await frozenClock.runFor(stepMs);
       await instrument.expectStages(stageNames.map(() => "pending"));
@@ -122,7 +122,7 @@ for (const locale of localeCases) {
       for (let elapsed = 0; elapsed < 3_000; elapsed += stepMs) {
         await frozenClock.runFor(stepMs);
         await expect(instrument.typedCode).toHaveText(specSource);
-        await expect(instrument.status).toHaveText("Passed");
+        await expect(instrument.status).toHaveText(runStatus.passed);
       }
       await expect(instrument.skip).toBeHidden();
     });
@@ -135,7 +135,7 @@ for (const locale of localeCases) {
       await homePage.open(locale.language.path);
 
       await instrument.rerun.click();
-      await expect(instrument.status).toHaveText("Running");
+      await expect(instrument.status).toHaveText(runStatus.running);
       await frozenClock.runFor(300);
       await expect(instrument.typedCode).toHaveText(specSource);
 
@@ -167,7 +167,7 @@ test.describe("instrument run budget", () => {
     await scrollToTop(page);
     await instrument.expectRunState("playing");
 
-    await expect(instrument.status).toHaveText("Running");
+    await expect(instrument.status).toHaveText(runStatus.running);
     await expect(instrument.typedCode).toHaveText(typedBefore ?? "");
     await frozenClock.runFor(wholeRunMs);
     await instrument.expectFinalFrame();
@@ -190,7 +190,7 @@ test.describe("instrument run budget", () => {
     await setTabHidden(page, false);
 
     await instrument.expectRunState("playing");
-    await expect(instrument.status).toHaveText("Running");
+    await expect(instrument.status).toHaveText(runStatus.running);
     await expect(instrument.typedCode).toHaveText(typedBefore ?? "");
   });
 

@@ -1,8 +1,11 @@
 import { expect, type Clock, type Locator } from "@playwright/test";
-import { specSource, stageNames } from "../data/instrument";
+import { runStatus, specSource, stageNames } from "../data/instrument";
 import type { InstrumentCopy, StageStateNames } from "../data/locales";
 
 export type StageState = keyof StageStateNames;
+
+/** Either status the bar shows, matched whole. */
+const anyRunStatus = new RegExp(`^(${Object.values(runStatus).join("|")})$`);
 
 /** What the run shows at one moment, read in a single pass. */
 export interface RunSnapshot {
@@ -37,7 +40,7 @@ export class Instrument {
       name: copy.name,
       exact: true,
     });
-    this.status = this.region.getByText(/^(Passed|Running)$/);
+    this.status = this.region.getByText(anyRunStatus);
     this.stages = this.region.getByRole("list", {
       name: copy.stagesName,
       exact: true,
@@ -87,7 +90,7 @@ export class Instrument {
   }
 
   async expectFinalFrame(): Promise<void> {
-    await expect(this.status).toHaveText("Passed");
+    await expect(this.status).toHaveText(runStatus.passed);
     await this.expectStages(stageNames.map(() => "passed"));
     await expect(this.sceneCaption).toHaveText(
       this.captionFor(stageNames.length - 1),
