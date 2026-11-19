@@ -1,0 +1,189 @@
+---
+import { useTranslations, type Locale } from "../i18n/ui";
+import { displayUrl, repositories } from "../lib/open-source";
+import SectionHead from "./SectionHead.astro";
+import UsageTerminal from "./UsageTerminal.astro";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const rows = repositories.map((repository, index) => ({
+  ...repository,
+  number: String(index + 1).padStart(2, "0"),
+  linkSteps: displayUrl(repository.url).split(/(?<=\/)/),
+  description: t(`openSource.${repository.key}.description`),
+  usageSource: t(`openSource.${repository.key}.usageSource`),
+  usageSummary: t(`openSource.${repository.key}.usageSummary`),
+}));
+---
+
+<section
+  class="open-source"
+  id="open-source"
+  aria-labelledby="open-source-heading"
+>
+  <SectionHead
+    locale={locale}
+    testCase={3}
+    headingId="open-source-heading"
+    title={t("openSource.title")}
+  />
+  {/* The list numbers its items for assistive technology already, so the printed numbers are
+     hidden from it. Safari drops list semantics once the markers are removed; the role keeps
+     them. */}
+  <ol class="repositories" role="list">
+    {rows.map((row) => (
+      <li class="repository">
+        <span class="rule" aria-hidden="true" />
+        <span class="number" aria-hidden="true">
+          {row.number}
+        </span>
+        <div class="summary">
+          <h3 class="name">{row.name}</h3>
+          <p class="description">{row.description}</p>
+          {/* Each path step stays whole, with a break opportunity after its slash, and the arrow
+             holds on to the last step, so phones wrap the address only between steps. */}
+          <a class="link" href={row.url}>
+            {row.linkSteps.map((step, index) => [
+              index > 0 && <wbr />,
+              <span class="step">
+                {step}
+                {index === row.linkSteps.length - 1 && (
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 11l6-6M6 5h5v5" />
+                  </svg>
+                )}
+              </span>,
+            ])}
+          </a>
+        </div>
+        <UsageTerminal
+          locale={locale}
+          usage={row.usage}
+          source={row.usageSource}
+          summary={row.usageSummary}
+        />
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .open-source {
+    max-inline-size: var(--page-max-width);
+    margin-inline: auto;
+    padding: 0 var(--gutter) var(--section-space-end);
+  }
+
+  .repositories {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Rows, not boxes: each repository opens on a dotted rule; its number, what it is and its
+     README's usage sit side by side from the top. */
+  .repository {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--space-24) minmax(0, 1fr) minmax(0, 32.5rem);
+    gap: var(--space-8);
+    align-items: start;
+    padding-block: var(--space-7);
+  }
+
+  /* The rule is an element of its own above the text, not the row's background or a
+     pseudo-element, so axe can judge the contrast of the text in the row. */
+  .rule {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    block-size: 3px;
+    background: var(--dotted-rule);
+  }
+
+  /* Half a grid unit down, so the number shares the name's first baseline. */
+  .number {
+    padding-block-start: calc(var(--grid-unit) / 2);
+    color: var(--link);
+    font-family: var(--font-mono);
+    font-size: var(--type-ui-size);
+    line-height: var(--type-ui-leading);
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .name {
+    margin-block-end: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-name-size);
+    font-weight: 500;
+    line-height: var(--type-mono-name-leading);
+  }
+
+  .description {
+    max-inline-size: 52ch;
+    margin-block-end: var(--space-4);
+    text-wrap: pretty;
+  }
+
+  .link {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: var(--type-ui-size);
+    line-height: var(--type-ui-leading);
+
+    svg {
+      display: inline-block;
+      margin-inline-start: var(--space-2);
+      vertical-align: -0.125em;
+    }
+  }
+
+  .step {
+    white-space: nowrap;
+  }
+
+  /* Narrower screens: the terminal moves under what the repository is. */
+  @media (width < 68.75em) {
+    .repository {
+      grid-template-columns: var(--space-24) minmax(0, 1fr);
+      row-gap: var(--space-5);
+    }
+
+    .repository > :global(.terminal) {
+      grid-column: 2;
+      max-inline-size: 35rem;
+    }
+  }
+
+  /* Phones: the number keeps its narrow column and the terminal takes the row's full width. */
+  @media (width < 60em) {
+    .repository {
+      grid-template-columns: var(--space-14) minmax(0, 1fr);
+      gap: var(--space-4);
+      padding-block: var(--space-6);
+    }
+
+    .repository > :global(.terminal) {
+      grid-column: 1 / -1;
+      max-inline-size: none;
+    }
+
+    .link {
+      min-block-size: var(--target-min);
+    }
+  }
+</style>

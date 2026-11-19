@@ -1,3 +1,5 @@
+import { playwrightCiReference, pw2xray } from "./openSource";
+
 export const profileUrls = {
   linkedIn: "https://www.linkedin.com/in/alcarcis",
   gitHub: "https://github.com/alcarcis",
@@ -6,6 +8,8 @@ export const profileUrls = {
 /** Every external link a page may carry, sorted; anything else fails the external-links spec. */
 export const expectedExternalUrls: readonly string[] = [
   profileUrls.gitHub,
+  playwrightCiReference.url,
+  pw2xray.url,
   profileUrls.linkedIn,
 ];
 

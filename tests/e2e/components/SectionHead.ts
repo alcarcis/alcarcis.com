@@ -4,6 +4,15 @@ import type { SectionHeadCopy } from "../data/locales";
 /** Quotes copy for an aria snapshot template, so punctuation in it is read literally. */
 export const quoted = (text: string): string => JSON.stringify(text);
 
+/** The two-digit numbers a section prints beside its rows: "01", "02", … one per row. */
+export const printedNumbers = (count: number): string[] =>
+  Array.from({ length: count }, (_, index) =>
+    String(index + 1).padStart(2, "0"),
+  );
+
+/** Text that is a row's printed number and nothing else. */
+export const printedNumber = /^\d{2}$/;
+
 /** The head that opens a section: its test case code, then the section title. */
 export class SectionHead {
   /** The code, an abbreviation whose title says what it stands for. */

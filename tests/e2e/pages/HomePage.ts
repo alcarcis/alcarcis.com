@@ -3,6 +3,7 @@ import { About } from "../components/About";
 import { GlyphField } from "../components/GlyphField";
 import { Hero } from "../components/Hero";
 import { LanguageSwitch } from "../components/LanguageSwitch";
+import { OpenSource } from "../components/OpenSource";
 import { ReadingProgress } from "../components/ReadingProgress";
 import { SeoLinks } from "../components/SeoLinks";
 import { SiteHeader } from "../components/SiteHeader";
@@ -70,6 +71,19 @@ export class HomePage {
 
   work(locale: LocaleCase): Work {
     return new Work(this.page, locale.work);
+  }
+
+  openSource(locale: LocaleCase): OpenSource {
+    return new OpenSource(this.page, locale.openSource);
+  }
+
+  /** The regions of the sections that follow the hero, in page order. */
+  sectionsBelowHero(locale: LocaleCase): Locator[] {
+    return [
+      this.about(locale).region,
+      this.work(locale).region,
+      this.openSource(locale).region,
+    ];
   }
 
   languageSwitch(accessibleName: string): LanguageSwitch {
