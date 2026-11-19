@@ -1,6 +1,11 @@
 import { contactEmailHref, localeCases } from "./data/locales";
 import { expect, test } from "./fixtures";
 
+/** Every PDF file opens with this header, whatever the server says about it. */
+const pdfSignature = "%PDF-";
+/** The PDF media type, with or without parameters such as a charset. */
+const pdfMediaType = /^application\/pdf\b/;
+
 for (const locale of localeCases) {
   test.describe(`${locale.language.name} hero`, () => {
     test.beforeEach(async ({ homePage }) => {
@@ -41,7 +46,13 @@ for (const locale of localeCases) {
 
       const pdf = await request.get(locale.hero.cvPath);
       expect(pdf.status()).toBe(200);
-      expect(pdf.headers()["content-type"]).toBe("application/pdf");
+      expect(pdf.headers()["content-type"]).toMatch(pdfMediaType);
+
+      const body = await pdf.body();
+      expect(body.length).toBeGreaterThan(pdfSignature.length);
+      expect(body.subarray(0, pdfSignature.length).toString("latin1")).toBe(
+        pdfSignature,
+      );
     });
 
     test("preloads the headline and body fonts", async ({ homePage }) => {

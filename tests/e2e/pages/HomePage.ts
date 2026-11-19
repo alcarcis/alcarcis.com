@@ -1,10 +1,12 @@
 import type { Locator, Page } from "@playwright/test";
+import { About } from "../components/About";
 import { GlyphField } from "../components/GlyphField";
 import { Hero } from "../components/Hero";
 import { LanguageSwitch } from "../components/LanguageSwitch";
 import { ReadingProgress } from "../components/ReadingProgress";
 import { SeoLinks } from "../components/SeoLinks";
 import { SiteHeader } from "../components/SiteHeader";
+import { Work } from "../components/Work";
 import type { ColorScheme } from "../data/colorSchemes";
 import type { HeaderCopy, LocaleCase } from "../data/locales";
 
@@ -60,6 +62,14 @@ export class HomePage {
 
   hero(locale: LocaleCase): Hero {
     return new Hero(this.page, locale);
+  }
+
+  about(locale: LocaleCase): About {
+    return new About(this.page, locale.about);
+  }
+
+  work(locale: LocaleCase): Work {
+    return new Work(this.page, locale.work);
   }
 
   languageSwitch(accessibleName: string): LanguageSwitch {

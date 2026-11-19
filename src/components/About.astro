@@ -1,0 +1,108 @@
+---
+import { Picture } from "astro:assets";
+import profilePhoto from "../assets/profile.jpg";
+import { useTranslations, type Locale } from "../i18n/ui";
+import { owner } from "../site";
+import SectionHead from "./SectionHead.astro";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<section class="about" id="about" aria-labelledby="about-heading">
+  <SectionHead
+    locale={locale}
+    testCase={1}
+    headingId="about-heading"
+    title={t("about.title")}
+  />
+  <div class="body">
+    <div class="prose">
+      <p class="lead">{t("about.lead")}</p>
+      <p>{t("about.experience")}</p>
+      <p>{t("about.practice")}</p>
+    </div>
+    <div class="portrait">
+      <Picture
+        class="photo"
+        src={profilePhoto}
+        formats={["avif", "webp"]}
+        widths={[360, 480, 720, 960, 1254]}
+        sizes="(min-width: 60em) min(27rem, 32vw), min(22.5rem, 100vw - 2rem)"
+        alt={owner.name}
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+  </div>
+</section>
+
+<style>
+  .about {
+    max-inline-size: var(--page-max-width);
+    margin-inline: auto;
+    padding: 0 var(--gutter) var(--section-space-end);
+  }
+
+  /* The words take the wide column and the photo the narrow one, both from the top. */
+  .body {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+    gap: var(--space-18);
+    align-items: start;
+  }
+
+  .prose p {
+    max-inline-size: 62ch;
+    text-wrap: pretty;
+  }
+
+  .prose p + p {
+    margin-block-start: var(--space-6);
+  }
+
+  /* The opening sentence is the section's claim, set in the display face. */
+  .prose .lead {
+    max-inline-size: 22ch;
+    font-family: var(--font-display);
+    font-size: var(--type-statement-size);
+    font-weight: 500;
+    line-height: var(--type-statement-leading);
+    letter-spacing: var(--type-statement-tracking);
+    text-wrap: balance;
+  }
+
+  .prose .lead + p {
+    margin-block-start: var(--space-8);
+  }
+
+  /* The photo sits on the panel tone inside a hairline frame, square at every size. */
+  .portrait {
+    margin-block-start: var(--space-2);
+    aspect-ratio: 1;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+    background: var(--panel);
+  }
+
+  .photo {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  @media (width < 60em) {
+    .body {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-12);
+    }
+
+    .portrait {
+      max-inline-size: 22.5rem;
+    }
+  }
+</style>

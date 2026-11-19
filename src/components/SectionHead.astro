@@ -1,0 +1,93 @@
+---
+import { useTranslations, type Locale } from "../i18n/ui";
+
+interface Props {
+  locale: Locale;
+  /** The section's place in the suite: 1 reads TC-01. */
+  testCase: number;
+  /** The heading's id, for the section's aria-labelledby. */
+  headingId: string;
+  title: string;
+}
+
+const { locale, testCase, headingId, title } = Astro.props;
+const t = useTranslations(locale);
+
+// Test case codes stay in English, like the rest of the test log; their expansion translates.
+const number = String(testCase).padStart(2, "0");
+const code = `TC-${number}`;
+const expansion = `${t("sectionHead.testCase")} ${number}`;
+---
+
+<header class="section-head">
+  <span class="divider" aria-hidden="true"></span>
+  <span class="code">
+    <span aria-hidden="true">[</span> <abbr title={expansion}>{code}</abbr>{" "}
+    <span aria-hidden="true">]</span>
+  </span>
+  <h2 id={headingId}>{title}</h2>
+  <span class="leader" aria-hidden="true"></span>
+</header>
+
+<style>
+  /* The head opens its section: a dotted rule divides it from the section before, then the code
+     labels the title on one baseline and the rule runs on from the title like a leader. */
+  .section-head {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-5);
+    margin-block-end: var(--space-10);
+    padding-block-start: var(--section-space-start);
+    font-family: var(--font-mono);
+    font-size: var(--type-ui-size);
+    line-height: var(--type-ui-leading);
+  }
+
+  /* The rule is an element of its own above the text, not the head's background or a
+     pseudo-element: axe cannot judge the contrast of text over an ancestor's gradient or wide
+     pseudo-element, and would leave the code and the title unchecked. */
+  .divider {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    block-size: 3px;
+    background: var(--dotted-rule);
+  }
+
+  .code {
+    color: var(--link);
+    white-space: nowrap;
+  }
+
+  abbr {
+    cursor: help;
+    text-decoration: underline dotted 1px;
+    text-decoration-color: var(--dots);
+    text-underline-offset: 4px;
+  }
+
+  h2 {
+    min-inline-size: 0;
+    font-family: var(--font-display);
+    font-size: var(--type-section-title-size);
+    font-weight: 600;
+    line-height: var(--type-section-title-leading);
+    letter-spacing: var(--type-section-title-tracking);
+    text-wrap: balance;
+  }
+
+  .leader {
+    flex: 1 1 0;
+    min-inline-size: 0;
+    block-size: 3px;
+    background: var(--dotted-rule);
+  }
+
+  @media (width < 60em) {
+    .section-head {
+      gap: var(--space-3);
+      margin-block-end: var(--space-8);
+    }
+  }
+</style>

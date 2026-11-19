@@ -47,6 +47,32 @@ export interface InstrumentCopy {
   readonly passedAnnouncement: string;
 }
 
+/** A section's head: its test case code, what the code stands for, and the section title. */
+export interface SectionHeadCopy {
+  readonly code: string;
+  readonly codeTitle: string;
+  readonly title: string;
+}
+
+export interface AboutCopy {
+  readonly head: SectionHeadCopy;
+  /** The opening sentence, set apart from the paragraphs that follow it. */
+  readonly lead: string;
+  readonly paragraphs: readonly string[];
+  readonly photoAlt: string;
+}
+
+export interface WorkItemCopy {
+  readonly title: string;
+  readonly description: string;
+}
+
+export interface WorkCopy {
+  readonly head: SectionHeadCopy;
+  /** The items in the order the page lists them. */
+  readonly items: readonly WorkItemCopy[];
+}
+
 export interface LocaleCase {
   readonly language: LanguageOption;
   readonly canonicalUrl: string;
@@ -59,6 +85,8 @@ export interface LocaleCase {
   readonly header: HeaderCopy;
   readonly hero: HeroCopy;
   readonly instrument: InstrumentCopy;
+  readonly about: AboutCopy;
+  readonly work: WorkCopy;
 }
 
 export const contactEmailHref = "mailto:hola@alcarcis.com";
@@ -128,6 +156,45 @@ export const englishPage: LocaleCase = {
     rerunName: "Rerun: replay the test run",
     passedAnnouncement: "Test run passed",
   },
+  about: {
+    head: { code: "TC-01", codeTitle: "Test case 01", title: "About" },
+    lead: "Quality isn't a filter: it lives in every stage of development.",
+    paragraphs: [
+      "I work in financial services (private banking and wealth management), where I conceived my team's first institutional automation framework and taught a manual-testing team to work with it. Within three months every QA had at least one automated flow.",
+      "Today I automate web, API and mobile apps (Playwright, TypeScript, Maestro), build tests to work as a quality gate in CI, and work with agents that generate, run and repair tests autonomously; I validate findings before they are reported.",
+    ],
+    photoAlt: "Carlos Alcalá",
+  },
+  work: {
+    head: { code: "TC-02", codeTitle: "Test case 02", title: "What I work on" },
+    items: [
+      {
+        title: "Test automation frameworks",
+        description:
+          "Layered Playwright + TypeScript architecture with atomic test cases, reusable components, linting, hooks, documented architecture decisions and runbooks.",
+      },
+      {
+        title: "Web, API & mobile",
+        description:
+          "End-to-end flows across modern and legacy platforms, API coverage with reusable sessions, and mobile tests with Maestro (previously Appium).",
+      },
+      {
+        title: "Quality in CI/CD",
+        description:
+          "GitHub Actions workflows that act as a quality gate: a failing test blocks the merge.",
+      },
+      {
+        title: "Agentic QA",
+        description:
+          "Agents that generate, run and repair BDD tests autonomously. I validate findings before they are reported, to keep false positives out of bug reports.",
+      },
+      {
+        title: "Test management integration",
+        description:
+          "Reusable tooling between test frameworks and Xray / Jira.",
+      },
+    ],
+  },
 };
 
 export const spanishPage: LocaleCase = {
@@ -175,6 +242,49 @@ export const spanishPage: LocaleCase = {
     skipName: "Skip: ver el resultado final",
     rerunName: "Rerun: repetir la ejecución",
     passedAnnouncement: "Pruebas aprobadas",
+  },
+  about: {
+    head: { code: "TC-01", codeTitle: "Caso de prueba 01", title: "Sobre mí" },
+    lead: "La calidad no es un filtro: existe en cada etapa del desarrollo.",
+    paragraphs: [
+      "Trabajo en servicios financieros (banca privada y gestión patrimonial), donde ideé el primer framework de automatización institucional de mi equipo de calidad y enseñé a trabajar con él a un equipo que venía de pruebas manuales: en tres meses, cada QA tenía al menos un flujo automatizado.",
+      "Hoy automatizo web, API y aplicaciones móviles (Playwright, TypeScript, Maestro), preparo las pruebas para funcionar como quality gate en CI y trabajo con agentes que generan, ejecutan y reparan pruebas de forma autónoma; yo valido los hallazgos antes de reportarlos.",
+    ],
+    photoAlt: "Carlos Alcalá",
+  },
+  work: {
+    head: {
+      code: "TC-02",
+      codeTitle: "Caso de prueba 02",
+      title: "En qué trabajo",
+    },
+    items: [
+      {
+        title: "Frameworks de automatización de pruebas",
+        description:
+          "Arquitectura en capas de Playwright + TypeScript con casos de prueba atómicos, componentes reutilizables, linting, hooks, decisiones de arquitectura documentadas y runbooks.",
+      },
+      {
+        title: "Web, API y móvil",
+        description:
+          "Flujos de punta a punta en plataformas modernas y heredadas, cobertura de API con sesiones reutilizables y pruebas móviles con Maestro (antes Appium).",
+      },
+      {
+        title: "Calidad en CI/CD",
+        description:
+          "Flujos de trabajo de GitHub Actions que actúan como quality gate: una prueba que falla bloquea la integración.",
+      },
+      {
+        title: "QA agéntico",
+        description:
+          "Agentes que generan, ejecutan y reparan pruebas BDD de forma autónoma. Yo valido los hallazgos antes de reportarlos, para mantener los falsos positivos fuera de los reportes de defectos.",
+      },
+      {
+        title: "Integración con gestión de pruebas",
+        description:
+          "Herramientas reutilizables entre frameworks de pruebas y Xray / Jira.",
+      },
+    ],
   },
 };
 
