@@ -1,8 +1,25 @@
-import type { APIResponse, Page } from "@playwright/test";
-import type { SitemapEntry } from "../data/seo";
+import type { APIResponse, Locator, Page } from "@playwright/test";
+import type { MetaTag, SitemapEntry } from "../data/seo";
 
 const sitemapNamespace = "http://www.sitemaps.org/schemas/sitemap/0.9";
 const xhtmlNamespace = "http://www.w3.org/1999/xhtml";
+
+/** The page's description and share tags, as crawlers and link previews read them. */
+export class SeoMeta {
+  readonly description: Locator;
+  readonly shareTags: Locator;
+
+  constructor(private readonly page: Page) {
+    this.description = page.locator('head meta[name="description"]');
+    this.shareTags = page.locator(
+      'head meta[property^="og:"], head meta[name^="twitter:"]',
+    );
+  }
+
+  tag(tag: Pick<MetaTag, "attribute" | "key">): Locator {
+    return this.page.locator(`head meta[${tag.attribute}="${tag.key}"]`);
+  }
+}
 
 /** The sitemap, read the way a crawler reads it: fetched, then parsed as namespaced XML. */
 export class Sitemap {

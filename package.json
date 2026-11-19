@@ -9,6 +9,7 @@
   },
   "scripts": {
     "fonts": "node scripts/fetch-fonts.ts",
+    "og": "pnpm fonts && node scripts/og/render.ts",
     "dev": "pnpm fonts && astro dev",
     "build": "pnpm fonts && astro build",
     "preview": "pnpm fonts && astro preview",

@@ -6,7 +6,13 @@ import Footer from "../components/Footer.astro";
 import GlyphField from "../components/GlyphField.astro";
 import ReadingProgress from "../components/ReadingProgress.astro";
 import SiteHeader from "../components/SiteHeader.astro";
-import { languageAlternates } from "../lib/seo";
+import {
+  languageAlternates,
+  openGraphLocales,
+  shareImageSize,
+  shareImages,
+  touchIcon,
+} from "../lib/seo";
 import { themeStorageKey } from "../lib/theme";
 import {
   defaultLocale,
@@ -30,6 +36,13 @@ const canonicalUrl = localizedUrl(locale, path);
 const alternateLinks = languageAlternates(locales, defaultLocale, (hreflang) =>
   localizedUrl(hreflang, path),
 );
+
+// Link previews and crawlers need absolute URLs.
+const homeUrl = localizedUrl(defaultLocale);
+const absoluteUrl = (href: string): string => new URL(href, homeUrl).href;
+
+const shareImage = shareImages[locale];
+const otherLocales = locales.filter((other) => other !== locale);
 ---
 
 <!doctype html>
@@ -59,10 +72,25 @@ const alternateLinks = languageAlternates(locales, defaultLocale, (hreflang) =>
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={touchIcon.path} />
     <link rel="canonical" href={canonicalUrl} />
     {alternateLinks.map(({ hreflang, href }) => (
       <link rel="alternate" hreflang={hreflang} href={href} />
     ))}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:locale" content={openGraphLocales[locale]} />
+    {otherLocales.map((other) => (
+      <meta property="og:locale:alternate" content={openGraphLocales[other]} />
+    ))}
+    <meta property="og:image" content={absoluteUrl(shareImage.path)} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content={String(shareImageSize.width)} />
+    <meta property="og:image:height" content={String(shareImageSize.height)} />
+    <meta property="og:image:alt" content={shareImage.alt} />
+    <meta name="twitter:card" content="summary_large_image" />
     <Font cssVariable="--font-display" preload />
     <Font cssVariable="--font-body" preload />
     <Font cssVariable="--font-mono" />
