@@ -249,6 +249,15 @@ export function sizeGrid(
   g.val.set(g.grain);
 }
 
+/** Takes a grid back to before it was sized: an empty canvas, and nothing for it to draw. */
+export function unsizeGrid(g: Grid): void {
+  g.N = 0;
+  g.canvas.width = 0;
+  g.canvas.height = 0;
+  g.canvas.style.width = "";
+  g.canvas.style.height = "";
+}
+
 export function resetLayers(g: Grid): void {
   g.val.set(g.grain);
   g.ink.fill(INK.GRAIN);

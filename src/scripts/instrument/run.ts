@@ -285,14 +285,24 @@ function setUpRun(instrument: HTMLElement): void {
   document.addEventListener("visibilitychange", update);
 
   /* The glyph renderer (grain and scene) loads only after the page has painted and gone idle.
-     If it cannot load or mount, the text frame stays and the run plays on without the scene. */
+     A chunk that cannot load (offline, a new deploy) quietly leaves the text frame. A renderer
+     that loads but fails to mount or to draw is a defect: what it put up comes down, the text
+     frame returns, the run plays on without the scene, and the error is reported. */
   async function loadScene(): Promise<void> {
+    const renderer = await import("../glyph-renderer").catch(() => null);
+    if (!renderer) return;
+    const mount = new AbortController();
     try {
-      const { mountGlyphLayers } = await import("../glyph-renderer");
-      scene = await mountGlyphLayers(instrument, reducedMotion);
+      scene = await renderer.mountGlyphLayers(
+        instrument,
+        reducedMotion,
+        mount.signal,
+      );
       drawScene(sceneTime);
-    } catch {
+    } catch (error) {
       scene = null;
+      mount.abort();
+      reportError(error);
     }
   }
 

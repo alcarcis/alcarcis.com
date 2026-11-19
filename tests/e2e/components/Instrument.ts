@@ -27,6 +27,11 @@ export interface CanvasScale {
 
 /** How often the clock moves on while waiting for the renderer. */
 const rendererStepMs = 100;
+/**
+ * Shorter than one of the renderer's idle slices, 50 ms on the test's clock while timers are
+ * pending, so the clock stops between two steps of its boot.
+ */
+const bootStepMs = 10;
 
 export class Instrument {
   readonly region: Locator;
@@ -142,6 +147,24 @@ export class Instrument {
       .not.toBeNull();
   }
 
+  /**
+   * Moves the clock on in short steps until the renderer has sized the scene canvas. It stops
+   * there: the renderer still has the grain to boot, in idle slices, before it is done.
+   */
+  async waitForSceneSized(clock: Clock): Promise<void> {
+    await expect
+      .poll(
+        async () => {
+          await clock.runFor(bootStepMs);
+          return this.sceneCanvas.evaluate(
+            (canvas: HTMLCanvasElement) => canvas.width,
+          );
+        },
+        { intervals: [0] },
+      )
+      .toBeGreaterThan(0);
+  }
+
   async sceneCanvasScale(): Promise<CanvasScale> {
     return this.sceneCanvas.evaluate((canvas: HTMLCanvasElement) => {
       const box = canvas.getBoundingClientRect();
@@ -156,6 +179,25 @@ export class Instrument {
     return this.region.evaluate(
       (instrument) => instrument.getBoundingClientRect().height,
     );
+  }
+
+  /**
+   * Scrolls until the instrument's top `pixels` show at the bottom of the viewport, then waits
+   * for the browser to report its new intersection, so the page's own observers have run too.
+   */
+  async scrollToShow(pixels: number): Promise<void> {
+    await this.region.evaluate(async (instrument, shown) => {
+      const top = instrument.getBoundingClientRect().top + window.scrollY;
+      const view = document.documentElement.clientHeight;
+      window.scrollTo({ top: top - (view - shown), behavior: "instant" });
+      await new Promise<void>((resolve) => {
+        const observer = new IntersectionObserver(() => {
+          observer.disconnect();
+          resolve();
+        });
+        observer.observe(instrument);
+      });
+    }, pixels);
   }
 
   async snapshot(): Promise<RunSnapshot> {

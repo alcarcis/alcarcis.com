@@ -1,3 +1,4 @@
+import { unsizedCanvas } from "./components/GlyphField";
 import { emptyLine, fullLine } from "./components/ReadingProgress";
 import {
   glyphRendererUrl,
@@ -9,19 +10,37 @@ import { englishPage, localeCases } from "./data/locales";
 import { expect, test } from "./fixtures";
 import {
   addRoomBelow,
+  missingMutationObserver,
+  removeMutationObserver,
   scrollToBottom,
   scrollToTop,
   setDevicePixelRatio,
   setTabHidden,
+  windowAndDocumentListeners,
 } from "./support/pageState";
 
 /** Longer than any whole run: typing, five stages and the closing pause. */
 const wholeRunMs = 15_000;
 const stepMs = 100;
-/** A phone on its side with the keyboard up: under a third of the instrument fits on screen. */
-const shortViewport = { width: 844, height: 240 };
-/** The share of the instrument that starts the first run when the viewport can show it. */
+/** The first run starts once 40% of the instrument, or three quarters of the viewport, shows. */
 const startShare = 0.4;
+const startCover = 0.75;
+/**
+ * Which rule starts the first run, by viewport: on a phone on its side 40% of the instrument
+ * comes first; with the keyboard up it never fits, and three quarters of the viewport does.
+ */
+const startRuleCases = [
+  {
+    rule: "40% of the instrument",
+    viewport: { width: 844, height: 420 },
+    firstRule: "share",
+  },
+  {
+    rule: "three quarters of the viewport",
+    viewport: { width: 844, height: 240 },
+    firstRule: "cover",
+  },
+] as const;
 
 for (const locale of localeCases) {
   test.describe(`${locale.language.name} instrument run`, () => {
@@ -267,7 +286,42 @@ test.describe("instrument resilience", () => {
     expect(consoleErrors.report()).toHaveNoConsoleErrors();
   });
 
-  test("redraws the scene at a new device pixel ratio", async ({
+  test("reports a renderer that fails while mounting, takes down its layers and listeners, and plays the run with the text frame", async ({
+    homePage,
+    page,
+    frozenClock,
+    consoleErrors,
+  }) => {
+    const { instrument } = homePage.hero(englishPage);
+    // The renderer mounts the scene and the grain, then fails when it starts watching the theme.
+    await removeMutationObserver(page);
+    await homePage.open(englishPage.language.path);
+    const listenersWithoutRenderer = await windowAndDocumentListeners(page);
+
+    await instrument.startRun(frozenClock);
+    await expect
+      .poll(async () => {
+        await frozenClock.runFor(stepMs);
+        return consoleErrors.report().errors.length;
+      })
+      .toBeGreaterThan(0);
+
+    expect(consoleErrors.report().errors).toEqual([
+      expect.objectContaining({
+        kind: "uncaught exception",
+        text: `Error: ${missingMutationObserver}`,
+      }),
+    ]);
+    expect(await windowAndDocumentListeners(page)).toEqual(
+      listenersWithoutRenderer,
+    );
+    expect(await homePage.glyphField.buffer()).toEqual(unsizedCanvas);
+    await frozenClock.runFor(wholeRunMs);
+    await instrument.expectFinalFrame();
+    await expect(instrument.textFrame).toBeVisible();
+  });
+
+  test("redraws the scene at each new device pixel ratio", async ({
     homePage,
     page,
     frozenClock,
@@ -277,6 +331,33 @@ test.describe("instrument resilience", () => {
     await instrument.waitForSceneDrawn(frozenClock);
     expect(await instrument.sceneCanvasScale()).toEqual({ across: 1, down: 1 });
 
+    // The first change may come before the renderer watches the ratio or after; either way,
+    // the last two reach it only if its watcher re-arms itself after each change.
+    for (const ratio of [2, 1, 2]) {
+      await setDevicePixelRatio(page, ratio);
+
+      await expect
+        .poll(async () => {
+          await frozenClock.runFor(stepMs);
+          return instrument.sceneCanvasScale();
+        })
+        .toEqual({ across: ratio, down: ratio });
+    }
+  });
+
+  test("catches up on a pixel ratio change while the renderer is still booting", async ({
+    homePage,
+    page,
+    frozenClock,
+  }) => {
+    const { instrument } = homePage.hero(englishPage);
+    await homePage.open(englishPage.language.path);
+    // The playing run keeps timers pending, so each of the renderer's idle slices takes 50 ms.
+    await instrument.startRun(frozenClock);
+    await instrument.waitForSceneSized(frozenClock);
+    expect(await instrument.sceneCanvasScale()).toEqual({ across: 1, down: 1 });
+
+    // Three slices before the renderer watches the pixel ratio.
     await setDevicePixelRatio(page, 2);
 
     await expect
@@ -287,26 +368,35 @@ test.describe("instrument resilience", () => {
       .toEqual({ across: 2, down: 2 });
   });
 
-  test.describe("on a viewport too short for 40% of the instrument", () => {
-    test.use({ viewport: shortViewport });
+  for (const { rule, viewport, firstRule } of startRuleCases) {
+    test.describe(`on a ${viewport.width} × ${viewport.height} viewport`, () => {
+      test.use({ viewport });
 
-    test("starts the first run once the instrument fills the screen", async ({
-      homePage,
-      frozenClock,
-    }) => {
-      const { instrument } = homePage.hero(englishPage);
-      await homePage.open(englishPage.language.path);
-      expect(await instrument.height()).toBeGreaterThan(
-        shortViewport.height / startShare,
-      );
+      test(`waits while too little of the instrument shows, then starts on ${rule}`, async ({
+        homePage,
+        frozenClock,
+      }) => {
+        const { instrument } = homePage.hero(englishPage);
+        await homePage.open(englishPage.language.path);
+        const shown = {
+          share: startShare * (await instrument.height()),
+          cover: startCover * viewport.height,
+        };
+        const first = shown[firstRule];
+        const other = shown[firstRule === "share" ? "cover" : "share"];
+        expect(first).toBeLessThan(other);
+        await frozenClock.runFor(stepMs);
 
-      await instrument.region.scrollIntoViewIfNeeded();
+        await instrument.scrollToShow(first / 2);
+        await instrument.expectRunState("waiting");
 
-      await instrument.startRun(frozenClock);
-      await frozenClock.runFor(wholeRunMs);
-      await instrument.expectFinalFrame();
+        await instrument.scrollToShow(
+          (first + Math.min(other, viewport.height)) / 2,
+        );
+        await instrument.expectRunState("playing");
+      });
     });
-  });
+  }
 });
 
 test.describe("reading progress", () => {
