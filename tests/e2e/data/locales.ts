@@ -3,6 +3,7 @@ import {
   pw2xray,
   type RepositoryFacts,
 } from "./openSource";
+import { creditUrls, type CreditSegment } from "./tools";
 
 export interface LanguageOption {
   readonly name: string;
@@ -96,6 +97,14 @@ export interface OpenSourceCopy {
   readonly repositories: readonly RepositoryCopy[];
 }
 
+export interface ToolsCopy {
+  readonly head: SectionHeadCopy;
+  /** The group titles, in the order the page shows the groups. */
+  readonly groupNames: readonly string[];
+  /** The line under the groups that credits the logos, link by link. */
+  readonly credits: readonly CreditSegment[];
+}
+
 export interface LocaleCase {
   readonly language: LanguageOption;
   readonly canonicalUrl: string;
@@ -111,6 +120,7 @@ export interface LocaleCase {
   readonly about: AboutCopy;
   readonly work: WorkCopy;
   readonly openSource: OpenSourceCopy;
+  readonly tools: ToolsCopy;
 }
 
 export const contactEmailHref = "mailto:hola@alcarcis.com";
@@ -240,6 +250,27 @@ export const englishPage: LocaleCase = {
       },
     ],
   },
+  tools: {
+    head: { code: "TC-04", codeTitle: "Test case 04", title: "Tools" },
+    groupNames: [
+      "Automation",
+      "Mobile",
+      "API & performance",
+      "CI/CD",
+      "Test management",
+    ],
+    credits: [
+      "Logos are trademarks of their owners and only name the tools. Jenkins logo by the ",
+      { link: "Jenkins project", url: creditUrls.jenkinsProject },
+      ", ",
+      { link: "CC BY-SA 3.0", url: creditUrls.ccBySa30 },
+      "; Git logo by Jason Long, ",
+      { link: "CC BY 3.0", url: creditUrls.ccBy30 },
+      "; Playwright logo by Microsoft, ",
+      { link: "CC BY 4.0", url: creditUrls.ccBy40 },
+      ".",
+    ],
+  },
 };
 
 export const spanishPage: LocaleCase = {
@@ -354,6 +385,31 @@ export const spanishPage: LocaleCase = {
         usageSummary:
           'Uso según el README, en TypeScript: import "dotenv/config"; importar la función uploadToXray desde "pw2xray/upload-to-xray"; luego llamar a uploadToXray() y, si falla, registrar el error con console.error y fijar process.exitCode en 1.',
       },
+    ],
+  },
+  tools: {
+    head: {
+      code: "TC-04",
+      codeTitle: "Caso de prueba 04",
+      title: "Herramientas",
+    },
+    groupNames: [
+      "Automatización",
+      "Móvil",
+      "API y rendimiento",
+      "CI/CD",
+      "Gestión de pruebas",
+    ],
+    credits: [
+      "Los logotipos son marcas de sus propietarios y solo identifican las herramientas. Logotipo de Jenkins: ",
+      { link: "proyecto Jenkins", url: creditUrls.jenkinsProject },
+      ", ",
+      { link: "CC BY-SA 3.0", url: creditUrls.ccBySa30 },
+      "; logotipo de Git: Jason Long, ",
+      { link: "CC BY 3.0", url: creditUrls.ccBy30 },
+      "; logotipo de Playwright: Microsoft, ",
+      { link: "CC BY 4.0", url: creditUrls.ccBy40 },
+      ".",
     ],
   },
 };

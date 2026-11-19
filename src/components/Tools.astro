@@ -1,0 +1,349 @@
+---
+import { useTranslations, type Locale } from "../i18n/ui";
+import { linkSegments, toolGroups, type Logo } from "../lib/tools";
+import SectionHead from "./SectionHead.astro";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+/*
+ * The logo files, from the site's own build; their sources are in SOURCES.md. None of them may
+ * cost the first screen anything, since the section sits far below it: a single-colour mark is
+ * a CSS mask whose file the script at the top of the section holds back until the section comes
+ * near, and an official multi-colour file is an image that loads lazily.
+ */
+type LogoFile = typeof import("../assets/icons/tools/git.svg").default;
+const logoFiles = import.meta.glob<LogoFile>("../assets/icons/tools/*.svg", {
+  eager: true,
+  import: "default",
+});
+
+function logoFile(file: string): LogoFile {
+  const logo = logoFiles[`../assets/icons/tools/${file}`];
+  if (!logo) throw new Error(`No logo file ${file} in src/assets/icons/tools.`);
+  return logo;
+}
+
+/* A mark's file and brand colour; an official file's rest brightness for each ground, where it
+   differs from the theme's. The stylesheet picks the values for the current theme. */
+function logoStyle(logo: Logo): Record<string, string> | undefined {
+  if (logo.kind === "mark") {
+    return {
+      "--logo": `url("${logoFile(logo.file).src}")`,
+      "--brand": logo.brand,
+    };
+  }
+  const { restBrightness } = logo;
+  if (!restBrightness) return undefined;
+  return {
+    ...(restBrightness.light === undefined
+      ? {}
+      : { "--rest-brightness-light": String(restBrightness.light) }),
+    ...(restBrightness.dark === undefined
+      ? {}
+      : { "--rest-brightness-dark": String(restBrightness.dark) }),
+  };
+}
+
+const groups = toolGroups.map((group) => ({
+  ...group,
+  headingId: `tools-${group.key}`,
+  title: t(`tools.group.${group.key}`),
+}));
+const credits = linkSegments(t("tools.credits"));
+---
+
+<section class="tools" id="tools" aria-labelledby="tools-heading">
+  {/*
+    Holds the marks' files back until the section is within a viewport's height, so they never
+    compete with the first screen. It runs inline, before the marks are parsed: a deferred
+    script would come too late, after the browser had requested them. It reads no layout; the
+    browser's own view check decides. Without scripting, the marks load with the page.
+  */}
+  <script is:inline>
+    (() => {
+      const section = document.currentScript?.parentElement;
+      if (!section || !("IntersectionObserver" in window)) return;
+      section.dataset.logos = "waiting";
+      const near = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((entry) => entry.isIntersecting)) return;
+          near.disconnect();
+          section.dataset.logos = "near";
+        },
+        { rootMargin: "100% 0px" },
+      );
+      near.observe(section);
+    })();
+  </script>
+  <SectionHead
+    locale={locale}
+    testCase={4}
+    headingId="tools-heading"
+    title={t("tools.title")}
+  />
+  <div class="groups">
+    {groups.map((group) => (
+      <div class="group">
+        <h3 class="label" id={group.headingId}>
+          {group.title}
+        </h3>
+        <span class="rule" aria-hidden="true" />
+        {/* Safari drops list semantics once the markers are removed; the role keeps them. */}
+        <ul class="list" role="list" aria-labelledby={group.headingId}>
+          {group.tools.map(({ name, logo, fit }) => {
+            const image = logo.kind === "official" ? logoFile(logo.file) : null;
+            const darkImage =
+              logo.kind === "official" && logo.darkFile
+                ? logoFile(logo.darkFile)
+                : null;
+            return (
+              <li class="tool">
+                <span
+                  class:list={["logo", logo.kind, fit]}
+                  style={logoStyle(logo)}
+                  aria-hidden="true"
+                  data-tool-logo
+                >
+                  {logo.kind === "mark" && <span class="art" />}
+                  {image && (
+                    <img
+                      class:list={["art", { "light-art": darkImage }]}
+                      src={image.src}
+                      alt=""
+                      width={image.width}
+                      height={image.height}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  )}
+                  {darkImage && (
+                    <img
+                      class="art dark-art"
+                      src={darkImage.src}
+                      alt=""
+                      width={darkImage.width}
+                      height={darkImage.height}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  )}
+                </span>
+                {name}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    ))}
+  </div>
+  <p class="credits">
+    {credits.map((segment) =>
+      typeof segment === "string" ? (
+        segment
+      ) : (
+        <a href={segment.href}>{segment.text}</a>
+      ),
+    )}
+  </p>
+</section>
+
+<style>
+  .tools {
+    max-inline-size: var(--page-max-width);
+    margin-inline: auto;
+    padding: 0 var(--gutter) var(--section-space-end);
+  }
+
+  .groups {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--space-8) var(--space-6);
+  }
+
+  .label {
+    padding-block-end: var(--space-2);
+    color: var(--accent-text);
+    font-family: var(--font-mono);
+    font-size: var(--type-label-size);
+    font-weight: 500;
+    line-height: var(--type-label-leading);
+    letter-spacing: var(--type-label-tracking);
+    text-transform: uppercase;
+  }
+
+  /* The rule under each label is an element of its own, not the label's background, so axe
+     can judge the label's contrast. */
+  .rule {
+    display: block;
+    block-size: 3px;
+    margin-block-end: var(--space-2);
+    background: var(--dotted-rule);
+  }
+
+  .list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tool {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding-block: var(--space-1);
+    font-family: var(--font-mono);
+    font-size: var(--type-list-size);
+    line-height: var(--type-list-leading);
+  }
+
+  /*
+   * One artwork per logo in both states; only its colour changes. A single-colour mark is a mask
+   * filled with the muted ink at rest and in its brand colour while pointed at. An official multi-colour
+   * file shows itself: grey and muted at rest, full colour while pointed at. The theme's
+   * colours swap without transitions (the base stylesheet holds them during a theme change), so
+   * only the hover eases.
+   */
+  .logo {
+    --rest-brightness: var(
+      --rest-brightness-light,
+      var(--logo-rest-brightness)
+    );
+    position: relative;
+    flex: none;
+    inline-size: var(--logo-size);
+    block-size: var(--logo-size);
+    color: var(--muted);
+    forced-color-adjust: none;
+    transition: color var(--duration-quick) var(--ease-out);
+  }
+
+  /* The artwork fills the logo's square, whatever its own proportions. */
+  .art {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: contain;
+  }
+
+  .mark .art {
+    background-color: currentColor;
+    mask: var(--logo) center / contain no-repeat;
+  }
+
+  /* Until the section comes near, a mark has no mask, so its file is not requested; it stays
+     hidden meanwhile, far below the screen. */
+  .tools[data-logos="waiting"] .mark .art {
+    visibility: hidden;
+    mask-image: none;
+  }
+
+  .official .art {
+    filter: grayscale(1) brightness(var(--rest-brightness));
+    opacity: var(--logo-rest-opacity);
+    transition:
+      filter var(--duration-quick) var(--ease-out),
+      opacity var(--duration-quick) var(--ease-out);
+  }
+
+  /* An official file made for paper has a twin for graphite; each ground shows its own. */
+  .dark-art {
+    display: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme="light"])) {
+      .logo {
+        --rest-brightness: var(
+          --rest-brightness-dark,
+          var(--logo-rest-brightness)
+        );
+      }
+
+      .light-art {
+        display: none;
+      }
+
+      .dark-art {
+        display: block;
+      }
+    }
+  }
+
+  :global(:root[data-theme="dark"]) {
+    .logo {
+      --rest-brightness: var(
+        --rest-brightness-dark,
+        var(--logo-rest-brightness)
+      );
+    }
+
+    .light-art {
+      display: none;
+    }
+
+    .dark-art {
+      display: block;
+    }
+  }
+
+  @media (hover: hover) {
+    .tool:hover .mark {
+      color: var(--brand);
+    }
+
+    .tool:hover .official .art {
+      filter: grayscale(0) brightness(1);
+      opacity: 1;
+    }
+  }
+
+  /* The feather is drawn steep and thin: a slightly larger box turned toward the diagonal
+     reads as a feather. The negative margin keeps its footprint at the logo size, so the name
+     stays in line. */
+  .feather {
+    inline-size: var(--space-6);
+    block-size: var(--space-6);
+    margin: calc(var(--grid-unit) / -2);
+    transform: translateX(1px) rotate(20deg) scale(1.1);
+  }
+
+  /* Xray's file is its mark plus its wordmark: the box shows the mark only. */
+  .mark-only .art {
+    object-fit: cover;
+    object-position: left center;
+  }
+
+  /* Small print under the grid: who the logos belong to, and the credits their licences ask. */
+  .credits {
+    max-inline-size: 72ch;
+    margin-block-start: var(--space-12);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: var(--type-ui-size);
+    line-height: var(--type-ui-leading);
+    text-wrap: pretty;
+
+    /* A licence or owner name reads as one name: it never breaks across lines. */
+    a {
+      white-space: nowrap;
+    }
+  }
+
+  @media (width < 68.75em) {
+    .groups {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (width < 60em) {
+    .groups {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

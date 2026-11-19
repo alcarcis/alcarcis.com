@@ -1,4 +1,5 @@
 import { playwrightCiReference, pw2xray } from "./openSource";
+import { creditUrls } from "./tools";
 
 export const profileUrls = {
   linkedIn: "https://www.linkedin.com/in/alcarcis",
@@ -7,9 +8,13 @@ export const profileUrls = {
 
 /** Every external link a page may carry, sorted; anything else fails the external-links spec. */
 export const expectedExternalUrls: readonly string[] = [
+  creditUrls.ccBySa30,
+  creditUrls.ccBy30,
+  creditUrls.ccBy40,
   profileUrls.gitHub,
   playwrightCiReference.url,
   pw2xray.url,
+  creditUrls.jenkinsProject,
   profileUrls.linkedIn,
 ];
 

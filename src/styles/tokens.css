@@ -50,6 +50,10 @@
   --focus: var(--brand-graphite);
   --selection-background: var(--brand-copper-soft);
   --selection-text: var(--brand-graphite);
+  /* Official multi-colour logos at rest: grey, darkened on paper and lightened on graphite, so
+     each mark keeps at least 3:1 against the ground */
+  --logo-rest-brightness: 0.5;
+  --logo-rest-opacity: 0.85;
   color-scheme: light;
 
   /* Type */
@@ -83,6 +87,13 @@
   /* A terminal window's title bar, in mono capitals */
   --type-window-title-size: 0.6875rem;
   --type-window-title-tracking: 0.08em;
+  /* A group label in mono capitals: 12/24 */
+  --type-label-size: 0.75rem;
+  --type-label-leading: 2;
+  --type-label-tracking: 0.12em;
+  /* An entry in a mono list, such as a tool's name: 14/28 */
+  --type-list-size: 0.875rem;
+  --type-list-leading: 2;
 
   /* Grid and spacing: one 4px unit, in rem so it follows the reader's text size */
   --grid-unit: 0.25rem;
@@ -108,6 +119,8 @@
   --header-height: var(--space-16);
   --reading-progress-height: 3px;
   --target-min: 2.5rem;
+  /* A tool's logo, beside its name */
+  --logo-size: 1.25rem;
   /* Section rhythm: the space from the dotted rule that opens a section to its head, and the
      space that closes the section before the next rule */
   --section-space-start: var(--space-22);
@@ -152,6 +165,8 @@
     --focus: var(--brand-copper-soft);
     --selection-background: var(--brand-copper);
     --selection-text: var(--brand-graphite);
+    --logo-rest-brightness: 1.8;
+    --logo-rest-opacity: 0.78;
     color-scheme: dark;
   }
 }
@@ -173,5 +188,7 @@
   --focus: var(--brand-copper-soft);
   --selection-background: var(--brand-copper);
   --selection-text: var(--brand-graphite);
+  --logo-rest-brightness: 1.8;
+  --logo-rest-opacity: 0.78;
   color-scheme: dark;
 }
