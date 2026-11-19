@@ -17,7 +17,7 @@ for (const locale of localeCases) {
       await homePage.tools(locale).head.expectShown();
     });
 
-    test("reads each group's title, then its tools, without the logos, then the logo credits", async ({
+    test("reads each group's title, then its tools, without the logos", async ({
       homePage,
     }) => {
       await homePage.tools(locale).expectReadingOrder();
@@ -41,18 +41,6 @@ for (const locale of localeCases) {
         const logo = await request.get(url.href);
         expect(logo.status(), `${name} logo`).toBe(200);
         expect(logo.headers()["content-type"], `${name} logo`).toMatch(svgType);
-      }
-    });
-
-    test("credits the Jenkins project with a link to jenkins.io, and each licence the logos ask to name", async ({
-      homePage,
-    }) => {
-      const tools = homePage.tools(locale);
-
-      for (const { name, url } of tools.expectedCreditLinks) {
-        await expect(
-          tools.credits.getByRole("link", { name, exact: true }),
-        ).toHaveAttribute("href", url);
       }
     });
 

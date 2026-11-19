@@ -1,0 +1,84 @@
+---
+import { useTranslations, type Locale } from "../i18n/ui";
+import { buildInfo } from "../lib/build-info";
+import { linkSegments } from "../lib/tools";
+import { owner } from "../site";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+/* The year comes from this build's own date, the one the instrument shows, so it is never stale. */
+const year = buildInfo().built.slice(0, 4);
+const credits = linkSegments(t("footer.credits"));
+---
+
+<footer class="site-footer">
+  <span class="rule" aria-hidden="true"></span>
+  <div class="fine-print">
+    <p>
+      © {year} {owner.name}
+    </p>
+    <p>{t("footer.privacy")}</p>
+  </div>
+  {/* The credits the Tools section's logos ask for, on the page that shows them. */}
+  <p class="credits">
+    {credits.map((segment) =>
+      typeof segment === "string" ? (
+        segment
+      ) : (
+        <a href={segment.href}>{segment.text}</a>
+      ),
+    )}
+  </p>
+</footer>
+
+<style>
+  /* The footer sits above the grain field, as the main content does. */
+  .site-footer {
+    position: relative;
+    z-index: 1;
+    max-inline-size: var(--page-max-width);
+    margin-inline: auto;
+    padding: var(--space-6) var(--gutter) var(--space-8);
+    color: var(--muted);
+    font-family: var(--font-mono);
+  }
+
+  /* The dotted rule that closes the page is an element of its own above the text, not a
+     pseudo-element: axe cannot judge the contrast of text beside a wide pseudo-element. */
+  .rule {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: var(--gutter);
+    block-size: 3px;
+    background: var(--dotted-rule);
+  }
+
+  .fine-print {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-6);
+    font-size: var(--type-fine-print-size);
+    line-height: var(--type-fine-print-leading);
+    letter-spacing: var(--type-fine-print-tracking);
+    text-transform: uppercase;
+  }
+
+  .credits {
+    max-inline-size: 72ch;
+    margin-block-start: var(--space-4);
+    font-size: var(--type-label-size);
+    line-height: var(--type-credits-leading);
+    text-wrap: pretty;
+
+    /* A licence or owner name reads as one name: it never breaks across lines. */
+    a {
+      white-space: nowrap;
+    }
+  }
+</style>

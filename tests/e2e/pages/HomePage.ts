@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { About } from "../components/About";
+import { Footer } from "../components/Footer";
 import { GlyphField } from "../components/GlyphField";
 import { Hero } from "../components/Hero";
 import { LanguageSwitch } from "../components/LanguageSwitch";
@@ -82,6 +83,10 @@ export class HomePage {
     return new Tools(this.page, locale.tools);
   }
 
+  footer(locale: LocaleCase): Footer {
+    return new Footer(this.page, locale.footer);
+  }
+
   /** The regions of the sections that follow the hero, in page order. */
   sectionsBelowHero(locale: LocaleCase): Locator[] {
     return [
@@ -90,6 +95,11 @@ export class HomePage {
       this.openSource(locale).region,
       this.tools(locale).region,
     ];
+  }
+
+  /** The landmarks that follow the hero, in page order: each section, then the footer. */
+  landmarksBelowHero(locale: LocaleCase): Locator[] {
+    return [...this.sectionsBelowHero(locale), this.footer(locale).landmark];
   }
 
   languageSwitch(accessibleName: string): LanguageSwitch {

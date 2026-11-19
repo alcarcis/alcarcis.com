@@ -1,19 +1,11 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import type { ToolsCopy } from "../data/locales";
-import { toolNamesByGroup, type CreditSegment } from "../data/tools";
+import { toolNamesByGroup } from "../data/tools";
 import { quoted, SectionHead } from "./SectionHead";
-
-/** An aria snapshot line for one stretch of the credits line, indented under its paragraph. */
-const creditLine = (segment: CreditSegment): string[] =>
-  typeof segment === "string"
-    ? [`  - text: ${quoted(segment.trim())}`]
-    : [`  - link ${quoted(segment.link)}:`, `    - /url: ${segment.url}`];
 
 export class Tools {
   readonly region: Locator;
   readonly head: SectionHead;
-  /** The line under the groups that credits the logos. */
-  readonly credits: Locator;
 
   constructor(
     private readonly page: Page,
@@ -24,18 +16,6 @@ export class Tools {
       exact: true,
     });
     this.head = new SectionHead(this.region, copy.head);
-    this.credits = this.region
-      .getByRole("paragraph")
-      .filter({ has: page.getByRole("link") });
-  }
-
-  /** The links the credits line holds, as name and address, in order. */
-  get expectedCreditLinks(): { name: string; url: string }[] {
-    return this.copy.credits.flatMap((segment) =>
-      typeof segment === "string"
-        ? []
-        : [{ name: segment.link, url: segment.url }],
-    );
   }
 
   /** The list item that names the tool. */
@@ -94,8 +74,8 @@ export class Tools {
 
   /**
    * Asserts the section reads its head, then each group's title as a level-3 heading followed
-   * by a list named by it, holding its tools' names and nothing more (the logos stay out), and
-   * ends with the credits line and its links.
+   * by a list named by it, holding its tools' names and nothing more: the logos stay out, and
+   * their credits are the footer's.
    */
   async expectReadingOrder(): Promise<void> {
     const groups = this.copy.groupNames.flatMap((groupName, index) => [
@@ -106,11 +86,7 @@ export class Tools {
       ),
     ]);
     await expect(this.region).toMatchAriaSnapshot(
-      this.head.sectionSnapshot([
-        ...groups,
-        "- paragraph:",
-        ...this.copy.credits.flatMap(creditLine),
-      ]),
+      this.head.sectionSnapshot(groups),
     );
   }
 }

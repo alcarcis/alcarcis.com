@@ -1,6 +1,6 @@
 ---
 import { useTranslations, type Locale } from "../i18n/ui";
-import { linkSegments, toolGroups, type Logo } from "../lib/tools";
+import { toolGroups, type Logo } from "../lib/tools";
 import SectionHead from "./SectionHead.astro";
 
 interface Props {
@@ -54,7 +54,6 @@ const groups = toolGroups.map((group) => ({
   headingId: `tools-${group.key}`,
   title: t(`tools.group.${group.key}`),
 }));
-const credits = linkSegments(t("tools.credits"));
 ---
 
 <section class="tools" id="tools" aria-labelledby="tools-heading">
@@ -141,15 +140,6 @@ const credits = linkSegments(t("tools.credits"));
       </div>
     ))}
   </div>
-  <p class="credits">
-    {credits.map((segment) =>
-      typeof segment === "string" ? (
-        segment
-      ) : (
-        <a href={segment.href}>{segment.text}</a>
-      ),
-    )}
-  </p>
 </section>
 
 <style>
@@ -317,22 +307,6 @@ const credits = linkSegments(t("tools.credits"));
   .mark-only .art {
     object-fit: cover;
     object-position: left center;
-  }
-
-  /* Small print under the grid: who the logos belong to, and the credits their licences ask. */
-  .credits {
-    max-inline-size: 72ch;
-    margin-block-start: var(--space-12);
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: var(--type-ui-size);
-    line-height: var(--type-ui-leading);
-    text-wrap: pretty;
-
-    /* A licence or owner name reads as one name: it never breaks across lines. */
-    a {
-      white-space: nowrap;
-    }
   }
 
   @media (width < 68.75em) {
