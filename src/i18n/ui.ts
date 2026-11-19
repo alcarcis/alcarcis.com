@@ -19,7 +19,7 @@ export const languages: Readonly<Record<Locale, LanguageLabel>> = {
 const en = {
   "meta.title": "Carlos Alcalá · Quality Engineering",
   "meta.description":
-    "Quality engineering end to end: test automation for web, API and mobile, quality in CI/CD and agentic QA. From requirements to production.",
+    "Quality engineering from requirements to production: test automation for web, API and mobile, quality gates in CI, and agentic QA.",
   "a11y.skipToContent": "Skip to content",
   "header.backToTop": "back to top",
   "header.linkedIn": "LinkedIn profile",
@@ -126,7 +126,7 @@ export type UiKey = keyof typeof en;
 const es: Readonly<Record<UiKey, string>> = {
   "meta.title": "Carlos Alcalá · Quality Engineering",
   "meta.description":
-    "Ingeniería de calidad de punta a punta: automatización de pruebas web, API y móvil, calidad en CI/CD y QA agéntico. De los requisitos a producción.",
+    "Ingeniería de calidad de los requisitos a producción: automatización de pruebas web, API y móvil, quality gates en CI y QA agéntico.",
   "a11y.skipToContent": "Ir al contenido",
   "header.backToTop": "ir al inicio",
   "header.linkedIn": "Perfil de LinkedIn",

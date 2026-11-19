@@ -1,12 +1,22 @@
 ---
 import "../styles/tokens.css";
 import "../styles/base.css";
-import { Font } from "astro:assets";
+import { Font, getImage } from "astro:assets";
+import profilePhoto from "../assets/profile.jpg";
 import Footer from "../components/Footer.astro";
 import GlyphField from "../components/GlyphField.astro";
 import ReadingProgress from "../components/ReadingProgress.astro";
 import SiteHeader from "../components/SiteHeader.astro";
+import {
+  languageAlternates,
+  openGraphLocales,
+  shareImageSize,
+  shareImages,
+  touchIcon,
+} from "../lib/seo";
+import { personJsonLd, serializeJsonLd } from "../lib/structured-data";
 import { themeStorageKey } from "../lib/theme";
+import { owner, profiles, structuredProfile } from "../site";
 import {
   defaultLocale,
   locales,
@@ -26,13 +36,31 @@ const { locale, title, description, path = "" } = Astro.props;
 const t = useTranslations(locale);
 
 const canonicalUrl = localizedUrl(locale, path);
-const alternateLinks = [
-  ...locales.map((hreflang) => ({
-    hreflang,
-    href: localizedUrl(hreflang, path),
-  })),
-  { hreflang: "x-default", href: localizedUrl(defaultLocale, path) },
-];
+const alternateLinks = languageAlternates(locales, defaultLocale, (hreflang) =>
+  localizedUrl(hreflang, path),
+);
+
+// Link previews and crawlers need absolute URLs.
+const homeUrl = localizedUrl(defaultLocale);
+const absoluteUrl = (href: string): string => new URL(href, homeUrl).href;
+
+const shareImage = shareImages[locale];
+const otherLocales = locales.filter((other) => other !== locale);
+
+// The About photo at a size search engines accept for a person's image.
+const personPhoto = await getImage({
+  src: profilePhoto,
+  width: 720,
+  format: "jpg",
+});
+const person = personJsonLd({
+  name: owner.name,
+  jobTitle: structuredProfile.jobTitle,
+  url: homeUrl,
+  image: absoluteUrl(personPhoto.src),
+  sameAs: [profiles.linkedIn, profiles.gitHub],
+  knowsAbout: structuredProfile.knowsAbout,
+});
 ---
 
 <!doctype html>
@@ -62,10 +90,30 @@ const alternateLinks = [
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={touchIcon.path} />
     <link rel="canonical" href={canonicalUrl} />
     {alternateLinks.map(({ hreflang, href }) => (
       <link rel="alternate" hreflang={hreflang} href={href} />
     ))}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:locale" content={openGraphLocales[locale]} />
+    {otherLocales.map((other) => (
+      <meta property="og:locale:alternate" content={openGraphLocales[other]} />
+    ))}
+    <meta property="og:image" content={absoluteUrl(shareImage.path)} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content={String(shareImageSize.width)} />
+    <meta property="og:image:height" content={String(shareImageSize.height)} />
+    <meta property="og:image:alt" content={shareImage.alt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={serializeJsonLd(person)}
+    />
     <Font cssVariable="--font-display" preload />
     <Font cssVariable="--font-body" preload />
     <Font cssVariable="--font-mono" />
