@@ -1,4 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
+import { About } from "../components/About";
 import { GlyphField } from "../components/GlyphField";
 import { Hero } from "../components/Hero";
 import { LanguageSwitch } from "../components/LanguageSwitch";
@@ -60,6 +61,10 @@ export class HomePage {
 
   hero(locale: LocaleCase): Hero {
     return new Hero(this.page, locale);
+  }
+
+  about(locale: LocaleCase): About {
+    return new About(this.page, locale.about);
   }
 
   languageSwitch(accessibleName: string): LanguageSwitch {

@@ -66,6 +66,14 @@
   --type-display-line-size: clamp(1.875rem, 0.25rem + 2.9vw, 2.875rem);
   --type-display-line-leading: 1.1;
   --type-display-line-tracking: -0.02em;
+  /* A section's title: 32px on phones, 48px on wide screens */
+  --type-section-title-size: clamp(2rem, 1rem + 2.2vw, 3rem);
+  --type-section-title-leading: 1.1;
+  --type-section-title-tracking: -0.025em;
+  /* A section's opening sentence in the display face: 28px on phones, 36px on wide screens */
+  --type-statement-size: clamp(1.75rem, 1rem + 1.4vw, 2.25rem);
+  --type-statement-leading: calc(44 / 36);
+  --type-statement-tracking: -0.015em;
 
   /* Grid and spacing: one 4px unit, in rem so it follows the reader's text size */
   --grid-unit: 0.25rem;
@@ -91,6 +99,10 @@
   --header-height: var(--space-16);
   --reading-progress-height: 3px;
   --target-min: 2.5rem;
+  /* Section rhythm: the space from the dotted rule that opens a section to its head, and the
+     space that closes the section before the next rule */
+  --section-space-start: var(--space-22);
+  --section-space-end: var(--space-16);
 
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -106,6 +118,8 @@
     --gutter: var(--space-4);
     --header-height: var(--space-14);
     --target-min: 2.75rem;
+    --section-space-start: var(--space-18);
+    --section-space-end: var(--space-14);
   }
 }
 

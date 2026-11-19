@@ -47,6 +47,14 @@ const en = {
   "instrument.skip": "Skip: show the finished run",
   "instrument.rerun": "Rerun: replay the test run",
   "instrument.announce.passed": "Test run passed",
+  "sectionHead.testCase": "Test case",
+  "about.title": "About",
+  "about.lead":
+    "Quality isn't a filter: it lives in every stage of development.",
+  "about.experience":
+    "I work in financial services (private banking and wealth management), where I conceived my team's first institutional automation framework and taught a manual-testing team to work with it. Within three months every QA had at least one automated flow.",
+  "about.practice":
+    "Today I automate web, API and mobile apps (Playwright, TypeScript, Maestro), build tests to work as a quality gate in CI, and work with agents that generate, run and repair tests autonomously; I validate findings before they are reported.",
 } as const;
 
 export type UiKey = keyof typeof en;
@@ -82,6 +90,14 @@ const es: Readonly<Record<UiKey, string>> = {
   "instrument.skip": "Skip: ver el resultado final",
   "instrument.rerun": "Rerun: repetir la ejecución",
   "instrument.announce.passed": "Pruebas aprobadas",
+  "sectionHead.testCase": "Caso de prueba",
+  "about.title": "Sobre mí",
+  "about.lead":
+    "La calidad no es un filtro: existe en cada etapa del desarrollo.",
+  "about.experience":
+    "Trabajo en servicios financieros (banca privada y gestión patrimonial), donde ideé el primer framework de automatización institucional de mi equipo de calidad y enseñé a trabajar con él a un equipo que venía de pruebas manuales: en tres meses, cada QA tenía al menos un flujo automatizado.",
+  "about.practice":
+    "Hoy automatizo web, API y aplicaciones móviles (Playwright, TypeScript, Maestro), preparo las pruebas para funcionar como quality gate en CI y trabajo con agentes que generan, ejecutan y reparan pruebas de forma autónoma; yo valido los hallazgos antes de reportarlos.",
 };
 
 const ui: Readonly<Record<Locale, Readonly<Record<UiKey, string>>>> = {

@@ -47,6 +47,21 @@ export interface InstrumentCopy {
   readonly passedAnnouncement: string;
 }
 
+/** A section's head: its test case code, what the code stands for, and the section title. */
+export interface SectionHeadCopy {
+  readonly code: string;
+  readonly codeTitle: string;
+  readonly title: string;
+}
+
+export interface AboutCopy {
+  readonly head: SectionHeadCopy;
+  /** The opening sentence, set apart from the paragraphs that follow it. */
+  readonly lead: string;
+  readonly paragraphs: readonly string[];
+  readonly photoAlt: string;
+}
+
 export interface LocaleCase {
   readonly language: LanguageOption;
   readonly canonicalUrl: string;
@@ -59,6 +74,7 @@ export interface LocaleCase {
   readonly header: HeaderCopy;
   readonly hero: HeroCopy;
   readonly instrument: InstrumentCopy;
+  readonly about: AboutCopy;
 }
 
 export const contactEmailHref = "mailto:hola@alcarcis.com";
@@ -128,6 +144,15 @@ export const englishPage: LocaleCase = {
     rerunName: "Rerun: replay the test run",
     passedAnnouncement: "Test run passed",
   },
+  about: {
+    head: { code: "TC-01", codeTitle: "Test case 01", title: "About" },
+    lead: "Quality isn't a filter: it lives in every stage of development.",
+    paragraphs: [
+      "I work in financial services (private banking and wealth management), where I conceived my team's first institutional automation framework and taught a manual-testing team to work with it. Within three months every QA had at least one automated flow.",
+      "Today I automate web, API and mobile apps (Playwright, TypeScript, Maestro), build tests to work as a quality gate in CI, and work with agents that generate, run and repair tests autonomously; I validate findings before they are reported.",
+    ],
+    photoAlt: "Carlos Alcalá",
+  },
 };
 
 export const spanishPage: LocaleCase = {
@@ -175,6 +200,15 @@ export const spanishPage: LocaleCase = {
     skipName: "Skip: ver el resultado final",
     rerunName: "Rerun: repetir la ejecución",
     passedAnnouncement: "Pruebas aprobadas",
+  },
+  about: {
+    head: { code: "TC-01", codeTitle: "Caso de prueba 01", title: "Sobre mí" },
+    lead: "La calidad no es un filtro: existe en cada etapa del desarrollo.",
+    paragraphs: [
+      "Trabajo en servicios financieros (banca privada y gestión patrimonial), donde ideé el primer framework de automatización institucional de mi equipo de calidad y enseñé a trabajar con él a un equipo que venía de pruebas manuales: en tres meses, cada QA tenía al menos un flujo automatizado.",
+      "Hoy automatizo web, API y aplicaciones móviles (Playwright, TypeScript, Maestro), preparo las pruebas para funcionar como quality gate en CI y trabajo con agentes que generan, ejecutan y reparan pruebas de forma autónoma; yo valido los hallazgos antes de reportarlos.",
+    ],
+    photoAlt: "Carlos Alcalá",
   },
 };
 
