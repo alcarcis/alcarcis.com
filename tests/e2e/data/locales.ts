@@ -6,6 +6,18 @@ export interface LanguageOption {
   readonly path: string;
 }
 
+export interface ThemeToggleNames {
+  readonly toDark: string;
+  readonly toLight: string;
+}
+
+export interface HeaderCopy {
+  readonly ownerLinkName: string;
+  readonly linkedInName: string;
+  readonly gitHubName: string;
+  readonly themeToggle: ThemeToggleNames;
+}
+
 export interface LocaleCase {
   readonly language: LanguageOption;
   readonly canonicalUrl: string;
@@ -13,6 +25,7 @@ export interface LocaleCase {
   readonly displayLine: string;
   readonly languageSwitchName: string;
   readonly switchTarget: LanguageOption;
+  readonly header: HeaderCopy;
 }
 
 export interface AlternateLink {
@@ -45,6 +58,15 @@ export const englishPage: LocaleCase = {
   displayLine: "Quality, end to end.",
   languageSwitchName: "Language",
   switchTarget: spanish,
+  header: {
+    ownerLinkName: "Carlos Alcalá, back to top",
+    linkedInName: "LinkedIn profile",
+    gitHubName: "GitHub profile",
+    themeToggle: {
+      toDark: "Switch to dark theme",
+      toLight: "Switch to light theme",
+    },
+  },
 };
 
 export const spanishPage: LocaleCase = {
@@ -54,6 +76,15 @@ export const spanishPage: LocaleCase = {
   displayLine: "Calidad, de punta a punta.",
   languageSwitchName: "Idioma",
   switchTarget: english,
+  header: {
+    ownerLinkName: "Carlos Alcalá, volver al inicio",
+    linkedInName: "Perfil de LinkedIn",
+    gitHubName: "Perfil de GitHub",
+    themeToggle: {
+      toDark: "Cambiar al tema oscuro",
+      toLight: "Cambiar al tema claro",
+    },
+  },
 };
 
 export const localeCases: readonly LocaleCase[] = [englishPage, spanishPage];
