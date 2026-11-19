@@ -35,6 +35,10 @@ const terminalLang = locale === "en" ? undefined : "en";
   <p class="visually-hidden">{summary}</p>
 </div>
 
+<script>
+  import "../scripts/usage-terminal/play";
+</script>
+
 <style>
   .terminal {
     min-inline-size: 0;
@@ -89,6 +93,36 @@ const terminalLang = locale === "en" ? undefined : "en";
 
     .function {
       color: var(--code-function);
+    }
+
+    /* The typing script hides what it has not typed yet in place, so the lines never move, and
+       marks where typing stands with a caret that takes no room. Both are made by the script,
+       so they are styled from outside this component. */
+    :global(.untyped) {
+      visibility: hidden;
+    }
+
+    :global(.caret) {
+      position: relative;
+
+      &::after {
+        content: "";
+        position: absolute;
+        inset-block: 0;
+        inset-inline-start: 0;
+        inline-size: 0.6em;
+        background: var(--link);
+
+        @media (prefers-reduced-motion: no-preference) {
+          animation: blink 1s steps(1) infinite;
+        }
+      }
+    }
+  }
+
+  @keyframes blink {
+    50% {
+      opacity: 0;
     }
   }
 

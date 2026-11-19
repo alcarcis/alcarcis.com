@@ -52,6 +52,15 @@ export class OpenSource {
     );
   }
 
+  /** The row of the repository with this name. */
+  repository(name: string): RepositoryRow {
+    const row = this.repositories.find(
+      ({ copy }) => copy.repository.name === name,
+    );
+    if (!row) throw new Error(`The page lists no repository named ${name}.`);
+    return row;
+  }
+
   /** "01", "02", … one per repository, in list order. */
   get expectedRowNumbers(): string[] {
     return printedNumbers(this.copy.repositories.length);

@@ -32,16 +32,6 @@ for (const locale of localeCases) {
       }
     });
 
-    test("prints each README's usage in its repository's terminal", async ({
-      homePage,
-    }) => {
-      for (const { copy, terminal } of homePage.openSource(locale)
-        .repositories) {
-        await expect(terminal.window).toBeVisible();
-        expect(await terminal.visibleText()).toBe(copy.repository.usage);
-      }
-    });
-
     test("names each terminal's README source in its bar", async ({
       homePage,
     }) => {
@@ -53,4 +43,56 @@ for (const locale of localeCases) {
       }
     });
   });
+}
+
+for (const locale of localeCases) {
+  test.describe(`${locale.language.name} Open source section without JavaScript`, () => {
+    test.use({ javaScriptEnabled: false });
+
+    test("prints each README's usage in its repository's terminal", async ({
+      homePage,
+    }) => {
+      await homePage.open(locale.language.path);
+
+      for (const { copy, terminal } of homePage.openSource(locale)
+        .repositories) {
+        await expect(terminal.window).toBeVisible();
+        expect(await terminal.visibleText()).toBe(copy.repository.usage);
+      }
+    });
+  });
+}
+
+/**
+ * The desktop layouts, where the lines neither wrap nor scroll: the narrowest viewport that gets
+ * one (60em), the narrowest terminal (from 68.75em the terminal shares its row in three columns),
+ * and a wide screen.
+ */
+const desktopViewports = [
+  { layout: "narrowest desktop", viewport: { width: 960, height: 900 } },
+  { layout: "three-column", viewport: { width: 1100, height: 900 } },
+  { layout: "wide desktop", viewport: { width: 1440, height: 900 } },
+] as const;
+
+for (const { layout, viewport } of desktopViewports) {
+  for (const locale of localeCases) {
+    test.describe(`${locale.language.name} Open source terminals on the ${layout} layout`, () => {
+      // Every line shows from the start, so the measure does not depend on typing.
+      test.use({ viewport, reducedMotion: "reduce" });
+
+      test("fit every line of their usage, so none is clipped", async ({
+        homePage,
+      }) => {
+        await homePage.open(locale.language.path);
+
+        for (const { copy, terminal } of homePage.openSource(locale)
+          .repositories) {
+          expect(
+            await terminal.clippedWidth(),
+            `${copy.repository.name} lines past the edge, in px`,
+          ).toBe(0);
+        }
+      });
+    });
+  }
 }

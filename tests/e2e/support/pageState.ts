@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 /** Pretends the tab went to the background (or came back), as the Page Visibility API reports. */
 export async function setTabHidden(page: Page, hidden: boolean): Promise<void> {
@@ -106,4 +106,13 @@ export async function windowAndDocumentListeners(
 
 export async function scrollToTop(page: Page): Promise<void> {
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+}
+
+/** Where an element sits in the viewport, in CSS pixels; it fails when the element is not rendered. */
+export async function boxOf(
+  locator: Locator,
+): Promise<{ x: number; y: number; width: number; height: number }> {
+  const box = await locator.boundingBox();
+  if (!box) throw new Error(`${locator} is not rendered.`);
+  return box;
 }
