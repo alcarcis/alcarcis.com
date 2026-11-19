@@ -7,6 +7,7 @@ import { OpenSource } from "../components/OpenSource";
 import { ReadingProgress } from "../components/ReadingProgress";
 import { SeoLinks } from "../components/SeoLinks";
 import { SiteHeader } from "../components/SiteHeader";
+import { Tools } from "../components/Tools";
 import { Work } from "../components/Work";
 import type { ColorScheme } from "../data/colorSchemes";
 import type { HeaderCopy, LocaleCase } from "../data/locales";
@@ -77,12 +78,17 @@ export class HomePage {
     return new OpenSource(this.page, locale.openSource);
   }
 
+  tools(locale: LocaleCase): Tools {
+    return new Tools(this.page, locale.tools);
+  }
+
   /** The regions of the sections that follow the hero, in page order. */
   sectionsBelowHero(locale: LocaleCase): Locator[] {
     return [
       this.about(locale).region,
       this.work(locale).region,
       this.openSource(locale).region,
+      this.tools(locale).region,
     ];
   }
 

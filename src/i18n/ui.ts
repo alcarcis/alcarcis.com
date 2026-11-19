@@ -82,6 +82,15 @@ const en = {
   "openSource.pw2xray.usageSource": "usage",
   "openSource.pw2xray.usageSummary":
     'Usage from the README, in TypeScript: import "dotenv/config"; import the uploadToXray function from "pw2xray/upload-to-xray"; then call uploadToXray(), and if it fails, log the error with console.error and set process.exitCode to 1.',
+  "tools.title": "Tools",
+  "tools.group.automation": "Automation",
+  "tools.group.mobile": "Mobile",
+  "tools.group.apiPerformance": "API & performance",
+  "tools.group.cicd": "CI/CD",
+  "tools.group.testManagement": "Test management",
+  /* Links are written [text](address); the Jenkins licence asks for the link to jenkins.io. */
+  "tools.credits":
+    "Logos are trademarks of their owners and only name the tools. Jenkins logo by the [Jenkins project](https://jenkins.io/), [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/); Git logo by Jason Long, [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/); Playwright logo by Microsoft, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).",
 } as const;
 
 export type UiKey = keyof typeof en;
@@ -152,6 +161,14 @@ const es: Readonly<Record<UiKey, string>> = {
   "openSource.pw2xray.usageSource": "uso",
   "openSource.pw2xray.usageSummary":
     'Uso según el README, en TypeScript: import "dotenv/config"; importar la función uploadToXray desde "pw2xray/upload-to-xray"; luego llamar a uploadToXray() y, si falla, registrar el error con console.error y fijar process.exitCode en 1.',
+  "tools.title": "Herramientas",
+  "tools.group.automation": "Automatización",
+  "tools.group.mobile": "Móvil",
+  "tools.group.apiPerformance": "API y rendimiento",
+  "tools.group.cicd": "CI/CD",
+  "tools.group.testManagement": "Gestión de pruebas",
+  "tools.credits":
+    "Los logotipos son marcas de sus propietarios y solo identifican las herramientas. Logotipo de Jenkins: [proyecto Jenkins](https://jenkins.io/), [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/); logotipo de Git: Jason Long, [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/); logotipo de Playwright: Microsoft, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).",
 };
 
 const ui: Readonly<Record<Locale, Readonly<Record<UiKey, string>>>> = {
