@@ -49,6 +49,8 @@ export interface InstrumentCopy {
 export interface LocaleCase {
   readonly language: LanguageOption;
   readonly canonicalUrl: string;
+  readonly title: string;
+  readonly skipLinkName: string;
   readonly heading: string;
   readonly displayLine: string;
   readonly languageSwitchName: string;
@@ -86,6 +88,8 @@ export const languageOptions: readonly LanguageOption[] = [english, spanish];
 export const englishPage: LocaleCase = {
   language: english,
   canonicalUrl: "https://alcarcis.com/",
+  title: "Carlos Alcalá · Quality Engineering",
+  skipLinkName: "Skip to content",
   heading: "Carlos Alcalá",
   displayLine: "Quality, end to end.",
   languageSwitchName: "Language",
@@ -128,12 +132,14 @@ export const englishPage: LocaleCase = {
 export const spanishPage: LocaleCase = {
   language: spanish,
   canonicalUrl: "https://alcarcis.com/es/",
+  title: "Carlos Alcalá · Quality Engineering",
+  skipLinkName: "Ir al contenido",
   heading: "Carlos Alcalá",
   displayLine: "Calidad, de punta a punta.",
-  languageSwitchName: "Idioma",
+  languageSwitchName: "Selector de idioma",
   switchTarget: english,
   header: {
-    ownerLinkName: "Carlos Alcalá, volver al inicio",
+    ownerLinkName: "Carlos Alcalá, ir al inicio",
     linkedInName: "Perfil de LinkedIn",
     gitHubName: "Perfil de GitHub",
     themeToggle: {
@@ -150,24 +156,24 @@ export const spanishPage: LocaleCase = {
   },
   instrument: {
     name: "Suite quality.spec.ts, ejecución de pruebas",
-    stagesName: "Etapas",
+    stagesName: "Etapas del desarrollo",
     stageStates: {
-      passed: "superada",
+      passed: "aprobada",
       running: "en curso",
       pending: "pendiente",
     },
-    sceneLabel: "Escena · QA en cada etapa",
+    sceneLabel: "Escena · Calidad en cada etapa",
     captions: [
       "criterios de aceptación verificables",
-      "riesgos mapeados antes del código",
-      "pruebas escritas con el código",
-      "la puerta de calidad bloquea DEF-01",
+      "riesgos identificados antes de programar",
+      "pruebas escritas junto al código",
+      "el quality gate bloquea DEF-01",
       "monitoreado, ejecución limpia",
     ],
-    fixCaption: "corrección integrada, la puerta se abre",
-    skipName: "Skip: mostrar la ejecución terminada",
+    fixCaption: "corrección integrada, el gate se abre",
+    skipName: "Skip: ver el resultado final",
     rerunName: "Rerun: repetir la ejecución",
-    passedAnnouncement: "Ejecución de pruebas superada",
+    passedAnnouncement: "Pruebas aprobadas",
   },
 };
 
