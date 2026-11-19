@@ -8,6 +8,7 @@ import {
   AccessibilityScanner,
   type AccessibilityReport,
 } from "./support/accessibility";
+import { ClipboardControl } from "./support/clipboard";
 import {
   ConsoleErrorCollector,
   type ConsoleErrorReport,
@@ -24,6 +25,8 @@ interface Fixtures {
   /** The page clock, installed and paused before the page loads: time moves only on runFor. */
   frozenClock: Clock;
   accessibilityScanner: AccessibilityScanner;
+  /** The page's clipboard: granted, refusing writes or missing, set up before the page opens. */
+  clipboard: ClipboardControl;
   consoleErrors: ConsoleErrorCollector;
   transitionRecorder: TransitionRecorder;
 }
@@ -43,6 +46,9 @@ export const test = base.extend<Fixtures>({
   },
   accessibilityScanner: async ({ page }, use) => {
     await use(new AccessibilityScanner(page));
+  },
+  clipboard: async ({ page }, use) => {
+    await use(new ClipboardControl(page));
   },
   consoleErrors: async ({ page }, use) => {
     await use(new ConsoleErrorCollector(page));

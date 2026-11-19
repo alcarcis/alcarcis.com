@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { About } from "../components/About";
+import { Contact } from "../components/Contact";
 import { Footer } from "../components/Footer";
 import { GlyphField } from "../components/GlyphField";
 import { Hero } from "../components/Hero";
@@ -83,6 +84,10 @@ export class HomePage {
     return new Tools(this.page, locale.tools);
   }
 
+  contact(locale: LocaleCase): Contact {
+    return new Contact(this.page, locale.contact);
+  }
+
   footer(locale: LocaleCase): Footer {
     return new Footer(this.page, locale.footer);
   }
@@ -94,6 +99,7 @@ export class HomePage {
       this.work(locale).region,
       this.openSource(locale).region,
       this.tools(locale).region,
+      this.contact(locale).region,
     ];
   }
 

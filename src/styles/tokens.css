@@ -94,6 +94,13 @@
   /* An entry in a mono list, such as a tool's name: 14/28 */
   --type-list-size: 0.875rem;
   --type-list-leading: 2;
+  /* The contact address, the link itself at display size: 32px on phones, 64px on wide screens */
+  --type-contact-address-size: clamp(2rem, 0.75rem + 3.6vw, 4rem);
+  --type-contact-address-leading: 1.1;
+  --type-contact-address-tracking: -0.02em;
+  /* A value in a row of data, such as a profile address: 14/24 */
+  --type-data-size: 0.875rem;
+  --type-data-leading: calc(24 / 14);
   /* The footer's fine print in mono: its closing line in capitals at 11/16, its credits at 12/20 */
   --type-fine-print-size: 0.6875rem;
   --type-fine-print-leading: calc(16 / 11);

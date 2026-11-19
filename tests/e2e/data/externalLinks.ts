@@ -1,3 +1,4 @@
+import { sourceRepository } from "./contact";
 import { playwrightCiReference, pw2xray } from "./openSource";
 import { creditUrls } from "./tools";
 
@@ -12,6 +13,7 @@ export const expectedExternalUrls: readonly string[] = [
   creditUrls.ccBy30,
   creditUrls.ccBy40,
   profileUrls.gitHub,
+  sourceRepository.url,
   playwrightCiReference.url,
   pw2xray.url,
   creditUrls.jenkinsProject,
