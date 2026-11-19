@@ -1,6 +1,7 @@
 import { unsizedCanvas } from "./components/GlyphField";
 import { emptyLine, fullLine } from "./components/ReadingProgress";
 import {
+  finalSceneTime,
   glyphRendererUrl,
   runStatus,
   specSource,
@@ -246,6 +247,30 @@ test.describe("instrument run budget", () => {
     await instrument.expectFinalFrame();
     expect(consoleErrors.report()).toHaveNoConsoleErrors();
   });
+
+  test.describe("under reduced motion", () => {
+    test.use({ reducedMotion: "reduce" });
+
+    test("the text frame shows until the renderer draws the run's final frame, which it draws first", async ({
+      homePage,
+      frozenClock,
+    }) => {
+      const { instrument } = homePage.hero(englishPage);
+      await homePage.open(englishPage.language.path);
+
+      // Sized, the scene waits while the renderer boots the grain, before the run draws it.
+      await instrument.waitForSceneSized(frozenClock);
+      await instrument.settleSceneObservers();
+      await expect(instrument.textFrame).toBeVisible();
+      await expect(instrument.scene).not.toHaveAttribute("data-drawn");
+
+      await instrument.waitForSceneDrawn(frozenClock);
+      await expect(instrument.scene).toHaveAttribute(
+        "data-drawn",
+        String(finalSceneTime),
+      );
+    });
+  });
 });
 
 test.describe("instrument resilience", () => {
@@ -331,9 +356,9 @@ test.describe("instrument resilience", () => {
     await instrument.waitForSceneDrawn(frozenClock);
     expect(await instrument.sceneCanvasScale()).toEqual({ across: 1, down: 1 });
 
-    // The first change may come before the renderer watches the ratio or after; either way,
-    // the last two reach it only if its watcher re-arms itself after each change.
-    for (const ratio of [2, 1, 2]) {
+    // The run draws the scene once the renderer has mounted, so it already watches the ratio;
+    // the second change reaches it only if its watcher re-armed itself after the first.
+    for (const ratio of [2, 1]) {
       await setDevicePixelRatio(page, ratio);
 
       await expect

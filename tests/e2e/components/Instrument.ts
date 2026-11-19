@@ -48,7 +48,7 @@ export class Instrument {
    * it has no role to find it by.
    */
   readonly typedCode: Locator;
-  /** The scene's box; the renderer marks it once it has drawn. */
+  /** The scene's box; the renderer marks it with the scene time of the run's frame it drew. */
   readonly scene: Locator;
   /** The scene's last frame in text: it shows between runs until the renderer has drawn. */
   readonly textFrame: Locator;
@@ -163,6 +163,20 @@ export class Instrument {
         { intervals: [0] },
       )
       .toBeGreaterThan(0);
+  }
+
+  /** Waits until the browser has reported the scene box's size, so the renderer's observer has run too. */
+  async settleSceneObservers(): Promise<void> {
+    await this.scene.evaluate(
+      (box) =>
+        new Promise<void>((resolve) => {
+          const observer = new ResizeObserver(() => {
+            observer.disconnect();
+            resolve();
+          });
+          observer.observe(box);
+        }),
+    );
   }
 
   async sceneCanvasScale(): Promise<CanvasScale> {

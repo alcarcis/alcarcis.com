@@ -1,4 +1,5 @@
 import { minimumCategoryScore } from "../../../scripts/quality-budget";
+import { sceneEnd } from "../../../src/scripts/instrument/timeline";
 
 /** Terminal vocabulary: the same in every language, as a real test log would be. */
 export const stageNames = [
@@ -13,6 +14,9 @@ export const runStatus = { passed: "Passed", running: "Running" } as const;
 
 /** The verdict the scene's text frame shows, before (and without) the glyph renderer. */
 export const sceneVerdict = "PASSED";
+
+/** The scene time of the run's last frame, the one shown under reduced motion. */
+export const finalSceneTime = sceneEnd;
 
 /** The lazily loaded chunk that draws the scene and the page's grain. */
 export const glyphRendererUrl = /glyph-renderer/;

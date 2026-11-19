@@ -27,7 +27,7 @@ export interface GlyphScene {
 }
 
 interface SceneLayer extends GlyphScene {
-  /** Fits the grid and its canvas to the box at the current cell size, then redraws. */
+  /** Fits the grid and its canvas to the box at the current cell size, then redraws the run's frame. */
   resize(): void;
 }
 
@@ -74,7 +74,9 @@ function mountScene(box: HTMLElement, signal: AbortSignal): SceneLayer | null {
     box.querySelector("[data-scene-label]"),
     box.querySelector("[data-scene-caption]"),
   ];
-  let sceneTime = 0;
+  /* The scene time of the frame on the canvas; none until the run draws its first, so the text
+     frame shows until then. A resize or a redraw only repeats a frame the run asked for. */
+  let sceneTime: number | null = null;
 
   const size = (): boolean => {
     const w = box.clientWidth;
@@ -115,11 +117,15 @@ function mountScene(box: HTMLElement, signal: AbortSignal): SceneLayer | null {
     resetLayers(grid);
     drawSteps(grid, t);
     blit(grid);
-    box.dataset["drawn"] = "";
+    box.dataset["drawn"] = String(t);
+  };
+
+  const redraw = (): void => {
+    if (sceneTime !== null) draw(sceneTime);
   };
 
   const resize = (): void => {
-    if (size()) draw(sceneTime);
+    if (size()) redraw();
   };
 
   if (!size()) return null;
@@ -129,7 +135,7 @@ function mountScene(box: HTMLElement, signal: AbortSignal): SceneLayer | null {
     "glyphs:redraw",
     () => {
       grid.full = true;
-      draw(sceneTime);
+      redraw();
     },
     { signal },
   );
