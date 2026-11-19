@@ -7,12 +7,14 @@ import { Hero } from "../components/Hero";
 import { LanguageSwitch } from "../components/LanguageSwitch";
 import { OpenSource } from "../components/OpenSource";
 import { ReadingProgress } from "../components/ReadingProgress";
+import { SectionsNav } from "../components/SectionsNav";
 import { SeoLinks } from "../components/SeoLinks";
 import { SiteHeader } from "../components/SiteHeader";
 import { Tools } from "../components/Tools";
 import { Work } from "../components/Work";
 import type { ColorScheme } from "../data/colorSchemes";
 import type { HeaderCopy, LocaleCase } from "../data/locales";
+import { sectionsNavCopy } from "../data/sectionsNav";
 
 type NavigationOptions = NonNullable<Parameters<Page["goto"]>[1]>;
 
@@ -52,6 +54,33 @@ export class HomePage {
     await this.page.emulateMedia({ colorScheme: scheme });
   }
 
+  /** Scrolls straight to the top of the page, with no smooth scrolling. */
+  async scrollToTop(): Promise<void> {
+    await this.page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
+  }
+
+  /** Scrolls straight to the end of the page, with no smooth scrolling. */
+  async scrollToEnd(): Promise<void> {
+    await this.page.evaluate(() =>
+      scrollTo({
+        top: document.scrollingElement?.scrollHeight ?? 0,
+        behavior: "instant",
+      }),
+    );
+  }
+
+  /**
+   * How far the page reaches past the viewport sideways once its fonts load, in CSS pixels;
+   * 0 when it fits.
+   */
+  async sidewaysOverflow(): Promise<number> {
+    return this.page.evaluate(async () => {
+      await document.fonts.ready;
+      const root = document.documentElement;
+      return root.scrollWidth - root.clientWidth;
+    });
+  }
+
   textInMain(content: string): Locator {
     return this.main.getByText(content, { exact: true });
   }
@@ -62,6 +91,10 @@ export class HomePage {
 
   header(copy: HeaderCopy): SiteHeader {
     return new SiteHeader(this.page, copy);
+  }
+
+  sectionsNav(locale: LocaleCase): SectionsNav {
+    return new SectionsNav(this.page, sectionsNavCopy(locale));
   }
 
   hero(locale: LocaleCase): Hero {

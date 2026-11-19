@@ -1,0 +1,179 @@
+---
+import { useTranslations, type Locale, type UiKey } from "../i18n/ui";
+import { profiles } from "../site";
+
+interface Props {
+  locale: Locale;
+  /** The id of the list, which the header's menu button opens below 1200 px. */
+  menuId: string;
+}
+
+const { locale, menuId } = Astro.props;
+const t = useTranslations(locale);
+
+/* One set of English anchors on every page (Q34); only the names translate. */
+const sections: readonly { anchor: string; label: UiKey }[] = [
+  { anchor: "about", label: "sectionsNav.about" },
+  { anchor: "work", label: "sectionsNav.work" },
+  { anchor: "open-source", label: "sectionsNav.openSource" },
+  { anchor: "tools", label: "sectionsNav.tools" },
+];
+
+const profileLinks = [
+  { href: profiles.linkedIn, label: "LinkedIn" },
+  { href: profiles.gitHub, label: "GitHub" },
+];
+---
+
+{/*
+  Wide screens show the list in the bar. Below 1200 px it is a native popover, which the menu
+  button opens with or without script; on phones it also holds the profile links, which leave
+  the bar there (they are in Contact too).
+*/}
+<nav class="sections-nav" aria-label={t("sectionsNav.label")}>
+  <ul class="links" id={menuId} popover="auto" data-sections-menu>
+    {sections.map(({ anchor, label }) => (
+      <li>
+        <a href={`#${anchor}`} data-section-link>
+          {t(label)}
+        </a>
+      </li>
+    ))}
+    {/* Contact is the destination: bracketed and in copper, like the hero's actions. */}
+    <li>
+      <a class="contact" href="#contact" data-section-link>
+        <span class="bracket" aria-hidden="true">
+          [
+        </span>
+        &nbsp;{t("sectionsNav.contact")}&nbsp;
+        <span class="bracket" aria-hidden="true">
+          ]
+        </span>
+      </a>
+    </li>
+    {profileLinks.map(({ href, label }, position) => (
+      <li class="profile">
+        {position === 0 && <span class="rule" aria-hidden="true" />}
+        <a href={href}>{label}</a>
+      </li>
+    ))}
+  </ul>
+</nav>
+
+<script>
+  import "../scripts/sections-nav/nav";
+</script>
+
+<style>
+  .links {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    padding-block: var(--space-2);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: var(--type-ui-size);
+    line-height: var(--type-ui-leading);
+    letter-spacing: var(--type-ui-tracking);
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover {
+      color: var(--text);
+    }
+
+    /* The section in view: full ink and a copper underline, not colour alone. */
+    &[aria-current] {
+      color: var(--text);
+      text-decoration: underline;
+      text-decoration-color: var(--link);
+      text-decoration-thickness: 2px;
+      text-underline-offset: 7px;
+    }
+  }
+
+  .contact {
+    color: var(--link);
+
+    &:hover {
+      color: var(--text);
+    }
+
+    &[aria-current] {
+      color: var(--link);
+    }
+  }
+
+  .bracket {
+    opacity: 0.6;
+  }
+
+  /* The profile links join the menu on phones only. */
+  .profile {
+    display: none;
+  }
+
+  /* The bar holds every link from 1200 px: the closed popover shows in place, as a row. */
+  @media (width >= 75em) {
+    .links {
+      position: static;
+      display: flex;
+      align-items: center;
+      gap: 1.75rem;
+      inset: auto;
+      inline-size: auto;
+      block-size: auto;
+      overflow: visible;
+      border: 0;
+      background: transparent;
+      color: inherit;
+    }
+  }
+
+  /* Below 1200 px the open menu drops under the bar, across the page. The nav leaves the bar's
+     row, so its empty box adds no gap there; the open menu lives in the top layer anyway. */
+  @media (width < 75em) {
+    .sections-nav {
+      position: absolute;
+    }
+
+    .links:popover-open {
+      position: fixed;
+      display: flex;
+      flex-direction: column;
+      inset: var(--header-height) 0 auto;
+      inline-size: auto;
+      max-block-size: calc(100dvh - var(--header-height));
+      margin: 0;
+      padding: var(--space-2) var(--gutter) var(--space-4);
+      overflow: auto;
+      border: 0;
+      border-block-end: 1px solid var(--rule);
+      background: var(--ground);
+      color: var(--text);
+    }
+
+    a {
+      padding-block: var(--space-3);
+    }
+  }
+
+  @media (width < 30em) {
+    .profile {
+      display: block;
+    }
+
+    /* The dotted rule above the profile links is an element of its own, clear of their text. */
+    .rule {
+      display: block;
+      block-size: 3px;
+      margin-block: var(--space-2);
+      background: var(--dotted-rule);
+    }
+  }
+</style>
