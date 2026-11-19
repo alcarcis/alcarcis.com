@@ -3,8 +3,9 @@
  * function of the run's scene time. Each step draws its composition at local time tau
  * (seconds since its step began) with overall alpha a, complete by the end of its step.
  */
-import { beats } from "../instrument/timeline";
+import { beats, fixDelay, stepStart } from "../instrument/timeline.ts";
 import {
+  CHECK_GLYPHS,
   INK,
   ch,
   clamp,
@@ -16,7 +17,7 @@ import {
   smoothstep,
   type Grid,
   type Ink,
-} from "./cells";
+} from "./cells.ts";
 
 /** The free rows between the scene's label and its caption. */
 let band = [2, 12] as [number, number];
@@ -245,7 +246,7 @@ function stepCriteria(g: Grid, tau: number, a: number): void {
         g,
         x + 3,
         y + 1 + j,
-        "✓",
+        CHECK_GLYPHS.tick,
         a * smoothstep(tick, tick + 0.08, tau),
         INK.CHECK,
       );
@@ -333,7 +334,7 @@ function stepCode(g: Grid, tau: number, a: number): void {
         g,
         x + 34,
         y + 2 + j,
-        "✓",
+        CHECK_GLYPHS.tick,
         a * smoothstep(tick, tick + 0.06, tau),
         INK.CHECK,
       );
@@ -341,23 +342,27 @@ function stepCode(g: Grid, tau: number, a: number): void {
 }
 
 /* 04 ci/cd: a commit carrying the bug rides the pipeline to the gate, which stays shut:
-   BLOCKED, and the bug is framed and tagged DEF-01. At 1.3 s the fix merges (the page switches
-   the caption on the same clock): the bug dissolves, the gate opens, the commit passes. */
+   BLOCKED, and the bug is framed and tagged DEF-01. Then the fix merges, fixDelay into the step
+   (the page switches the caption on the same clock): BLOCKED and the tag fade, the bug
+   dissolves, the gate opens and the commit passes, each timed from that moment. */
 function stepGate(g: Grid, tau: number, a: number): void {
   const W = 36;
   const f = a * smoothstep(0, 0.15, tau);
+  const sinceFix = tau - fixDelay;
   const [x, y] = place(g, W, 8, f);
   const line = y + 4;
   const gx = x + 22;
   for (let c = 0; c < W; c++) putSym(g, x + c, line, "─", f * 0.62, INK.TEXT);
   // Earlier commits that already passed drift on toward production.
   const drift = Math.round(easeOut(clamp(tau / 0.9, 0, 1)) * 4);
-  for (let j = 0; j < 2; j++)
-    putSym(g, gx + 3 + j * 5 + drift, line, "●", f * 0.9, INK.CHECK);
-  const open = smoothstep(1.7, 1.85, tau);
+  for (let j = 0; j < 2; j++) {
+    const c = gx + 3 + j * 5 + drift;
+    putSym(g, c, line, CHECK_GLYPHS.commit, f * 0.9, INK.CHECK);
+  }
+  const open = smoothstep(0.4, 0.55, sinceFix);
   for (let r = y + 1; r <= y + 7; r++) {
     if (open > 0.5 && Math.abs(r - line) <= 1) continue;
-    putSym(g, gx, r, "║", f, open > 0.5 ? INK.CHECK : INK.MARK);
+    putSym(g, gx, r, CHECK_GLYPHS.gate, f, open > 0.5 ? INK.CHECK : INK.MARK);
   }
   const arrive = easeOut(clamp((tau - 0.1) / 0.6, 0, 1));
   const bug: Bug = {
@@ -365,20 +370,20 @@ function stepGate(g: Grid, tau: number, a: number): void {
     r0: line - 2,
     leg: arrive < 1 && !reduced ? Math.floor(tau * 9) & 1 : 0,
   };
-  const gone = smoothstep(1.35, 1.7, tau);
-  const pass = easeOut(clamp((tau - 1.85) / 0.4, 0, 1));
+  const gone = smoothstep(0.05, 0.4, sinceFix);
+  const pass = easeOut(clamp((sinceFix - 0.55) / 0.4, 0, 1));
   const cc = Math.round(lerp(bug.c0 + 3, x + W - 2, pass));
   putSym(
     g,
     cc,
     line,
-    "●",
+    CHECK_GLYPHS.commit,
     a * (gone < 1 ? 0.8 : 1),
     cc > gx ? INK.CHECK : INK.TEXT,
   );
   if (gone < 1) drawBug(g, bug, a * 0.85, gone);
   const detected =
-    smoothstep(0.78, 0.92, tau) * (1 - smoothstep(1.6, 1.8, tau));
+    smoothstep(0.78, 0.92, tau) * (1 - smoothstep(0.3, 0.5, sinceFix));
   if (detected > 0.01) {
     drawDefect(
       g,
@@ -394,7 +399,7 @@ function stepGate(g: Grid, tau: number, a: number): void {
       gx + 2,
       y + 2,
       "BLOCKED",
-      a * (1 - smoothstep(1.55, 1.75, tau)),
+      a * (1 - smoothstep(0.25, 0.45, sinceFix)),
       INK.MARK,
       typed(tau, 0.72, 0.15, "BLOCKED"),
     );
@@ -408,7 +413,8 @@ function stepProduction(g: Grid, tau: number, a: number): void {
   const n = Math.floor(clamp(tau / 0.5, 0, 1) * 24);
   for (let c = 0; c < n; c++)
     putSym(g, x + c, y + 1, WAVE[c % WAVE.length] ?? "_", a * 0.82, INK.MARK);
-  type(g, x + 27, y + 1, "PASSED", a * smoothstep(0.5, 0.62, tau), INK.CHECK);
+  const verdict = a * smoothstep(0.5, 0.62, tau);
+  type(g, x + 27, y + 1, CHECK_GLYPHS.verdict, verdict, INK.CHECK);
 }
 
 const STEPS = [stepCriteria, stepDesign, stepCode, stepGate, stepProduction];
@@ -418,13 +424,8 @@ const STEPS = [stepCriteria, stepDesign, stepCode, stepGate, stepProduction];
 export function drawSteps(g: Grid, t: number): void {
   let k = 0;
   while (k < STEPS.length - 1 && t >= (beats[k] ?? 0)) k++;
-  const t0 = k ? (beats[k - 1] ?? 0) : 0;
-  if (k && t - t0 < 0.2) {
-    STEPS[k - 1]?.(
-      g,
-      t0 - (k > 1 ? (beats[k - 2] ?? 0) : 0),
-      1 - (t - t0) / 0.2,
-    );
-  }
+  const t0 = stepStart(k);
+  if (k && t - t0 < 0.2)
+    STEPS[k - 1]?.(g, t0 - stepStart(k - 1), 1 - (t - t0) / 0.2);
   STEPS[k]?.(g, Math.min(t, beats[k] ?? t) - t0, 1);
 }

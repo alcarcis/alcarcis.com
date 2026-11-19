@@ -32,7 +32,14 @@ type RunState = "final" | "waiting" | "playing" | "paused" | "holding";
 const firstLeadMs = 300;
 const rerunLeadMs = 250;
 const reducedRerunMs = 700;
-const startRatio = 0.4;
+/*
+ * The first run starts once the visitor is looking at it: when 40% of the instrument is in view,
+ * or when it covers three quarters of the viewport, whichever comes first. The second only
+ * decides for an instrument taller than 1.875 viewports, on a short screen: above 2.5, 40% of it
+ * never fits in view, while its visible part can always cover three quarters of the viewport.
+ */
+const startShare = 0.4;
+const startCover = 0.75;
 const interactive =
   "a[href], button, input, select, textarea, summary, [contenteditable]";
 
@@ -242,28 +249,56 @@ function setUpRun(instrument: HTMLElement): void {
   setState("final");
   if (!reducedMotion.matches) prime(true);
 
-  new IntersectionObserver(
-    ([entry]) => {
-      if (!entry) return;
-      inView = entry.isIntersecting;
-      if (entry.intersectionRatio >= startRatio) startAllowed = true;
-      update();
-    },
-    { threshold: [0, startRatio] },
-  ).observe(instrument);
+  /* The share of the instrument in view that starts the first run, for its height and the
+     viewport's (see startShare). */
+  function startRatio(): number {
+    const height = instrument.getBoundingClientRect().height;
+    const view = root.clientHeight;
+    return height > 0 && view > 0
+      ? Math.min(startShare, (startCover * view) / height)
+      : startShare;
+  }
+
+  /* Watches the instrument come into view; observed again whenever its start ratio changes. */
+  let viewObserver: IntersectionObserver | null = null;
+  let watchedRatio = 0;
+  function watchView(): void {
+    const ratio = startRatio();
+    if (ratio === watchedRatio) return;
+    watchedRatio = ratio;
+    viewObserver?.disconnect();
+    viewObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry) return;
+        inView = entry.isIntersecting;
+        if (entry.intersectionRatio >= ratio) startAllowed = true;
+        update();
+      },
+      { threshold: [0, ratio] },
+    );
+    viewObserver.observe(instrument);
+  }
+
+  watchView();
+  new ResizeObserver(watchView).observe(instrument);
+  addEventListener("resize", watchView);
   document.addEventListener("visibilitychange", update);
+
+  /* The glyph renderer (grain and scene) loads only after the page has painted and gone idle.
+     If it cannot load or mount, the text frame stays and the run plays on without the scene. */
+  async function loadScene(): Promise<void> {
+    try {
+      const { mountGlyphLayers } = await import("../glyph-renderer");
+      scene = await mountGlyphLayers(instrument, reducedMotion);
+      drawScene(sceneTime);
+    } catch {
+      scene = null;
+    }
+  }
 
   whenIdle(() => {
     idle = true;
     update();
-    // The glyph renderer (grain and scene) loads only after the page has painted and gone idle.
-    void import("../glyph-renderer")
-      .then(({ mountGlyphLayers }) =>
-        mountGlyphLayers(instrument, reducedMotion),
-      )
-      .then((mounted) => {
-        scene = mounted;
-        drawScene(sceneTime);
-      });
+    void loadScene();
   });
 }

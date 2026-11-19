@@ -1,5 +1,10 @@
 import { expect, type Clock, type Locator } from "@playwright/test";
-import { runStatus, specSource, stageNames } from "../data/instrument";
+import {
+  runStatus,
+  sceneVerdict,
+  specSource,
+  stageNames,
+} from "../data/instrument";
 import type { InstrumentCopy, StageStateNames } from "../data/locales";
 
 export type StageState = keyof StageStateNames;
@@ -13,6 +18,15 @@ export interface RunSnapshot {
   readonly caption: string;
   readonly captionShown: boolean;
 }
+
+/** Backing-store pixels per CSS pixel of a canvas, across and down. */
+export interface CanvasScale {
+  readonly across: number;
+  readonly down: number;
+}
+
+/** How often the clock moves on while waiting for the renderer. */
+const rendererStepMs = 100;
 
 export class Instrument {
   readonly region: Locator;
@@ -31,6 +45,9 @@ export class Instrument {
   readonly typedCode: Locator;
   /** The scene's box; the renderer marks it once it has drawn. */
   readonly scene: Locator;
+  /** The scene's last frame in text: it shows between runs until the renderer has drawn. */
+  readonly textFrame: Locator;
+  readonly sceneCanvas: Locator;
 
   constructor(
     scope: Locator,
@@ -62,6 +79,8 @@ export class Instrument {
     this.announcement = this.region.getByRole("status");
     this.typedCode = this.region.locator("[data-spec]");
     this.scene = this.region.locator("[data-scene]");
+    this.textFrame = this.scene.getByText(sceneVerdict, { exact: true });
+    this.sceneCanvas = this.scene.locator("canvas");
   }
 
   /** The value a data row shows next to its term, such as COMMIT. */
@@ -111,6 +130,32 @@ export class Instrument {
   /** The run's state hook: waiting, playing, paused or final. */
   async expectRunState(state: string): Promise<void> {
     await expect(this.region).toHaveAttribute("data-run-state", state);
+  }
+
+  /** The renderer loads once the page is idle, on the test's clock; this moves it on until then. */
+  async waitForSceneDrawn(clock: Clock): Promise<void> {
+    await expect
+      .poll(async () => {
+        await clock.runFor(rendererStepMs);
+        return this.scene.getAttribute("data-drawn");
+      })
+      .not.toBeNull();
+  }
+
+  async sceneCanvasScale(): Promise<CanvasScale> {
+    return this.sceneCanvas.evaluate((canvas: HTMLCanvasElement) => {
+      const box = canvas.getBoundingClientRect();
+      return {
+        across: canvas.width / box.width,
+        down: canvas.height / box.height,
+      };
+    });
+  }
+
+  async height(): Promise<number> {
+    return this.region.evaluate(
+      (instrument) => instrument.getBoundingClientRect().height,
+    );
   }
 
   async snapshot(): Promise<RunSnapshot> {

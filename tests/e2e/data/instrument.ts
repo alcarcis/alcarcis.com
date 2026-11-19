@@ -11,6 +11,12 @@ export const stageNames = [
 
 export const runStatus = { passed: "Passed", running: "Running" } as const;
 
+/** The verdict the scene's text frame shows, before (and without) the glyph renderer. */
+export const sceneVerdict = "PASSED";
+
+/** The lazily loaded chunk that draws the scene and the page's grain. */
+export const glyphRendererUrl = /glyph-renderer/;
+
 export const specSource =
   "test('quality, end to end', async () => { for (const stage of development) await expect(stage).toHaveQuality(); });";
 

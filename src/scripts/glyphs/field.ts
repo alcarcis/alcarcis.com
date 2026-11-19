@@ -2,7 +2,7 @@
  * The page's ground: quiet, static grain on a fixed canvas, cleared around every line of text,
  * image and control, so it never draws over content.
  */
-import { blit, ch, cw, quietRect, sizeGrid, type Grid } from "./cells";
+import { blit, ch, cw, quietRect, sizeGrid, type Grid } from "./cells.ts";
 
 /** [x0, y0, x1, y1, hard] in document px. */
 type QuietRect = [number, number, number, number, boolean];

@@ -36,6 +36,28 @@ export async function scrollToBottom(page: Page): Promise<void> {
   );
 }
 
+/**
+ * Changes the device pixel ratio and keeps the viewport's CSS size, as moving the window to a
+ * denser screen does: no resize event, and `(resolution)` media queries change. Chromium only:
+ * it goes through the DevTools protocol, whose ratio override does not evaluate media queries
+ * again by itself, so the same screen media type is emulated to make it.
+ */
+export async function setDevicePixelRatio(
+  page: Page,
+  ratio: number,
+): Promise<void> {
+  const viewport = page.viewportSize();
+  if (!viewport)
+    throw new Error("A device pixel ratio needs a fixed viewport.");
+  const session = await page.context().newCDPSession(page);
+  await session.send("Emulation.setDeviceMetricsOverride", {
+    ...viewport,
+    deviceScaleFactor: ratio,
+    mobile: false,
+  });
+  await session.send("Emulation.setEmulatedMedia", { media: "screen" });
+}
+
 export async function scrollToTop(page: Page): Promise<void> {
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
 }

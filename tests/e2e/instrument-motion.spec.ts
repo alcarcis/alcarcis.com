@@ -1,17 +1,27 @@
 import { emptyLine, fullLine } from "./components/ReadingProgress";
-import { runStatus, specSource, stageNames } from "./data/instrument";
+import {
+  glyphRendererUrl,
+  runStatus,
+  specSource,
+  stageNames,
+} from "./data/instrument";
 import { englishPage, localeCases } from "./data/locales";
 import { expect, test } from "./fixtures";
 import {
   addRoomBelow,
   scrollToBottom,
   scrollToTop,
+  setDevicePixelRatio,
   setTabHidden,
 } from "./support/pageState";
 
 /** Longer than any whole run: typing, five stages and the closing pause. */
 const wholeRunMs = 15_000;
 const stepMs = 100;
+/** A phone on its side with the keyboard up: under a third of the instrument fits on screen. */
+const shortViewport = { width: 844, height: 240 };
+/** The share of the instrument that starts the first run when the viewport can show it. */
+const startShare = 0.4;
 
 for (const locale of localeCases) {
   test.describe(`${locale.language.name} instrument run`, () => {
@@ -203,24 +213,99 @@ test.describe("instrument run budget", () => {
     const { instrument } = homePage.hero(englishPage);
     const rendererRequests: string[] = [];
     page.on("request", (request) => {
-      if (/glyph-renderer/.test(request.url()))
+      if (glyphRendererUrl.test(request.url()))
         rendererRequests.push(request.url());
     });
 
     await homePage.open(englishPage.language.path);
     expect(rendererRequests).toEqual([]);
 
-    await expect
-      .poll(async () => {
-        await frozenClock.runFor(stepMs);
-        return instrument.scene.getAttribute("data-drawn");
-      })
-      .not.toBeNull();
+    await instrument.waitForSceneDrawn(frozenClock);
     expect(rendererRequests).toHaveLength(1);
 
     await frozenClock.runFor(wholeRunMs);
     await instrument.expectFinalFrame();
     expect(consoleErrors.report()).toHaveNoConsoleErrors();
+  });
+});
+
+test.describe("instrument resilience", () => {
+  test("keeps its text frame and plays, skips and reruns the run when the glyph renderer cannot load", async ({
+    homePage,
+    page,
+    frozenClock,
+    consoleErrors,
+  }) => {
+    const { instrument } = homePage.hero(englishPage);
+    const blockedRequests: string[] = [];
+    await page.route(glyphRendererUrl, async (route) => {
+      blockedRequests.push(route.request().url());
+      // Cancelled, so the import fails without the browser's own "Failed to load resource" line,
+      // which it prints for other network errors and no page code can prevent.
+      await route.abort("aborted");
+    });
+
+    await homePage.open(englishPage.language.path);
+    await instrument.startRun(frozenClock);
+    await expect
+      .poll(async () => {
+        await frozenClock.runFor(stepMs);
+        return blockedRequests.length;
+      })
+      .toBe(1);
+
+    await frozenClock.runFor(wholeRunMs);
+    await instrument.expectFinalFrame();
+    await expect(instrument.textFrame).toBeVisible();
+
+    await instrument.rerun.click();
+    await expect(instrument.status).toHaveText(runStatus.running);
+    await frozenClock.runFor(700);
+    await instrument.skip.click();
+    await instrument.expectFinalFrame();
+    await expect(instrument.textFrame).toBeVisible();
+    expect(consoleErrors.report()).toHaveNoConsoleErrors();
+  });
+
+  test("redraws the scene at a new device pixel ratio", async ({
+    homePage,
+    page,
+    frozenClock,
+  }) => {
+    const { instrument } = homePage.hero(englishPage);
+    await homePage.open(englishPage.language.path);
+    await instrument.waitForSceneDrawn(frozenClock);
+    expect(await instrument.sceneCanvasScale()).toEqual({ across: 1, down: 1 });
+
+    await setDevicePixelRatio(page, 2);
+
+    await expect
+      .poll(async () => {
+        await frozenClock.runFor(stepMs);
+        return instrument.sceneCanvasScale();
+      })
+      .toEqual({ across: 2, down: 2 });
+  });
+
+  test.describe("on a viewport too short for 40% of the instrument", () => {
+    test.use({ viewport: shortViewport });
+
+    test("starts the first run once the instrument fills the screen", async ({
+      homePage,
+      frozenClock,
+    }) => {
+      const { instrument } = homePage.hero(englishPage);
+      await homePage.open(englishPage.language.path);
+      expect(await instrument.height()).toBeGreaterThan(
+        shortViewport.height / startShare,
+      );
+
+      await instrument.region.scrollIntoViewIfNeeded();
+
+      await instrument.startRun(frozenClock);
+      await frozenClock.runFor(wholeRunMs);
+      await instrument.expectFinalFrame();
+    });
   });
 });
 

@@ -25,6 +25,11 @@ export interface GlyphScene {
   draw(sceneTime: number): void;
 }
 
+interface SceneLayer extends GlyphScene {
+  /** Fits the grid and its canvas to the box at the current cell size, then redraws. */
+  resize(): void;
+}
+
 /* Boot in short idle slices so no single task blocks input for long. */
 const slice = (): Promise<void> =>
   new Promise((resolve) => {
@@ -43,7 +48,20 @@ function gridFontReady(): Promise<unknown> {
   return Promise.race([fontLoad, new Promise((r) => setTimeout(r, 1500))]);
 }
 
-function mountScene(box: HTMLElement): ((t: number) => void) | null {
+/* The pixel ratio changes when the window moves to another screen or the page zooms, and a
+   resize event need not come with it. The query matches one ratio, so each change re-arms it. */
+function onPixelRatioChange(callback: () => void): void {
+  matchMedia(`(resolution: ${devicePixelRatio}dppx)`).addEventListener(
+    "change",
+    () => {
+      callback();
+      onPixelRatioChange(callback);
+    },
+    { once: true },
+  );
+}
+
+function mountScene(box: HTMLElement): SceneLayer | null {
   const canvas = box.querySelector<HTMLCanvasElement>("[data-scene-canvas]");
   const grid = canvas && makeGrid(canvas);
   if (!canvas || !grid) return null;
@@ -95,15 +113,17 @@ function mountScene(box: HTMLElement): ((t: number) => void) | null {
     box.dataset["drawn"] = "";
   };
 
-  if (!size()) return null;
-  new ResizeObserver(() => {
+  const resize = (): void => {
     if (size()) draw(sceneTime);
-  }).observe(box);
+  };
+
+  if (!size()) return null;
+  new ResizeObserver(resize).observe(box);
   addEventListener("glyphs:redraw", () => {
     grid.full = true;
     draw(sceneTime);
   });
-  return draw;
+  return { draw, resize };
 }
 
 export async function mountGlyphLayers(
@@ -114,6 +134,7 @@ export async function mountGlyphLayers(
   await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
   measureFont();
   measureCells();
+  const measuredRatio = devicePixelRatio;
   setReducedMotion(reducedMotion.matches);
   await slice();
   buildAtlas();
@@ -121,7 +142,7 @@ export async function mountGlyphLayers(
 
   // The scene first: it is the part in view, and the run may already be playing.
   const sceneBox = instrument?.querySelector<HTMLElement>("[data-scene]");
-  const drawScene = sceneBox ? mountScene(sceneBox) : null;
+  const scene = sceneBox ? mountScene(sceneBox) : null;
   await slice();
 
   const fieldCanvas = document.querySelector<HTMLCanvasElement>(
@@ -164,18 +185,27 @@ export async function mountGlyphLayers(
     redrawAll();
   });
 
-  let resizeTimer = 0;
-  addEventListener("resize", () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(() => {
-      if (measureCells()) buildAtlas();
+  /* A new pixel ratio changes the device cell: the atlas and both grids follow, the scene's too,
+     whose own observer sees only CSS size changes. A plain resize changes the grain's grid. */
+  let relayoutTimer = 0;
+  const relayout = (): void => {
+    clearTimeout(relayoutTimer);
+    relayoutTimer = window.setTimeout(() => {
+      if (measureCells()) {
+        buildAtlas();
+        scene?.resize();
+      }
       if (field) sizeField(field);
       measureQuiet();
       redrawAll();
     }, 120);
-  });
+  };
+  addEventListener("resize", relayout);
+  onPixelRatioChange(relayout);
+  // A ratio change during the idle slices above came before the watcher: catch up on it.
+  if (devicePixelRatio !== measuredRatio) relayout();
 
-  return drawScene ? { draw: drawScene } : null;
+  return scene;
 }
 
 /* ---------- the grain: redrawn only when the page scrolls or its layout changes ---------- */
