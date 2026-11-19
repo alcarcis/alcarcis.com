@@ -46,8 +46,8 @@ export const expect = baseExpect.extend({
       pass: count === 0,
       message: () =>
         count === 0
-          ? "Expected console errors or uncaught exceptions, but the page logged none."
-          : `Expected no console errors or uncaught exceptions, but the page logged ${count}:\n\n${report.summary()}`,
+          ? "Expected console errors, failed assertions or uncaught exceptions, but the page logged none."
+          : `Expected no console errors, failed assertions or uncaught exceptions, but the page logged ${count}:\n\n${report.summary()}`,
     };
   },
 });

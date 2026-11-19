@@ -23,6 +23,11 @@ export const consoleCanaries: readonly ConsoleCanary[] = [
     expected: { kind: "console error", text: "Console canary" },
   },
   {
+    description: "a failed console.assert call",
+    document: documentRunning(`console.assert(false, "Assertion canary");`),
+    expected: { kind: "failed assertion", text: "Assertion canary" },
+  },
+  {
     description: "an uncaught exception",
     document: documentRunning(`throw new TypeError("Exception canary");`),
     expected: {

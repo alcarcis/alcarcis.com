@@ -8,7 +8,7 @@ for (const colorScheme of colorSchemes) {
     test.use({ colorScheme });
 
     for (const locale of localeCases) {
-      test(`${locale.language.name} page at ${locale.language.path} loads without console errors or uncaught exceptions`, async ({
+      test(`${locale.language.name} page at ${locale.language.path} loads without console errors, failed assertions or uncaught exceptions`, async ({
         homePage,
         consoleErrors,
       }) => {
