@@ -2,6 +2,7 @@
 import "../styles/tokens.css";
 import "../styles/base.css";
 import { Font } from "astro:assets";
+import Footer from "../components/Footer.astro";
 import GlyphField from "../components/GlyphField.astro";
 import ReadingProgress from "../components/ReadingProgress.astro";
 import SiteHeader from "../components/SiteHeader.astro";
@@ -78,6 +79,7 @@ const alternateLinks = [
     <main id="main">
       <slot />
     </main>
+    <Footer locale={locale} />
     <ReadingProgress />
   </body>
 </html>

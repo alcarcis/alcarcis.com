@@ -8,8 +8,8 @@ Core type URI as an identifier; nothing is loaded from it; the Xray file's one r
 to a PNG embedded in the same file).
 
 The names and logos are trademarks of their owners. They appear only to name the tools the
-site's owner uses, which is nominative use; none of them implies endorsement. The page credits
-the logos whose licences ask for attribution (Jenkins, Git, Playwright) under the Tools grid.
+site's owner uses, which is nominative use; none of them implies endorsement. The site footer
+credits the logos whose licences ask for attribution (Jenkins, Git, Playwright) on both pages.
 
 `src/lib/tools.ts` names the file each tool shows; a unit test checks that every file here is
 shown and has a row below.
@@ -31,17 +31,17 @@ field.
 | apache.svg | Apache JMeter row (Apache feather) | #D22128 | https://www.apache.org/foundation/press/kit | Apache-2.0; marks policy: https://www.apache.org/foundation/marks. The JMeter row shows the feather alone, at the owner's request: simple-icons' `apachejmeter.svg` is the feather plus the "JMeter" wordmark, which reads as a smudge at 20px, so the package's `apache.svg` (the Apache feather, with its small ™ mark, unchanged) is used instead, with its own hex for hover. On the page the feather's box is 24px (laid out at 20px) and turned 20° in CSS so it runs diagonally; the file itself is unchanged |
 | githubactions.svg | GitHub Actions | #2088FF | https://github.com/features/actions | Trademark of GitHub, Inc. |
 | docker.svg | Docker | #2496ED | https://www.docker.com/company/newsroom/media-resources | Trademark of Docker, Inc. |
-| git.svg | Git | #F03C2E | https://git-scm.com/community/logos | CC-BY-3.0 (Git logo by Jason Long); credited on the page with a link to the licence |
+| git.svg | Git | #F03C2E | https://git-scm.com/community/logos | CC-BY-3.0 (Git logo by Jason Long); credited in the site footer with a link to the licence |
 | jira.svg | Jira | #0052CC | https://atlassian.design/resources/logo-library | Trademark of Atlassian; guidelines: https://atlassian.design/foundations/logos/ |
 
 ## Official files (not in simple-icons)
 
 | File | Brand | Downloaded from | Same file also at | Licence or brand note |
 | --- | --- | --- | --- | --- |
-| playwright.svg | Playwright | https://playwright.dev/img/playwright-logo.svg | https://raw.githubusercontent.com/microsoft/playwright.dev/main/static/img/playwright-logo.svg (identical bytes) | The microsoft/playwright.dev repository is CC-BY-4.0; Playwright is a Microsoft project (microsoft/playwright, Apache-2.0) and its name and logo are Microsoft trademarks. Credited on the page with a link to the licence |
+| playwright.svg | Playwright | https://playwright.dev/img/playwright-logo.svg | https://raw.githubusercontent.com/microsoft/playwright.dev/main/static/img/playwright-logo.svg (identical bytes) | The microsoft/playwright.dev repository is CC-BY-4.0; Playwright is a Microsoft project (microsoft/playwright, Apache-2.0) and its name and logo are Microsoft trademarks. Credited in the site footer with a link to the licence |
 | maestro.svg | Maestro | https://maestro.dev/favicon.svg (the site's own mark: white mark on a black tile) | none | Maestro by mobile.dev (mobile-dev-inc/Maestro, Apache-2.0); no public brand guidelines found; the mark is a trademark of its owner. Light-theme file, at rest and on hover |
 | maestro-reversed.svg | Maestro (reversed: near-black #141415 mark on a white tile) | https://raw.githubusercontent.com/mobile-dev-inc/Maestro/main/.idea/icon.svg (the project's own icon in its official repository) | none | Same owner and licence as above. Dark-theme file, at rest and on hover, because the official black tile disappears on the graphite ground |
-| jenkins-official.svg | Jenkins (full-colour butler) | https://www.jenkins.io/images/logos/jenkins/jenkins.svg (the jenkins.io logo page) | none | CC-BY-SA-3.0 Unported, per https://www.jenkins.io/artwork/: "you must include an attribution to the Jenkins project, with a link (https://jenkins.io/), if you display these logos". The page credits the Jenkins project with that link, and the licence, under the Tools grid |
+| jenkins-official.svg | Jenkins (full-colour butler) | https://www.jenkins.io/images/logos/jenkins/jenkins.svg (the jenkins.io logo page) | none | CC-BY-SA-3.0 Unported, per https://www.jenkins.io/artwork/: "you must include an attribution to the Jenkins project, with a link (https://jenkins.io/), if you display these logos". Credited in the site footer: the Jenkins project with that link, and the licence |
 | xray.svg | Xray | https://www.getxray.app/wp-content/uploads/2026/08/Xray-Logo-by-Sembi.svg (the logo in the site header) | none | The site states "© 2026 Xray. All rights reserved."; no public brand guidelines found; trademark of its owner. The file embeds one small PNG texture as a `data:` URI inside the SVG; it references nothing outside the file |
 
 ## How the page shows them

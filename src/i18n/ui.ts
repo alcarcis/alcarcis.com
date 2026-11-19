@@ -88,8 +88,9 @@ const en = {
   "tools.group.apiPerformance": "API & performance",
   "tools.group.cicd": "CI/CD",
   "tools.group.testManagement": "Test management",
+  "footer.privacy": "No cookies, no tracking",
   /* Links are written [text](address); the Jenkins licence asks for the link to jenkins.io. */
-  "tools.credits":
+  "footer.credits":
     "Logos are trademarks of their owners and only name the tools. Jenkins logo by the [Jenkins project](https://jenkins.io/), [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/); Git logo by Jason Long, [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/); Playwright logo by Microsoft, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).",
 } as const;
 
@@ -167,7 +168,8 @@ const es: Readonly<Record<UiKey, string>> = {
   "tools.group.apiPerformance": "API y rendimiento",
   "tools.group.cicd": "CI/CD",
   "tools.group.testManagement": "Gestión de pruebas",
-  "tools.credits":
+  "footer.privacy": "Sin cookies, sin rastreo",
+  "footer.credits":
     "Los logotipos son marcas de sus propietarios y solo identifican las herramientas. Logotipo de Jenkins: [proyecto Jenkins](https://jenkins.io/), [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/); logotipo de Git: Jason Long, [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/); logotipo de Playwright: Microsoft, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).",
 };
 

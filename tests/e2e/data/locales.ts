@@ -101,7 +101,12 @@ export interface ToolsCopy {
   readonly head: SectionHeadCopy;
   /** The group titles, in the order the page shows the groups. */
   readonly groupNames: readonly string[];
-  /** The line under the groups that credits the logos, link by link. */
+}
+
+export interface FooterCopy {
+  /** What the site does not do to its visitors. */
+  readonly privacyNote: string;
+  /** The small print that credits the Tools section's logos, link by link. */
   readonly credits: readonly CreditSegment[];
 }
 
@@ -121,6 +126,7 @@ export interface LocaleCase {
   readonly work: WorkCopy;
   readonly openSource: OpenSourceCopy;
   readonly tools: ToolsCopy;
+  readonly footer: FooterCopy;
 }
 
 export const contactEmailHref = "mailto:hola@alcarcis.com";
@@ -259,6 +265,9 @@ export const englishPage: LocaleCase = {
       "CI/CD",
       "Test management",
     ],
+  },
+  footer: {
+    privacyNote: "No cookies, no tracking",
     credits: [
       "Logos are trademarks of their owners and only name the tools. Jenkins logo by the ",
       { link: "Jenkins project", url: creditUrls.jenkinsProject },
@@ -400,6 +409,9 @@ export const spanishPage: LocaleCase = {
       "CI/CD",
       "Gestión de pruebas",
     ],
+  },
+  footer: {
+    privacyNote: "Sin cookies, sin rastreo",
     credits: [
       "Los logotipos son marcas de sus propietarios y solo identifican las herramientas. Logotipo de Jenkins: ",
       { link: "proyecto Jenkins", url: creditUrls.jenkinsProject },

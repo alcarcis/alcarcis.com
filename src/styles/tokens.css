@@ -94,6 +94,11 @@
   /* An entry in a mono list, such as a tool's name: 14/28 */
   --type-list-size: 0.875rem;
   --type-list-leading: 2;
+  /* The footer's fine print in mono: its closing line in capitals at 11/16, its credits at 12/20 */
+  --type-fine-print-size: 0.6875rem;
+  --type-fine-print-leading: calc(16 / 11);
+  --type-fine-print-tracking: 0.1em;
+  --type-credits-leading: calc(20 / 12);
 
   /* Grid and spacing: one 4px unit, in rem so it follows the reader's text size */
   --grid-unit: 0.25rem;
