@@ -34,7 +34,10 @@ test.describe("accessibility scan coverage", () => {
       accessibilityScanner,
     }) => {
       await homePage.open(locale.language.path);
-      const sections = [homePage.about(locale).region];
+      const sections = [
+        homePage.about(locale).region,
+        homePage.work(locale).region,
+      ];
 
       const report = await accessibilityScanner.scan();
       const decided = report.targetsDecidedBy("color-contrast");

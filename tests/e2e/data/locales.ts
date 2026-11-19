@@ -62,6 +62,17 @@ export interface AboutCopy {
   readonly photoAlt: string;
 }
 
+export interface WorkItemCopy {
+  readonly title: string;
+  readonly description: string;
+}
+
+export interface WorkCopy {
+  readonly head: SectionHeadCopy;
+  /** The items in the order the page lists them. */
+  readonly items: readonly WorkItemCopy[];
+}
+
 export interface LocaleCase {
   readonly language: LanguageOption;
   readonly canonicalUrl: string;
@@ -75,6 +86,7 @@ export interface LocaleCase {
   readonly hero: HeroCopy;
   readonly instrument: InstrumentCopy;
   readonly about: AboutCopy;
+  readonly work: WorkCopy;
 }
 
 export const contactEmailHref = "mailto:hola@alcarcis.com";
@@ -153,6 +165,36 @@ export const englishPage: LocaleCase = {
     ],
     photoAlt: "Carlos Alcalá",
   },
+  work: {
+    head: { code: "TC-02", codeTitle: "Test case 02", title: "What I work on" },
+    items: [
+      {
+        title: "Test automation frameworks",
+        description:
+          "Layered Playwright + TypeScript architecture with atomic test cases, reusable components, linting, hooks, documented architecture decisions and runbooks.",
+      },
+      {
+        title: "Web, API & mobile",
+        description:
+          "End-to-end flows across modern and legacy platforms, API coverage with reusable sessions, and mobile tests with Maestro (previously Appium).",
+      },
+      {
+        title: "Quality in CI/CD",
+        description:
+          "GitHub Actions workflows that act as a quality gate: a failing test blocks the merge.",
+      },
+      {
+        title: "Agentic QA",
+        description:
+          "Agents that generate, run and repair BDD tests autonomously. I validate findings before they are reported, to keep false positives out of bug reports.",
+      },
+      {
+        title: "Test management integration",
+        description:
+          "Reusable tooling between test frameworks and Xray / Jira.",
+      },
+    ],
+  },
 };
 
 export const spanishPage: LocaleCase = {
@@ -209,6 +251,40 @@ export const spanishPage: LocaleCase = {
       "Hoy automatizo web, API y aplicaciones móviles (Playwright, TypeScript, Maestro), preparo las pruebas para funcionar como quality gate en CI y trabajo con agentes que generan, ejecutan y reparan pruebas de forma autónoma; yo valido los hallazgos antes de reportarlos.",
     ],
     photoAlt: "Carlos Alcalá",
+  },
+  work: {
+    head: {
+      code: "TC-02",
+      codeTitle: "Caso de prueba 02",
+      title: "En qué trabajo",
+    },
+    items: [
+      {
+        title: "Frameworks de automatización de pruebas",
+        description:
+          "Arquitectura en capas de Playwright + TypeScript con casos de prueba atómicos, componentes reutilizables, linting, hooks, decisiones de arquitectura documentadas y runbooks.",
+      },
+      {
+        title: "Web, API y móvil",
+        description:
+          "Flujos de punta a punta en plataformas modernas y heredadas, cobertura de API con sesiones reutilizables y pruebas móviles con Maestro (antes Appium).",
+      },
+      {
+        title: "Calidad en CI/CD",
+        description:
+          "Flujos de trabajo de GitHub Actions que actúan como quality gate: una prueba que falla bloquea la integración.",
+      },
+      {
+        title: "QA agéntico",
+        description:
+          "Agentes que generan, ejecutan y reparan pruebas BDD de forma autónoma. Yo valido los hallazgos antes de reportarlos, para mantener los falsos positivos fuera de los reportes de defectos.",
+      },
+      {
+        title: "Integración con gestión de pruebas",
+        description:
+          "Herramientas reutilizables entre frameworks de pruebas y Xray / Jira.",
+      },
+    ],
   },
 };
 

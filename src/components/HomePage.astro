@@ -3,6 +3,7 @@ import { useTranslations, type Locale } from "../i18n/ui";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import About from "./About.astro";
 import Hero from "./Hero.astro";
+import Work from "./Work.astro";
 
 interface Props {
   locale: Locale;
@@ -19,4 +20,5 @@ const t = useTranslations(locale);
 >
   <Hero locale={locale} />
   <About locale={locale} />
+  <Work locale={locale} />
 </BaseLayout>

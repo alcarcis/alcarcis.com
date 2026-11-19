@@ -1,0 +1,120 @@
+---
+import { useTranslations, type Locale } from "../i18n/ui";
+import SectionHead from "./SectionHead.astro";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const areas = [
+  "frameworks",
+  "platforms",
+  "cicd",
+  "agentic",
+  "testManagement",
+] as const;
+
+const items = areas.map((area, index) => ({
+  number: String(index + 1).padStart(2, "0"),
+  title: t(`work.${area}.title`),
+  description: t(`work.${area}.description`),
+}));
+---
+
+<section class="work" id="work" aria-labelledby="work-heading">
+  <SectionHead
+    locale={locale}
+    testCase={2}
+    headingId="work-heading"
+    title={t("work.title")}
+  />
+  {/* The list numbers its items for assistive technology already, so the printed numbers are
+     hidden from it. Safari drops list semantics once the markers are removed; the role keeps
+     them. */}
+  <ol class="items" role="list">
+    {items.map(({ number, title, description }) => (
+      <li class="item">
+        <span class="rule" aria-hidden="true"></span>
+        <span class="number" aria-hidden="true">
+          {number}
+        </span>
+        <h3 class="title">{title}</h3>
+        <p class="description">{description}</p>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .work {
+    max-inline-size: var(--page-max-width);
+    margin-inline: auto;
+    padding: 0 var(--gutter) var(--section-space-end);
+  }
+
+  .items {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Rows, not boxes: each item opens on a dotted rule, and number, title and description share
+     one baseline. */
+  .item {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--space-24) minmax(0, 21.25rem) minmax(0, 1fr);
+    gap: var(--space-8);
+    align-items: baseline;
+    padding-block: var(--space-6);
+  }
+
+  /* The rule is an element of its own above the text, not the row's background or a
+     pseudo-element, so axe can judge the contrast of the text in the row. */
+  .rule {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    block-size: 3px;
+    background: var(--dotted-rule);
+  }
+
+  .number {
+    color: var(--link);
+    font-family: var(--font-mono);
+    font-size: var(--type-ui-size);
+    line-height: var(--type-ui-leading);
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .title {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: calc(24 / 14);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  .description {
+    max-inline-size: 62ch;
+    text-wrap: pretty;
+  }
+
+  /* Phones: the number keeps its narrow column and the description moves under the title. */
+  @media (width < 60em) {
+    .item {
+      grid-template-columns: var(--space-14) minmax(0, 1fr);
+      gap: var(--space-1) var(--space-4);
+    }
+
+    .description {
+      grid-column: 2;
+    }
+  }
+</style>

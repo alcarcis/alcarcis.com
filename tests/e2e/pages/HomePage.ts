@@ -6,6 +6,7 @@ import { LanguageSwitch } from "../components/LanguageSwitch";
 import { ReadingProgress } from "../components/ReadingProgress";
 import { SeoLinks } from "../components/SeoLinks";
 import { SiteHeader } from "../components/SiteHeader";
+import { Work } from "../components/Work";
 import type { ColorScheme } from "../data/colorSchemes";
 import type { HeaderCopy, LocaleCase } from "../data/locales";
 
@@ -65,6 +66,10 @@ export class HomePage {
 
   about(locale: LocaleCase): About {
     return new About(this.page, locale.about);
+  }
+
+  work(locale: LocaleCase): Work {
+    return new Work(this.page, locale.work);
   }
 
   languageSwitch(accessibleName: string): LanguageSwitch {

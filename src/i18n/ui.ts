@@ -55,6 +55,22 @@ const en = {
     "I work in financial services (private banking and wealth management), where I conceived my team's first institutional automation framework and taught a manual-testing team to work with it. Within three months every QA had at least one automated flow.",
   "about.practice":
     "Today I automate web, API and mobile apps (Playwright, TypeScript, Maestro), build tests to work as a quality gate in CI, and work with agents that generate, run and repair tests autonomously; I validate findings before they are reported.",
+  "work.title": "What I work on",
+  "work.frameworks.title": "Test automation frameworks",
+  "work.frameworks.description":
+    "Layered Playwright + TypeScript architecture with atomic test cases, reusable components, linting, hooks, documented architecture decisions and runbooks.",
+  "work.platforms.title": "Web, API & mobile",
+  "work.platforms.description":
+    "End-to-end flows across modern and legacy platforms, API coverage with reusable sessions, and mobile tests with Maestro (previously Appium).",
+  "work.cicd.title": "Quality in CI/CD",
+  "work.cicd.description":
+    "GitHub Actions workflows that act as a quality gate: a failing test blocks the merge.",
+  "work.agentic.title": "Agentic QA",
+  "work.agentic.description":
+    "Agents that generate, run and repair BDD tests autonomously. I validate findings before they are reported, to keep false positives out of bug reports.",
+  "work.testManagement.title": "Test management integration",
+  "work.testManagement.description":
+    "Reusable tooling between test frameworks and Xray / Jira.",
 } as const;
 
 export type UiKey = keyof typeof en;
@@ -98,6 +114,22 @@ const es: Readonly<Record<UiKey, string>> = {
     "Trabajo en servicios financieros (banca privada y gestión patrimonial), donde ideé el primer framework de automatización institucional de mi equipo de calidad y enseñé a trabajar con él a un equipo que venía de pruebas manuales: en tres meses, cada QA tenía al menos un flujo automatizado.",
   "about.practice":
     "Hoy automatizo web, API y aplicaciones móviles (Playwright, TypeScript, Maestro), preparo las pruebas para funcionar como quality gate en CI y trabajo con agentes que generan, ejecutan y reparan pruebas de forma autónoma; yo valido los hallazgos antes de reportarlos.",
+  "work.title": "En qué trabajo",
+  "work.frameworks.title": "Frameworks de automatización de pruebas",
+  "work.frameworks.description":
+    "Arquitectura en capas de Playwright + TypeScript con casos de prueba atómicos, componentes reutilizables, linting, hooks, decisiones de arquitectura documentadas y runbooks.",
+  "work.platforms.title": "Web, API y móvil",
+  "work.platforms.description":
+    "Flujos de punta a punta en plataformas modernas y heredadas, cobertura de API con sesiones reutilizables y pruebas móviles con Maestro (antes Appium).",
+  "work.cicd.title": "Calidad en CI/CD",
+  "work.cicd.description":
+    "Flujos de trabajo de GitHub Actions que actúan como quality gate: una prueba que falla bloquea la integración.",
+  "work.agentic.title": "QA agéntico",
+  "work.agentic.description":
+    "Agentes que generan, ejecutan y reparan pruebas BDD de forma autónoma. Yo valido los hallazgos antes de reportarlos, para mantener los falsos positivos fuera de los reportes de defectos.",
+  "work.testManagement.title": "Integración con gestión de pruebas",
+  "work.testManagement.description":
+    "Herramientas reutilizables entre frameworks de pruebas y Xray / Jira.",
 };
 
 const ui: Readonly<Record<Locale, Readonly<Record<UiKey, string>>>> = {
