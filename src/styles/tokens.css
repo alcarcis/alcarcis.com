@@ -38,7 +38,7 @@
   --text: var(--brand-graphite);
   --muted: var(--ink-secondary);
   --link: var(--ink-copper);
-  --eyebrow: var(--ink-copper);
+  --accent-text: var(--ink-copper);
   --fill: var(--brand-copper);
   --fill-hover: var(--brand-copper-soft);
   --on-fill: var(--brand-graphite);
@@ -118,7 +118,7 @@
     --text: var(--brand-ivory);
     --muted: var(--brand-muted);
     --link: var(--brand-copper);
-    --eyebrow: var(--brand-copper-soft);
+    --accent-text: var(--brand-copper-soft);
     --code-keyword: var(--brand-muted);
     --code-string: var(--brand-copper-soft);
     --code-function: var(--brand-ivory);
@@ -139,7 +139,7 @@
   --text: var(--brand-ivory);
   --muted: var(--brand-muted);
   --link: var(--brand-copper);
-  --eyebrow: var(--brand-copper-soft);
+  --accent-text: var(--brand-copper-soft);
   --code-keyword: var(--brand-muted);
   --code-string: var(--brand-copper-soft);
   --code-function: var(--brand-ivory);

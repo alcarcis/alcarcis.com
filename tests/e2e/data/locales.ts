@@ -19,7 +19,8 @@ export interface HeaderCopy {
 }
 
 export interface HeroCopy {
-  readonly eyebrow: string;
+  /** The discipline line, between the display lines and the primary action. */
+  readonly disciplines: string;
   readonly sub: string;
   readonly primaryAction: string;
   readonly cvAction: string;
@@ -104,7 +105,7 @@ export const englishPage: LocaleCase = {
     },
   },
   hero: {
-    eyebrow: "Quality Engineering · Agentic QA · Web, API & mobile",
+    disciplines: "Quality Engineering · Agentic QA · Web, API & mobile",
     sub: "From requirements to production.",
     primaryAction: "Let's talk",
     cvAction: "Download CV (PDF)",
@@ -148,7 +149,7 @@ export const spanishPage: LocaleCase = {
     },
   },
   hero: {
-    eyebrow: "Ingeniería de calidad · QA agéntico · Web, API y móvil",
+    disciplines: "Ingeniería de calidad · QA agéntico · Web, API y móvil",
     sub: "De los requisitos a producción.",
     primaryAction: "Conversemos",
     cvAction: "Descargar CV (PDF)",

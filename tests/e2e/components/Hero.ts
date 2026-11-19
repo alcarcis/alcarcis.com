@@ -1,18 +1,21 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import type { HeroCopy, InstrumentCopy, LocaleCase } from "../data/locales";
 import { Instrument } from "./Instrument";
 
 export class Hero {
   readonly region: Locator;
   readonly heading: Locator;
-  readonly eyebrow: Locator;
+  readonly disciplines: Locator;
   readonly displayLine: Locator;
   readonly sub: Locator;
   readonly primaryAction: Locator;
   readonly cvLinks: Locator;
   readonly instrument: Instrument;
 
-  constructor(page: Page, locale: LocaleCase) {
+  constructor(
+    page: Page,
+    private readonly locale: LocaleCase,
+  ) {
     const hero: HeroCopy = locale.hero;
     const instrument: InstrumentCopy = locale.instrument;
     this.region = page.getByRole("region", {
@@ -20,7 +23,9 @@ export class Hero {
       exact: true,
     });
     this.heading = this.region.getByRole("heading", { level: 1 });
-    this.eyebrow = this.region.getByText(hero.eyebrow, { exact: true });
+    this.disciplines = this.region.getByText(hero.disciplines, {
+      exact: true,
+    });
     this.displayLine = this.region.getByText(locale.displayLine, {
       exact: true,
     });
@@ -31,5 +36,23 @@ export class Hero {
     });
     this.cvLinks = page.getByRole("link", { name: hero.cvAction });
     this.instrument = new Instrument(this.region, instrument);
+  }
+
+  /**
+   * Asserts the copy reads in this order: the name, both display lines, the discipline line,
+   * then the primary action. Other content may sit around them, not between them.
+   */
+  async expectReadingOrder(): Promise<void> {
+    const { heading, displayLine, hero } = this.locale;
+    const quoted = (text: string): string => JSON.stringify(text);
+    await expect(this.region).toMatchAriaSnapshot(
+      [
+        `- heading ${quoted(heading)} [level=1]`,
+        `- paragraph: ${quoted(displayLine)}`,
+        `- paragraph: ${quoted(hero.sub)}`,
+        `- paragraph: ${quoted(hero.disciplines)}`,
+        `- link ${quoted(hero.primaryAction)}`,
+      ].join("\n"),
+    );
   }
 }

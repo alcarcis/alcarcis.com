@@ -7,15 +7,21 @@ for (const locale of localeCases) {
       await homePage.open(locale.language.path);
     });
 
-    test("introduces the owner by name, disciplines and promise", async ({
+    test("introduces the owner by name, promise and disciplines", async ({
       homePage,
     }) => {
       const hero = homePage.hero(locale);
 
       await expect(hero.heading).toHaveText(locale.heading);
-      await expect(hero.eyebrow).toBeVisible();
       await expect(hero.displayLine).toBeVisible();
       await expect(hero.sub).toBeVisible();
+      await expect(hero.disciplines).toBeVisible();
+    });
+
+    test("reads the name and promise first, then the disciplines, then the primary action", async ({
+      homePage,
+    }) => {
+      await homePage.hero(locale).expectReadingOrder();
     });
 
     test("its primary action opens an email to the owner", async ({
