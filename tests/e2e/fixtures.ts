@@ -12,6 +12,10 @@ import {
   ConsoleErrorCollector,
   type ConsoleErrorReport,
 } from "./support/console";
+import {
+  TransitionRecorder,
+  type TransitionReport,
+} from "./support/transitions";
 
 interface Fixtures {
   homePage: HomePage;
@@ -21,6 +25,7 @@ interface Fixtures {
   frozenClock: Clock;
   accessibilityScanner: AccessibilityScanner;
   consoleErrors: ConsoleErrorCollector;
+  transitionRecorder: TransitionRecorder;
 }
 
 export const test = base.extend<Fixtures>({
@@ -41,6 +46,9 @@ export const test = base.extend<Fixtures>({
   },
   consoleErrors: async ({ page }, use) => {
     await use(new ConsoleErrorCollector(page));
+  },
+  transitionRecorder: async ({ page }, use) => {
+    await use(new TransitionRecorder(page));
   },
 });
 
@@ -65,6 +73,17 @@ export const expect = baseExpect.extend({
         count === 0
           ? "Expected console errors, failed assertions or uncaught exceptions, but the page logged none."
           : `Expected no console errors, failed assertions or uncaught exceptions, but the page logged ${count}:\n\n${report.summary()}`,
+    };
+  },
+  toStartColourTransitions(report: TransitionReport) {
+    const count = report.colourTransitions.length;
+    return {
+      name: "toStartColourTransitions",
+      pass: count > 0,
+      message: () =>
+        count > 0
+          ? `Expected no colour transitions, but ${count} started:\n\n${report.summary()}`
+          : "Expected colour transitions, but none started.",
     };
   },
 });

@@ -16,6 +16,45 @@ html {
   }
 }
 
+/*
+ * A theme change swaps every colour token at once. Transitions would blend the old inks into
+ * the new ones, and the mid-way colours fail contrast (issue #24), so they stay off while a
+ * change applies. The theme script sets data-theme-changing around the changes it makes.
+ * Chromium tells scripts of a system flip only after the style update that swapped the tokens,
+ * so this stylesheet catches that one itself: data-system-theme holds the system theme the
+ * script last saw, and while the media query disagrees with it, the flip is under way.
+ */
+:root[data-theme-changing] {
+  &,
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root[data-system-theme="dark"] {
+    &,
+    *,
+    *::before,
+    *::after {
+      transition: none !important;
+    }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-system-theme="light"] {
+    &,
+    *,
+    *::before,
+    *::after {
+      transition: none !important;
+    }
+  }
+}
+
 body {
   margin: 0;
   /* Room for the reading-progress line along the bottom edge. */

@@ -123,6 +123,57 @@ for (const systemScheme of colorSchemes) {
         expect(report).toHaveNoViolations();
       });
     }
+
+    // Reduced motion holds the instrument's run still, so only the theme or the pointer can
+    // start a transition here; the controls' colour transitions run under either preference.
+    test.describe("with reduced motion", () => {
+      test.use({ reducedMotion: "reduce" });
+
+      test(`the toggle swaps every colour to ${otherScheme} at once, without transitions`, async ({
+        homePage,
+        transitionRecorder,
+      }) => {
+        const { themeToggle } = homePage.header(englishPage.header);
+        await homePage.open(englishPage.language.path);
+        await themeToggle.hover();
+        await transitionRecorder.settle();
+
+        const report = await transitionRecorder.during(() =>
+          themeToggle.switchTo(otherScheme),
+        );
+
+        await expect(homePage.document).toHaveCSS("color-scheme", otherScheme);
+        expect(report).not.toStartColourTransitions();
+      });
+
+      test(`with no stored choice, a system switch to ${otherScheme} swaps every colour at once, without transitions`, async ({
+        homePage,
+        transitionRecorder,
+      }) => {
+        await homePage.open(englishPage.language.path);
+
+        const report = await transitionRecorder.during(() =>
+          homePage.switchSystemScheme(otherScheme),
+        );
+
+        await expect(homePage.document).toHaveCSS("color-scheme", otherScheme);
+        expect(report).not.toStartColourTransitions();
+      });
+
+      test("hovering a header control still eases its colours", async ({
+        homePage,
+        transitionRecorder,
+      }) => {
+        const { themeToggle } = homePage.header(englishPage.header);
+        await homePage.open(englishPage.language.path);
+
+        const report = await transitionRecorder.during(() =>
+          themeToggle.hover(),
+        );
+
+        expect(report).toStartColourTransitions();
+      });
+    });
   });
 }
 

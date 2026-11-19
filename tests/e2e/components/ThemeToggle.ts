@@ -30,4 +30,9 @@ export class ThemeToggle {
   async switchTo(theme: ColorScheme): Promise<void> {
     await this.offering(theme).click();
   }
+
+  /** Rests the pointer on the toggle, in either state. */
+  async hover(): Promise<void> {
+    await this.button.hover();
+  }
 }
