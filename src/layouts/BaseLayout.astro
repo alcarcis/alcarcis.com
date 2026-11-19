@@ -2,7 +2,7 @@
 import "../styles/tokens.css";
 import "../styles/base.css";
 import { Font } from "astro:assets";
-import LanguageSwitch from "../components/LanguageSwitch.astro";
+import SiteHeader from "../components/SiteHeader.astro";
 import {
   defaultLocale,
   locales,
@@ -65,23 +65,9 @@ const alternateLinks = [
     <a class="skip-link" href="#main">
       {t("a11y.skipToContent")}
     </a>
-    <header class="site-header">
-      <LanguageSwitch locale={locale} path={path} />
-    </header>
+    <SiteHeader locale={locale} path={path} />
     <main id="main">
       <slot />
     </main>
   </body>
 </html>
-
-<style>
-  .site-header {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    max-inline-size: var(--page-max-width);
-    min-block-size: var(--header-height);
-    margin-inline: auto;
-    padding-inline: var(--gutter);
-  }
-</style>

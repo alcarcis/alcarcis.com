@@ -1,0 +1,65 @@
+---
+import Moon from "../assets/icons/moon.svg";
+import Sun from "../assets/icons/sun.svg";
+import { useTranslations, type Locale } from "../i18n/ui";
+
+interface Props {
+  locale: Locale;
+}
+
+const t = useTranslations(Astro.props.locale);
+---
+
+{/*
+  Both states are in the markup and CSS shows the one that matches the rendered theme, so the
+  control stays right when the system preference changes, with or without this page's script.
+*/}
+<button class="icon-button theme-toggle" type="button" data-theme-toggle>
+  <span class="option to-dark">
+    <Sun width={18} height={18} aria-hidden="true" />
+    <span class="visually-hidden">{t("themeToggle.toDark")}</span>
+  </span>
+  <span class="option to-light">
+    <Moon width={18} height={18} aria-hidden="true" />
+    <span class="visually-hidden">{t("themeToggle.toLight")}</span>
+  </span>
+</button>
+
+<script>
+  import "../scripts/theme-toggle";
+</script>
+
+<style>
+  .option {
+    display: contents;
+  }
+
+  .to-light {
+    display: none;
+  }
+
+  :global(:root[data-theme="dark"]) .to-dark {
+    display: none;
+  }
+
+  :global(:root[data-theme="dark"]) .to-light {
+    display: contents;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme="light"])) .to-dark {
+      display: none;
+    }
+
+    :global(:root:not([data-theme="light"])) .to-light {
+      display: contents;
+    }
+  }
+
+  /* Without scripting the toggle could not run, so it is not offered. */
+  @media (scripting: none) {
+    .theme-toggle {
+      display: none;
+    }
+  }
+</style>

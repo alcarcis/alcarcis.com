@@ -1,0 +1,152 @@
+---
+import GitHub from "../assets/icons/github.svg";
+import LinkedIn from "../assets/icons/linkedin.svg";
+import { useTranslations, type Locale } from "../i18n/ui";
+import { owner, profiles } from "../site";
+import LanguageSwitch from "./LanguageSwitch.astro";
+import ThemeToggle from "./ThemeToggle.astro";
+
+interface Props {
+  locale: Locale;
+  path?: string;
+}
+
+const { locale, path = "" } = Astro.props;
+const t = useTranslations(locale);
+
+const profileLinks = [
+  { href: profiles.linkedIn, label: t("header.linkedIn"), Icon: LinkedIn },
+  { href: profiles.gitHub, label: t("header.gitHub"), Icon: GitHub },
+];
+---
+
+<header class="site-header">
+  <div class="bar">
+    {/*
+      An aria-label, not visually hidden text: Chrome joins a positioned hidden span to the name
+      with a space ("Carlos Alcalá , back to top"). The name still starts with the visible label.
+    */}
+    <a
+      class="owner"
+      href="#top"
+      aria-label={`${owner.name}, ${t("header.backToTop")}`}
+    >
+      <span class="monogram" aria-hidden="true"></span>
+      <span class="owner-name">{owner.name}</span>
+    </a>
+    <div class="tools">
+      {profileLinks.map(({ href, label, Icon }) => (
+        <a class="icon-button" href={href}>
+          <Icon width={18} height={18} aria-hidden="true" />
+          <span class="visually-hidden">{label}</span>
+        </a>
+      ))}
+      <LanguageSwitch locale={locale} path={path} />
+      <ThemeToggle locale={locale} />
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 20;
+    background: var(--ground);
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset-inline: 0;
+      inset-block-end: 0;
+      block-size: 3px;
+      background: var(--dotted-rule);
+    }
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    max-inline-size: var(--page-max-width);
+    block-size: var(--header-height);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  /* Who this is, in the first viewport: monogram and name are one link back to the top. */
+  .owner {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--text);
+    text-decoration: none;
+
+    &:hover .monogram {
+      border-color: var(--link);
+    }
+  }
+
+  /* The letters come from CSS: a placeholder mark, not part of the link's name. */
+  .monogram {
+    display: grid;
+    flex: none;
+    place-items: center;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    border: 1px solid var(--dots);
+    color: var(--link);
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    transition: border-color var(--duration-quick) var(--ease-out);
+
+    &::before {
+      content: "CA";
+    }
+  }
+
+  .owner-name {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.125rem;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+
+  .tools {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin-inline-start: auto;
+  }
+
+  @media (width < 60em) {
+    .bar {
+      gap: var(--space-3);
+    }
+
+    .owner {
+      gap: 0.625rem;
+      min-block-size: var(--target-min);
+    }
+
+    .tools {
+      gap: 0;
+    }
+  }
+
+  /* Phones: the name takes two lines beside the monogram. */
+  @media (width < 30em) {
+    .owner-name {
+      inline-size: min-content;
+      font-size: var(--type-ui-size);
+      line-height: 1rem;
+      white-space: normal;
+    }
+  }
+</style>
