@@ -47,6 +47,19 @@ export class UsageTerminal {
     return this.lines.evaluate((pre) => pre.textContent ?? "");
   }
 
+  /**
+   * How many CSS pixels the widest line runs past the window's inner edge, measured once the
+   * lines' font has loaded: 0 when every line fits. On wide screens the lines neither wrap nor
+   * scroll, so anything wider would be cut off without a sign.
+   */
+  async clippedWidth(): Promise<number> {
+    return this.lines.evaluate(async (pre) => {
+      await document.fonts.load(getComputedStyle(pre).font);
+      await document.fonts.ready;
+      return Math.max(0, pre.scrollWidth - pre.clientWidth);
+    });
+  }
+
   async expectTypingState(state: TypingState): Promise<void> {
     await expect(this.window).toHaveAttribute("data-typing", state);
   }
