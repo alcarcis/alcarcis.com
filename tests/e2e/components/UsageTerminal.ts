@@ -49,13 +49,26 @@ export class UsageTerminal {
 
   /**
    * How many CSS pixels the widest line runs past the window's inner edge, measured once the
-   * lines' font has loaded: 0 when every line fits. On wide screens the lines neither wrap nor
-   * scroll, so anything wider would be cut off without a sign.
+   * face the lines render in has loaded: 0 when every line fits. On wide screens the lines
+   * neither wrap nor scroll, so anything wider would be cut off without a sign.
+   *
+   * Only the first family of the lines' font is awaited: the families after it are fallbacks,
+   * and the metric-matched one names a font installed on the system (`local()`), which a
+   * machine may lack. Waiting for every face the full font matches then fails on such a machine
+   * (a NetworkError on the Linux runner, which has no Courier New) though the lines render fine.
    */
   async clippedWidth(): Promise<number> {
     return this.lines.evaluate(async (pre) => {
-      await document.fonts.load(getComputedStyle(pre).font);
-      await document.fonts.ready;
+      const { fontFamily, fontSize } = getComputedStyle(pre);
+      const family = /^\s*("[^"]*"|[^,]+)/.exec(fontFamily)?.[1]?.trim();
+      if (!family) {
+        throw new Error(`No font family on the lines: ${fontFamily}`);
+      }
+      const font = `${fontSize} ${family}`;
+      const faces = await document.fonts.load(font);
+      if (faces.length === 0 || !document.fonts.check(font)) {
+        throw new Error(`The lines' face ${family} did not load.`);
+      }
       return Math.max(0, pre.scrollWidth - pre.clientWidth);
     });
   }
