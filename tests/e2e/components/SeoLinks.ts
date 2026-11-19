@@ -8,13 +8,19 @@ const alternateLinkSelector = (hreflang?: string): string =>
 export class SeoLinks {
   readonly canonical: Locator;
   readonly alternates: Locator;
+  readonly icon: Locator;
 
   constructor(private readonly page: Page) {
     this.canonical = page.locator('head link[rel="canonical"]');
     this.alternates = page.locator(alternateLinkSelector());
+    this.icon = page.locator('head link[rel="icon"]');
   }
 
   alternate(hreflang: string): Locator {
     return this.page.locator(alternateLinkSelector(hreflang));
+  }
+
+  async iconUrl(): Promise<string> {
+    return this.icon.evaluate((link: HTMLLinkElement) => link.href);
   }
 }

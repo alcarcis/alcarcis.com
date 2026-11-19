@@ -52,6 +52,7 @@ const alternateLinks = [
     </script>
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="canonical" href={canonicalUrl} />
     {alternateLinks.map(({ hreflang, href }) => (
       <link rel="alternate" hreflang={hreflang} href={href} />

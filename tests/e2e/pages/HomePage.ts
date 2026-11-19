@@ -2,6 +2,8 @@ import type { Locator, Page } from "@playwright/test";
 import { LanguageSwitch } from "../components/LanguageSwitch";
 import { SeoLinks } from "../components/SeoLinks";
 
+type NavigationOptions = NonNullable<Parameters<Page["goto"]>[1]>;
+
 export class HomePage {
   readonly document: Locator;
   readonly main: Locator;
@@ -15,8 +17,11 @@ export class HomePage {
     this.seo = new SeoLinks(page);
   }
 
-  async open(path: string): Promise<void> {
-    await this.page.goto(path);
+  async open(
+    path: string,
+    options: Pick<NavigationOptions, "waitUntil"> = {},
+  ): Promise<void> {
+    await this.page.goto(path, options);
   }
 
   textInMain(content: string): Locator {
