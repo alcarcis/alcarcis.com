@@ -33,17 +33,15 @@ for (const locale of localeCases) {
       );
     });
 
-    test("offers the CV download exactly when this page's PDF is in the build", async ({
-      homePage,
-      request,
-    }) => {
+    test("offers this page's CV as a PDF", async ({ homePage, request }) => {
       const { cvLinks } = homePage.hero(locale);
-      const pdf = await request.get(locale.hero.cvPath);
 
-      await expect(cvLinks).toHaveCount(pdf.ok() ? 1 : 0);
-      for (const link of await cvLinks.all()) {
-        await expect(link).toHaveAttribute("href", locale.hero.cvPath);
-      }
+      await expect(cvLinks).toHaveCount(1);
+      await expect(cvLinks).toHaveAttribute("href", locale.hero.cvPath);
+
+      const pdf = await request.get(locale.hero.cvPath);
+      expect(pdf.status()).toBe(200);
+      expect(pdf.headers()["content-type"]).toBe("application/pdf");
     });
 
     test("preloads the headline and body fonts", async ({ homePage }) => {
