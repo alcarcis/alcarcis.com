@@ -5,6 +5,7 @@ import { LanguageSwitch } from "../components/LanguageSwitch";
 import { ReadingProgress } from "../components/ReadingProgress";
 import { SeoLinks } from "../components/SeoLinks";
 import { SiteHeader } from "../components/SiteHeader";
+import type { ColorScheme } from "../data/colorSchemes";
 import type { HeaderCopy, LocaleCase } from "../data/locales";
 
 type NavigationOptions = NonNullable<Parameters<Page["goto"]>[1]>;
@@ -38,6 +39,11 @@ export class HomePage {
 
   async reload(): Promise<void> {
     await this.page.reload();
+  }
+
+  /** Flips the system's light or dark preference while the page is open, as the OS does. */
+  async switchSystemScheme(scheme: ColorScheme): Promise<void> {
+    await this.page.emulateMedia({ colorScheme: scheme });
   }
 
   textInMain(content: string): Locator {
