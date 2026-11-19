@@ -1,0 +1,102 @@
+---
+import type { Locale } from "../i18n/ui";
+import type { Usage } from "../lib/open-source";
+
+interface Props {
+  locale: Locale;
+  usage: Usage;
+  /** Where in the README the lines come from, as the bar names it. */
+  source: string;
+  /** The usage in words: what assistive technology reads instead of the lines. */
+  summary: string;
+}
+
+const { locale, usage, source, summary } = Astro.props;
+
+/* Terminal content stays English on every page, as a real terminal would; this marks it for
+   translation tools on pages in other languages. */
+const terminalLang = locale === "en" ? undefined : "en";
+---
+
+<div class="terminal" data-usage-terminal>
+  <div class="bar" aria-hidden="true">
+    <span>{usage.window}</span>
+    <span>
+      <span class="readme">README</span>
+      {` · ${source}`}
+    </span>
+  </div>
+  <pre
+    class="lines"
+    aria-hidden="true"
+    lang={terminalLang}
+    translate="no"
+  ><code data-usage-code>{usage.code.map((token) => typeof token === "string" ? token : <span class={token[0]}>{token[1]}</span>)}</code></pre>
+  <p class="visually-hidden">{summary}</p>
+</div>
+
+<style>
+  .terminal {
+    min-inline-size: 0;
+    border: 1px solid var(--rule);
+    font-family: var(--font-mono);
+    font-size: var(--type-code-size);
+    line-height: var(--type-code-leading);
+  }
+
+  /* The window's title bar: what runs on the left, where the lines come from on the right. */
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    block-size: var(--space-8);
+    padding-inline: var(--space-3);
+    border-block-end: 1px solid var(--rule);
+    background: var(--panel);
+    color: var(--muted);
+    font-size: var(--type-window-title-size);
+    letter-spacing: var(--type-window-title-tracking);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .readme {
+    color: var(--link);
+  }
+
+  .lines {
+    margin: 0;
+    padding: var(--space-4);
+    overflow: hidden;
+    background: var(--ground);
+    color: var(--code-function);
+    font: inherit;
+    white-space: pre;
+
+    .comment,
+    .prompt {
+      color: var(--muted);
+    }
+
+    .keyword {
+      color: var(--code-keyword);
+    }
+
+    .string {
+      color: var(--code-string);
+    }
+
+    .function {
+      color: var(--code-function);
+    }
+  }
+
+  /* Phones: long lines wrap inside the window instead of running out of it. */
+  @media (width < 60em) {
+    .lines {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+  }
+</style>

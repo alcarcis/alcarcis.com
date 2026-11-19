@@ -1,6 +1,11 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import type { WorkCopy } from "../data/locales";
-import { quoted, SectionHead } from "./SectionHead";
+import {
+  printedNumber,
+  printedNumbers,
+  quoted,
+  SectionHead,
+} from "./SectionHead";
 
 export class Work {
   readonly region: Locator;
@@ -17,14 +22,12 @@ export class Work {
       exact: true,
     });
     this.head = new SectionHead(this.region, copy.head);
-    this.itemNumbers = this.region.getByText(/^\d{2}$/);
+    this.itemNumbers = this.region.getByText(printedNumber);
   }
 
   /** "01", "02", … one per item, in list order. */
   get expectedItemNumbers(): string[] {
-    return this.copy.items.map((_, index) =>
-      String(index + 1).padStart(2, "0"),
-    );
+    return printedNumbers(this.copy.items.length);
   }
 
   /**

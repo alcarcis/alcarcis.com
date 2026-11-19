@@ -71,6 +71,17 @@ const en = {
   "work.testManagement.title": "Test management integration",
   "work.testManagement.description":
     "Reusable tooling between test frameworks and Xray / Jira.",
+  "openSource.title": "Open source",
+  "openSource.playwrightCiReference.description":
+    "A small, complete reference of how a test suite becomes a quality gate: layered Playwright tests and a CI pipeline on GitHub-hosted runners.",
+  "openSource.playwrightCiReference.usageSource": "run it locally",
+  "openSource.playwrightCiReference.usageSummary":
+    "Usage from the README, run it locally: npm ci; npx playwright install chromium; npm run check, which runs lint, format, typecheck and all tests; npm run report, which opens the last HTML report.",
+  "openSource.pw2xray.description":
+    "A lightweight Xray Cloud API client for reporting Playwright results: it uploads JUnit executions, attaches evidence to each Test Run and syncs Cucumber scenarios with Jira.",
+  "openSource.pw2xray.usageSource": "usage",
+  "openSource.pw2xray.usageSummary":
+    'Usage from the README, in TypeScript: import "dotenv/config"; import the uploadToXray function from "pw2xray/upload-to-xray"; then call uploadToXray(), and if it fails, log the error with console.error and set process.exitCode to 1.',
 } as const;
 
 export type UiKey = keyof typeof en;
@@ -130,6 +141,17 @@ const es: Readonly<Record<UiKey, string>> = {
   "work.testManagement.title": "Integración con gestión de pruebas",
   "work.testManagement.description":
     "Herramientas reutilizables entre frameworks de pruebas y Xray / Jira.",
+  "openSource.title": "Código abierto",
+  "openSource.playwrightCiReference.description":
+    "Una referencia pequeña y completa de cómo una suite de pruebas se convierte en un quality gate: pruebas de Playwright en capas y un pipeline de CI en runners alojados en GitHub.",
+  "openSource.playwrightCiReference.usageSource": "ejecutar en local",
+  "openSource.playwrightCiReference.usageSummary":
+    "Uso según el README, para ejecutarlo en local: npm ci; npx playwright install chromium; npm run check, que ejecuta lint, format, typecheck y todas las pruebas; npm run report, que abre el último reporte HTML.",
+  "openSource.pw2xray.description":
+    "Cliente ligero de la API de Xray Cloud para reportar resultados de Playwright: sube ejecuciones JUnit, adjunta evidencia a cada Test Run y sincroniza escenarios Cucumber con Jira.",
+  "openSource.pw2xray.usageSource": "uso",
+  "openSource.pw2xray.usageSummary":
+    'Uso según el README, en TypeScript: import "dotenv/config"; importar la función uploadToXray desde "pw2xray/upload-to-xray"; luego llamar a uploadToXray() y, si falla, registrar el error con console.error y fijar process.exitCode en 1.',
 };
 
 const ui: Readonly<Record<Locale, Readonly<Record<UiKey, string>>>> = {

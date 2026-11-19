@@ -1,3 +1,9 @@
+import {
+  playwrightCiReference,
+  pw2xray,
+  type RepositoryFacts,
+} from "./openSource";
+
 export interface LanguageOption {
   readonly name: string;
   readonly code: string;
@@ -73,6 +79,23 @@ export interface WorkCopy {
   readonly items: readonly WorkItemCopy[];
 }
 
+/** A repository row: the facts every page shares, and what this page says about them. */
+export interface RepositoryCopy {
+  readonly repository: RepositoryFacts;
+  /** What the repository is, in its README's own words. */
+  readonly description: string;
+  /** The caption the terminal's bar gives the README lines it shows. */
+  readonly usageSource: string;
+  /** The usage in words: what assistive technology reads instead of the terminal. */
+  readonly usageSummary: string;
+}
+
+export interface OpenSourceCopy {
+  readonly head: SectionHeadCopy;
+  /** The repositories in the order the page lists them. */
+  readonly repositories: readonly RepositoryCopy[];
+}
+
 export interface LocaleCase {
   readonly language: LanguageOption;
   readonly canonicalUrl: string;
@@ -87,6 +110,7 @@ export interface LocaleCase {
   readonly instrument: InstrumentCopy;
   readonly about: AboutCopy;
   readonly work: WorkCopy;
+  readonly openSource: OpenSourceCopy;
 }
 
 export const contactEmailHref = "mailto:hola@alcarcis.com";
@@ -195,6 +219,27 @@ export const englishPage: LocaleCase = {
       },
     ],
   },
+  openSource: {
+    head: { code: "TC-03", codeTitle: "Test case 03", title: "Open source" },
+    repositories: [
+      {
+        repository: playwrightCiReference,
+        description:
+          "A small, complete reference of how a test suite becomes a quality gate: layered Playwright tests and a CI pipeline on GitHub-hosted runners.",
+        usageSource: "run it locally",
+        usageSummary:
+          "Usage from the README, run it locally: npm ci; npx playwright install chromium; npm run check, which runs lint, format, typecheck and all tests; npm run report, which opens the last HTML report.",
+      },
+      {
+        repository: pw2xray,
+        description:
+          "A lightweight Xray Cloud API client for reporting Playwright results: it uploads JUnit executions, attaches evidence to each Test Run and syncs Cucumber scenarios with Jira.",
+        usageSource: "usage",
+        usageSummary:
+          'Usage from the README, in TypeScript: import "dotenv/config"; import the uploadToXray function from "pw2xray/upload-to-xray"; then call uploadToXray(), and if it fails, log the error with console.error and set process.exitCode to 1.',
+      },
+    ],
+  },
 };
 
 export const spanishPage: LocaleCase = {
@@ -283,6 +328,31 @@ export const spanishPage: LocaleCase = {
         title: "Integración con gestión de pruebas",
         description:
           "Herramientas reutilizables entre frameworks de pruebas y Xray / Jira.",
+      },
+    ],
+  },
+  openSource: {
+    head: {
+      code: "TC-03",
+      codeTitle: "Caso de prueba 03",
+      title: "Código abierto",
+    },
+    repositories: [
+      {
+        repository: playwrightCiReference,
+        description:
+          "Una referencia pequeña y completa de cómo una suite de pruebas se convierte en un quality gate: pruebas de Playwright en capas y un pipeline de CI en runners alojados en GitHub.",
+        usageSource: "ejecutar en local",
+        usageSummary:
+          "Uso según el README, para ejecutarlo en local: npm ci; npx playwright install chromium; npm run check, que ejecuta lint, format, typecheck y todas las pruebas; npm run report, que abre el último reporte HTML.",
+      },
+      {
+        repository: pw2xray,
+        description:
+          "Cliente ligero de la API de Xray Cloud para reportar resultados de Playwright: sube ejecuciones JUnit, adjunta evidencia a cada Test Run y sincroniza escenarios Cucumber con Jira.",
+        usageSource: "uso",
+        usageSummary:
+          'Uso según el README, en TypeScript: import "dotenv/config"; importar la función uploadToXray desde "pw2xray/upload-to-xray"; luego llamar a uploadToXray() y, si falla, registrar el error con console.error y fijar process.exitCode en 1.',
       },
     ],
   },
