@@ -1,8 +1,15 @@
-import { expect, type Locator } from "@playwright/test";
+import { expect, type Clock, type Locator } from "@playwright/test";
 import { specSource, stageNames } from "../data/instrument";
 import type { InstrumentCopy, StageStateNames } from "../data/locales";
 
 export type StageState = keyof StageStateNames;
+
+/** What the run shows at one moment, read in a single pass. */
+export interface RunSnapshot {
+  readonly stages: readonly (StageState | undefined)[];
+  readonly caption: string;
+  readonly captionShown: boolean;
+}
 
 export class Instrument {
   readonly region: Locator;
@@ -11,6 +18,16 @@ export class Instrument {
   readonly specText: Locator;
   readonly sceneLabel: Locator;
   readonly sceneCaption: Locator;
+  readonly skip: Locator;
+  readonly rerun: Locator;
+  readonly announcement: Locator;
+  /**
+   * The visible, typed code. It is hidden from assistive technology (specText carries it), so
+   * it has no role to find it by.
+   */
+  readonly typedCode: Locator;
+  /** The scene's box; the renderer marks it once it has drawn. */
+  readonly scene: Locator;
 
   constructor(
     scope: Locator,
@@ -31,6 +48,17 @@ export class Instrument {
       .filter({ hasText: specSource });
     this.sceneLabel = this.region.getByText(copy.sceneLabel, { exact: true });
     this.sceneCaption = this.region.getByText(/^0\d .+ · .+$/);
+    this.skip = this.region.getByRole("button", {
+      name: copy.skipName,
+      exact: true,
+    });
+    this.rerun = this.region.getByRole("button", {
+      name: copy.rerunName,
+      exact: true,
+    });
+    this.announcement = this.region.getByRole("status");
+    this.typedCode = this.region.locator("[data-spec]");
+    this.scene = this.region.locator("[data-scene]");
   }
 
   /** The value a data row shows next to its term, such as COMMIT. */
@@ -42,8 +70,9 @@ export class Instrument {
   }
 
   /** The caption the scene shows while stage `index` plays (0-based). */
-  captionFor(index: number): string {
-    return `0${index + 1} ${stageNames[index]} · ${this.copy.captions[index]}`;
+  captionFor(index: number, fixed = false): string {
+    const action = fixed ? this.copy.fixCaption : this.copy.captions[index];
+    return `0${index + 1} ${stageNames[index]} · ${action}`;
   }
 
   /** Asserts each stage row reads its name and the given state, in order. */
@@ -64,5 +93,48 @@ export class Instrument {
       this.captionFor(stageNames.length - 1),
     );
     await expect(this.specText).toBeAttached();
+    await expect(this.typedCode).toHaveText(specSource);
+  }
+
+  /**
+   * The run starts once the page is idle and the instrument is in view. Idle time is on the
+   * test's clock; the view check is the browser's own, so this waits for it in real time.
+   */
+  async startRun(clock: Clock): Promise<void> {
+    await clock.runFor(100);
+    await this.expectRunState("playing");
+  }
+
+  /** The run's state hook: waiting, playing, paused or final. */
+  async expectRunState(state: string): Promise<void> {
+    await expect(this.region).toHaveAttribute("data-run-state", state);
+  }
+
+  async snapshot(): Promise<RunSnapshot> {
+    const stateByName = new Map(
+      Object.entries(this.copy.stageStates).map(([state, name]) => [
+        name,
+        state as StageState,
+      ]),
+    );
+    const raw = await this.region.evaluate((instrument) => {
+      const caption = instrument.querySelector<HTMLElement>(
+        "[data-scene-caption]",
+      );
+      return {
+        states: [...instrument.querySelectorAll("[data-stage-state]")].map(
+          (state) => state.textContent?.trim() ?? "",
+        ),
+        caption: caption?.textContent?.replace(/\s+/g, " ").trim() ?? "",
+        captionShown: caption
+          ? getComputedStyle(caption).visibility === "visible"
+          : false,
+      };
+    });
+    return {
+      stages: raw.states.map((name) => stateByName.get(name)),
+      caption: raw.caption,
+      captionShown: raw.captionShown,
+    };
   }
 }

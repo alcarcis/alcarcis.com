@@ -68,9 +68,33 @@ const dataRows = [
     value: breakOnlyBetween("lighthouse ≥ 95 · axe 0 violations"),
   },
 ].filter((row) => row.value !== null);
+
+/* What the run script writes as the scene plays, in this page's language. */
+const runCopy = {
+  captions: [
+    t("instrument.caption.requirements"),
+    t("instrument.caption.design"),
+    t("instrument.caption.code"),
+    t("instrument.caption.cicd"),
+    t("instrument.caption.production"),
+  ],
+  fixCaption: t("instrument.caption.fix"),
+  states: {
+    passed: t("instrument.state.passed"),
+    running: t("instrument.state.running"),
+    pending: t("instrument.state.pending"),
+  },
+  passed: t("instrument.announce.passed"),
+};
 ---
 
-<aside class="instrument" aria-label={t("instrument.label")} data-instrument>
+<aside
+  class="instrument"
+  aria-label={t("instrument.label")}
+  data-instrument
+  data-run-state="final"
+  data-run-copy={JSON.stringify(runCopy)}
+>
   <svg class="marker" viewBox="0 0 20 20" aria-hidden="true">
     <circle class="marker-ground" cx="10" cy="10" r="9.5"></circle>
     <path
@@ -84,6 +108,15 @@ const dataRows = [
     <span class="title" lang={terminalLang}>
       <span class="suite">Suite</span> · quality.spec.ts
     </span>
+    <button
+      class="control"
+      type="button"
+      aria-label={t("instrument.skip")}
+      data-skip
+      hidden
+    >
+      <span aria-hidden="true">[</span>Skip<span aria-hidden="true">]</span>
+    </button>
     <span class="status" lang={terminalLang} data-run-status>
       Passed
     </span>
@@ -92,16 +125,20 @@ const dataRows = [
       type="button"
       aria-label={t("instrument.rerun")}
       data-rerun
-      hidden
     >
       <span aria-hidden="true">[</span>
       <RerunIcon width={13} height={13} aria-hidden="true" />
       Rerun<span aria-hidden="true">]</span>
     </button>
+    <span class="visually-hidden" role="status" data-run-live></span>
   </div>
 
   <div class="scene" aria-hidden="true" data-scene>
-    <span class="scene-label">{t("instrument.sceneLabel")}</span>
+    {/* Zero-size until the renderer sizes it, so drawing in never counts as a layout shift. */}
+    <canvas width="0" height="0" data-scene-canvas></canvas>
+    <span class="scene-label" data-scene-label>
+      {t("instrument.sceneLabel")}
+    </span>
     {/* Spaces are explicit: the HTML compressor drops whitespace at line breaks. */}
     <p class="scene-still" data-scene-still>
       <span>
@@ -158,7 +195,7 @@ const dataRows = [
       ))}
     </ol>
 
-    <dl class="data" lang={terminalLang}>
+    <dl class="data" lang={terminalLang} data-rows>
       {dataRows.map(({ term, value, datetime }) => (
         <div>
           <dt>{term}</dt>
@@ -168,6 +205,10 @@ const dataRows = [
     </dl>
   </div>
 </aside>
+
+<script>
+  import "../scripts/instrument/run";
+</script>
 
 <style>
   .instrument {
@@ -239,6 +280,15 @@ const dataRows = [
     }
   }
 
+  /* While a run plays the status reads in soft copper (the darker copper on paper). */
+  .instrument:not([data-run-state="final"]) .status {
+    color: var(--eyebrow);
+
+    &::before {
+      background: var(--link);
+    }
+  }
+
   .control {
     display: inline-flex;
     align-items: center;
@@ -266,6 +316,24 @@ const dataRows = [
     &:hover {
       border-color: var(--dots);
       color: var(--text);
+    }
+
+    /* Disabled while a run plays; aria-disabled keeps focus on the button instead of dropping it. */
+    &[aria-disabled="true"] {
+      opacity: 0.45;
+      cursor: default;
+
+      &:hover {
+        border-color: transparent;
+        color: var(--muted);
+      }
+    }
+  }
+
+  /* Without scripting there is no run to replay. */
+  @media (scripting: none) {
+    [data-rerun] {
+      display: none;
     }
   }
 
@@ -307,6 +375,11 @@ const dataRows = [
     white-space: nowrap;
   }
 
+  .scene canvas {
+    position: absolute;
+    inset-block-start: 0;
+  }
+
   .caption-number {
     color: var(--link);
   }
@@ -325,6 +398,12 @@ const dataRows = [
     line-height: 1;
     letter-spacing: 0;
     white-space: pre;
+  }
+
+  /* The text frame steps aside while a run plays and once the renderer has drawn. */
+  .instrument:not([data-run-state="final"]) .scene-still,
+  .scene[data-drawn] .scene-still {
+    visibility: hidden;
   }
 
   .signal {
@@ -360,6 +439,26 @@ const dataRows = [
     .str {
       color: var(--code-string);
     }
+
+    /* The caret is added by the run script, so it is styled from outside this component. */
+    :global(.caret) {
+      display: inline-block;
+      inline-size: 0.6em;
+      block-size: 1.05em;
+      margin-inline-start: 1px;
+      vertical-align: -0.18em;
+      background: var(--link);
+
+      @media (prefers-reduced-motion: no-preference) {
+        animation: blink 1s steps(1) infinite;
+      }
+    }
+  }
+
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
   }
 
   .stages {
@@ -380,6 +479,10 @@ const dataRows = [
 
   .stage-name {
     color: var(--text);
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: color 0.35s var(--ease-out);
+    }
   }
 
   .leader {
@@ -402,6 +505,10 @@ const dataRows = [
     path {
       stroke-dasharray: 16;
       stroke-dashoffset: 0;
+
+      @media (prefers-reduced-motion: no-preference) {
+        transition: stroke-dashoffset 0.5s var(--ease-out) 0.08s;
+      }
     }
   }
 
@@ -412,10 +519,59 @@ const dataRows = [
     opacity: 0;
   }
 
+  .stage[data-state="pending"] {
+    .stage-name {
+      color: var(--muted);
+    }
+
+    .check path {
+      stroke-dashoffset: 16;
+    }
+
+    .check-box {
+      opacity: 1;
+    }
+  }
+
+  /* Running: the one stage the scene is showing, in ink, with a copper caret in the gutter
+     before its name and a muted "running…" in place of its check. */
+  .stage[data-state="running"] {
+    &::before {
+      content: "";
+      position: absolute;
+      inset-block-start: 7px;
+      inset-inline-start: -14px;
+      inline-size: 7px;
+      block-size: 14px;
+      background: var(--link);
+
+      @media (prefers-reduced-motion: no-preference) {
+        animation: blink 1s steps(1) infinite;
+      }
+    }
+
+    .stage-run {
+      display: inline;
+    }
+
+    .check {
+      display: none;
+    }
+  }
+
   .data {
     display: grid;
     grid-template-columns: 5.5rem minmax(0, 1fr);
     margin: 0;
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: opacity 0.5s var(--ease-out);
+    }
+
+    /* The first run shows the facts once its scene has played. */
+    &[data-pending] {
+      opacity: 0;
+    }
 
     & > div {
       display: contents;
@@ -438,6 +594,24 @@ const dataRows = [
       margin: 0;
       color: var(--text);
       font-variant-numeric: tabular-nums;
+    }
+  }
+
+  /* Until the run script primes the first run, the parts it types and ticks stay hidden, so
+     the final frame never flashes before the typing. If the script never arrives, they show
+     after 3 s. The pre-paint script in BaseLayout sets the class when motion is allowed. */
+  :global(.run-pending) .spec code,
+  :global(.run-pending) .stage,
+  :global(.run-pending) .data,
+  :global(.run-pending) .scene-caption,
+  :global(.run-pending) .scene-still {
+    visibility: hidden;
+    animation: reveal 0s 3s forwards;
+  }
+
+  @keyframes reveal {
+    to {
+      visibility: visible;
     }
   }
 

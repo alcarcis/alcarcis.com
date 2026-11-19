@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { Hero } from "../components/Hero";
 import { LanguageSwitch } from "../components/LanguageSwitch";
+import { ReadingProgress } from "../components/ReadingProgress";
 import { SeoLinks } from "../components/SeoLinks";
 import { SiteHeader } from "../components/SiteHeader";
 import type { HeaderCopy, LocaleCase } from "../data/locales";
@@ -15,12 +16,14 @@ export class HomePage {
   readonly main: Locator;
   readonly mainHeading: Locator;
   readonly seo: SeoLinks;
+  readonly readingProgress: ReadingProgress;
 
   constructor(private readonly page: Page) {
     this.document = page.locator("html");
     this.main = page.getByRole("main");
     this.mainHeading = this.main.getByRole("heading", { level: 1 });
     this.seo = new SeoLinks(page);
+    this.readingProgress = new ReadingProgress(page);
   }
 
   async open(

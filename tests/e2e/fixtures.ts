@@ -1,4 +1,8 @@
-import { test as base, expect as baseExpect } from "@playwright/test";
+import {
+  test as base,
+  expect as baseExpect,
+  type Clock,
+} from "@playwright/test";
 import { HomePage } from "./pages/HomePage";
 import {
   AccessibilityScanner,
@@ -13,6 +17,8 @@ interface Fixtures {
   homePage: HomePage;
   /** The home page in a second tab of the same browser context, so both share storage. */
   otherTab: HomePage;
+  /** The page clock, installed and paused before the page loads: time moves only on runFor. */
+  frozenClock: Clock;
   accessibilityScanner: AccessibilityScanner;
   consoleErrors: ConsoleErrorCollector;
 }
@@ -23,6 +29,12 @@ export const test = base.extend<Fixtures>({
   },
   otherTab: async ({ context }, use) => {
     await use(new HomePage(await context.newPage()));
+  },
+  frozenClock: async ({ page }, use) => {
+    const start = new Date("2026-11-18T12:00:00Z").getTime();
+    await page.clock.install({ time: start });
+    await page.clock.pauseAt(start + 1000);
+    await use(page.clock);
   },
   accessibilityScanner: async ({ page }, use) => {
     await use(new AccessibilityScanner(page));

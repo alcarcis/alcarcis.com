@@ -38,8 +38,15 @@ const en = {
   "instrument.state.passed": "passed",
   "instrument.state.running": "running",
   "instrument.state.pending": "pending",
+  "instrument.caption.requirements": "acceptance criteria made testable",
+  "instrument.caption.design": "risks mapped before code",
+  "instrument.caption.code": "tests written with the code",
+  "instrument.caption.cicd": "the gate blocks DEF-01",
+  "instrument.caption.fix": "fix merged, gate opens",
   "instrument.caption.production": "monitored, clean run",
+  "instrument.skip": "Skip: show the finished run",
   "instrument.rerun": "Rerun: replay the test run",
+  "instrument.announce.passed": "Test run passed",
 } as const;
 
 export type UiKey = keyof typeof en;
@@ -66,8 +73,15 @@ const es: Readonly<Record<UiKey, string>> = {
   "instrument.state.passed": "superada",
   "instrument.state.running": "en curso",
   "instrument.state.pending": "pendiente",
+  "instrument.caption.requirements": "criterios de aceptación verificables",
+  "instrument.caption.design": "riesgos mapeados antes del código",
+  "instrument.caption.code": "pruebas escritas con el código",
+  "instrument.caption.cicd": "la puerta de calidad bloquea DEF-01",
+  "instrument.caption.fix": "corrección integrada, la puerta se abre",
   "instrument.caption.production": "monitoreado, ejecución limpia",
+  "instrument.skip": "Skip: mostrar la ejecución terminada",
   "instrument.rerun": "Rerun: repetir la ejecución",
+  "instrument.announce.passed": "Ejecución de pruebas superada",
 };
 
 const ui: Readonly<Record<Locale, Readonly<Record<UiKey, string>>>> = {

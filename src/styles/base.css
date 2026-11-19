@@ -18,6 +18,8 @@ html {
 
 body {
   margin: 0;
+  /* Room for the reading-progress line along the bottom edge. */
+  padding-block-end: var(--reading-progress-height);
   background: var(--ground);
   color: var(--text);
   font-family: var(--font-body);

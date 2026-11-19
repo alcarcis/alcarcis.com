@@ -1,0 +1,17 @@
+{/*
+  The page's ground: quiet glyph grain on a fixed canvas behind the content, drawn by the glyph
+  renderer once the page is idle. Decorative; without scripting it stays empty.
+*/}
+<div class="glyph-field" aria-hidden="true">
+  <canvas width="0" height="0" data-glyph-field></canvas>
+</div>
+
+<style>
+  .glyph-field {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+</style>

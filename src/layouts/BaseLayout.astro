@@ -2,6 +2,8 @@
 import "../styles/tokens.css";
 import "../styles/base.css";
 import { Font } from "astro:assets";
+import GlyphField from "../components/GlyphField.astro";
+import ReadingProgress from "../components/ReadingProgress.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import { themeStorageKey } from "../lib/theme";
 import {
@@ -50,6 +52,11 @@ const alternateLinks = [
       } catch {
         // Storage can be blocked; the system preference decides the theme then.
       }
+      // The instrument types its spec when motion is welcome; until its script primes the run,
+      // the parts it types stay hidden so the final frame never flashes first.
+      if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+        document.documentElement.classList.add("run-pending");
+      }
     </script>
     <title>{title}</title>
     <meta name="description" content={description} />
@@ -66,9 +73,19 @@ const alternateLinks = [
     <a class="skip-link" href="#main">
       {t("a11y.skipToContent")}
     </a>
+    <GlyphField />
     <SiteHeader locale={locale} path={path} />
     <main id="main">
       <slot />
     </main>
+    <ReadingProgress />
   </body>
 </html>
+
+<style>
+  /* Content sits above the grain field. */
+  main {
+    position: relative;
+    z-index: 1;
+  }
+</style>
