@@ -1,0 +1,306 @@
+---
+import { minimumCategoryScore } from "../../scripts/quality-budget";
+import { useTranslations, type Locale } from "../i18n/ui";
+import { cvDownloadFor, isInPublicDir } from "../lib/cv";
+import { breakOnlyBetween } from "../lib/typography";
+import { contact, profiles } from "../site";
+import SectionHead from "./SectionHead.astro";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+/** This site's own repository: the report's last row, where its tests can be read. */
+const sourceRepository = "https://github.com/alcarcis/alcarcis.com";
+
+interface RowLink {
+  readonly href: string;
+  /** The link's text in pieces; a line may break between them. */
+  readonly pieces: readonly string[];
+  readonly type?: string;
+}
+
+/** A term, and a fact in words or a link. */
+interface Row {
+  readonly term: string;
+  readonly value: string | RowLink;
+}
+
+/* A web address as a row shows it: without its scheme or www, breakable after each slash. */
+const addressLink = (href: string): RowLink => ({
+  href,
+  pieces: href.replace(/^https:\/\/(?:www\.)?/, "").split(/(?<=\/)/),
+});
+
+const cv = cvDownloadFor(locale, isInPublicDir(process.cwd()));
+
+/* Profile and product names stay as they are in every language; the CV row only when it ships. */
+const contactRows: Row[] = [
+  { term: "LinkedIn", value: addressLink(profiles.linkedIn) },
+  { term: "GitHub", value: addressLink(profiles.gitHub) },
+  ...(cv
+    ? [
+        {
+          term: "CV",
+          value: {
+            href: cv.href,
+            pieces: [t("hero.cvAction")],
+            type: "application/pdf",
+          },
+        },
+      ]
+    : []),
+];
+
+/* The score the pipeline enforces, read from the module lighthouserc.cjs asserts; "≥ 95" stays
+   on one line. */
+const lighthouseMinimum = Math.round(minimumCategoryScore * 100);
+
+const reportRows: Row[] = [
+  { term: "E2E", value: t("report.e2e") },
+  { term: t("report.accessibility.term"), value: t("report.accessibility") },
+  {
+    term: t("report.performance.term"),
+    value: `${breakOnlyBetween(`Lighthouse · ≥ ${lighthouseMinimum}`)} ${t("report.performance.scope")}`,
+  },
+  { term: t("report.deploy.term"), value: t("report.deploy") },
+  { term: t("report.source.term"), value: addressLink(sourceRepository) },
+];
+
+/* Both lists share one layout: Contact's rows, then the report's. */
+const rowLists = [
+  { rows: contactRows, inReport: false },
+  { rows: reportRows, inReport: true },
+];
+---
+
+<section class="contact" id="contact" aria-labelledby="contact-heading">
+  <SectionHead
+    locale={locale}
+    testCase={5}
+    headingId="contact-heading"
+    title={t("contact.title")}
+  />
+  {/* The script reads each outcome's label and announcement here, in this page's language. */}
+  <div
+    class="address"
+    data-copy-address
+    data-copied-label={t("contact.copied")}
+    data-copied-message={t("contact.announce.copied")}
+    data-selected-label={t("contact.selected")}
+    data-selected-message={t("contact.announce.selected")}
+  >
+    <a class="email" id="contact-address" href={`mailto:${contact.email}`}>
+      {contact.email}
+    </a>
+    <button class="copy" type="button" aria-describedby="contact-address">
+      <span class="bracket" aria-hidden="true">
+        [
+      </span>
+      <span data-copy-label>{t("contact.copy")}</span>
+      <span class="bracket" aria-hidden="true">
+        ]
+      </span>
+    </button>
+    {/* Outside the button: a live region inside a button is not reliably announced. */}
+    <span class="visually-hidden" role="status"></span>
+  </div>
+  {rowLists.map(({ rows, inReport }) => {
+    const list = (
+      <dl class="rows">
+        {rows.map(({ term, value }) => (
+          <div class="row">
+            {/* The rule is an element of its own, so axe can judge the row's contrast. */}
+            <dt>
+              <span class="rule" aria-hidden="true" />
+              {term}
+            </dt>
+            <dd>
+              {typeof value === "string" ? (
+                value
+              ) : (
+                <a href={value.href} type={value.type}>
+                  {value.pieces.map((piece, index) => (
+                    <Fragment>
+                      {index > 0 && <wbr />}
+                      {piece}
+                    </Fragment>
+                  ))}
+                </a>
+              )}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    );
+    return inReport ? (
+      <section class="report" id="report" aria-labelledby="report-heading">
+        <h3 class="report-title" id="report-heading">
+          <span class="report-code">{t("report.code")}</span> ·{" "}
+          {t("report.title")}
+        </h3>
+        {list}
+      </section>
+    ) : (
+      list
+    );
+  })}
+</section>
+
+<script>
+  import "../scripts/contact/copy-address";
+</script>
+
+<style>
+  .contact {
+    max-inline-size: var(--page-max-width);
+    margin-inline: auto;
+    padding: 0 var(--gutter) var(--section-space-end);
+  }
+
+  /* The address is the link itself, at display size, with its copy button beside it. */
+  .address {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4) var(--space-6);
+    margin-block-end: var(--space-10);
+  }
+
+  .email {
+    display: inline-block;
+    /* On phones the line is shorter than a target: the padding makes up the difference. */
+    padding-block: max(0px, (var(--target-min) - 1lh) / 2);
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: var(--type-contact-address-size);
+    font-weight: 500;
+    line-height: var(--type-contact-address-leading);
+    letter-spacing: var(--type-contact-address-tracking);
+    text-decoration-color: var(--link);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.16em;
+
+    &:hover {
+      text-decoration-thickness: 3px;
+    }
+  }
+
+  .copy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+    min-inline-size: 12ch;
+    min-block-size: var(--target-min);
+    padding-inline: var(--space-2);
+    border: 1px solid transparent;
+    background: var(--ground);
+    color: var(--link);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: var(--type-ui-size);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition:
+      border-color var(--duration-quick) var(--ease-out),
+      color var(--duration-quick) var(--ease-out);
+
+    &:hover {
+      border-color: var(--dots);
+    }
+
+    /* The outcome shows in words and in colour: a pass when copied, plain text when the
+       visitor has to copy the selected address. */
+    &[data-state="copied"] {
+      border-color: currentColor;
+      color: var(--pass);
+    }
+
+    &[data-state="selected"] {
+      border-color: var(--dots);
+      color: var(--text);
+    }
+  }
+
+  .bracket {
+    opacity: 0.55;
+  }
+
+  /* Data rows, not boxes: each opens on a dotted rule, its term in mono capitals beside its
+     value. A list is as wide as its longest row. */
+  .rows {
+    inline-size: fit-content;
+    max-inline-size: min(100%, 35rem);
+  }
+
+  .row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 8rem minmax(0, 1fr);
+    column-gap: var(--space-3);
+    padding-block: var(--space-2);
+  }
+
+  .rule {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    block-size: 3px;
+    background: var(--dotted-rule);
+  }
+
+  dt {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: var(--type-label-size);
+    line-height: var(--type-label-leading);
+    letter-spacing: var(--type-label-tracking);
+    text-transform: uppercase;
+  }
+
+  dd {
+    font-family: var(--font-mono);
+    font-size: var(--type-data-size);
+    line-height: var(--type-data-leading);
+  }
+
+  /* The report: how this site is tested, in the same rows, its facts in the text ink. */
+  .report {
+    margin-block-start: var(--space-10);
+
+    dd {
+      color: var(--text);
+    }
+  }
+
+  .report-title {
+    margin-block-end: var(--space-2);
+    color: var(--accent-text);
+    font-family: var(--font-mono);
+    font-size: var(--type-label-size);
+    font-weight: 500;
+    line-height: var(--type-label-leading);
+    letter-spacing: var(--type-label-tracking);
+    text-transform: uppercase;
+  }
+
+  .report-code {
+    color: var(--link);
+  }
+
+  @media (width < 60em) {
+    /* A link keeps its row's rhythm; its own box grows to a full target around its line. */
+    dd a {
+      display: inline-flex;
+      align-items: center;
+      min-block-size: var(--target-min);
+      margin-block: calc((1lh - var(--target-min)) / 2);
+    }
+  }
+</style>

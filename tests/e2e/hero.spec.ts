@@ -1,3 +1,4 @@
+import { anchors } from "./data/contact";
 import { contactEmailHref, localeCases } from "./data/locales";
 import { expect, test } from "./fixtures";
 
@@ -53,6 +54,18 @@ for (const locale of localeCases) {
       expect(body.subarray(0, pdfSignature.length).toString("latin1")).toBe(
         pdfSignature,
       );
+    });
+
+    test("leads to the report on how this site is tested, and brings it into view", async ({
+      homePage,
+    }) => {
+      const { reportLink } = homePage.hero(locale);
+      const { report } = homePage.contact(locale);
+      await expect(reportLink).toHaveAttribute("href", `#${anchors.report}`);
+
+      await reportLink.click();
+
+      await expect(report.region).toBeInViewport();
     });
 
     test("preloads the headline and body fonts", async ({ homePage }) => {

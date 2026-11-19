@@ -1,4 +1,11 @@
 import {
+  emailAddress,
+  lighthouseMinimum,
+  sourceRepository,
+  type CopyOutcome,
+} from "./contact";
+import { profileUrls } from "./externalLinks";
+import {
   playwrightCiReference,
   pw2xray,
   type RepositoryFacts,
@@ -32,6 +39,8 @@ export interface HeroCopy {
   readonly primaryAction: string;
   readonly cvAction: string;
   readonly cvPath: string;
+  /** The note under the actions that links to the report on how this site is tested. */
+  readonly reportLink: string;
 }
 
 export interface StageStateNames {
@@ -103,6 +112,39 @@ export interface ToolsCopy {
   readonly groupNames: readonly string[];
 }
 
+/** A row that links somewhere: what it names, and the link's text and address. */
+export interface LinkRowCopy {
+  readonly term: string;
+  readonly link: string;
+  readonly url: string;
+}
+
+/** A row that states a fact: what it names, and what it says about it. */
+export interface FactRowCopy {
+  readonly term: string;
+  readonly fact: string;
+}
+
+export interface ReportCopy {
+  /** The heading: the report's code, then what it covers. */
+  readonly title: string;
+  /** How each part of the quality gate checks this site, in the order the page lists them. */
+  readonly facts: readonly FactRowCopy[];
+  /** The last row: where the site's source lives. */
+  readonly source: LinkRowCopy;
+}
+
+export interface ContactCopy {
+  readonly head: SectionHeadCopy;
+  /** The copy button's label at rest, and as it reports each outcome. */
+  readonly copyLabels: Readonly<Record<CopyOutcome | "idle", string>>;
+  /** What the live region announces for each outcome. */
+  readonly announcements: Readonly<Record<CopyOutcome, string>>;
+  /** The profile and CV rows, in order. */
+  readonly rows: readonly LinkRowCopy[];
+  readonly report: ReportCopy;
+}
+
 export interface FooterCopy {
   /** What the site does not do to its visitors. */
   readonly privacyNote: string;
@@ -126,10 +168,11 @@ export interface LocaleCase {
   readonly work: WorkCopy;
   readonly openSource: OpenSourceCopy;
   readonly tools: ToolsCopy;
+  readonly contact: ContactCopy;
   readonly footer: FooterCopy;
 }
 
-export const contactEmailHref = "mailto:hola@alcarcis.com";
+export const contactEmailHref = `mailto:${emailAddress}`;
 
 export interface AlternateLink {
   readonly hreflang: string;
@@ -178,6 +221,7 @@ export const englishPage: LocaleCase = {
     primaryAction: "Let's talk",
     cvAction: "Download CV (PDF)",
     cvPath: "/cv/carlos-alcala-cv-en.pdf",
+    reportLink: "This site is tested on every pull request · see the report",
   },
   instrument: {
     name: "Suite quality.spec.ts, test run",
@@ -266,6 +310,52 @@ export const englishPage: LocaleCase = {
       "Test management",
     ],
   },
+  contact: {
+    head: { code: "TC-05", codeTitle: "Test case 05", title: "Contact" },
+    copyLabels: {
+      idle: "copy",
+      copied: "copied",
+      selected: "selected, press Ctrl+C",
+    },
+    announcements: {
+      copied: "Email address copied.",
+      selected:
+        "Could not copy. The address is selected: press Ctrl+C, or Cmd+C on a Mac.",
+    },
+    rows: [
+      {
+        term: "LinkedIn",
+        link: "linkedin.com/in/alcarcis",
+        url: profileUrls.linkedIn,
+      },
+      { term: "GitHub", link: "github.com/alcarcis", url: profileUrls.gitHub },
+      {
+        term: "CV",
+        link: "Download CV (PDF)",
+        url: "/cv/carlos-alcala-cv-en.pdf",
+      },
+    ],
+    report: {
+      title: "Report · How this site is tested",
+      facts: [
+        { term: "E2E", fact: "Playwright · on every pull request" },
+        { term: "Accessibility", fact: "axe · 0 violations required" },
+        {
+          term: "Performance",
+          fact: `Lighthouse · ≥ ${lighthouseMinimum} in all four categories`,
+        },
+        {
+          term: "Deploy",
+          fact: "Cloudflare Pages · preview per pull request",
+        },
+      ],
+      source: {
+        term: "Source",
+        link: sourceRepository.linkText,
+        url: sourceRepository.url,
+      },
+    },
+  },
   footer: {
     privacyNote: "No cookies, no tracking",
     credits: [
@@ -306,6 +396,7 @@ export const spanishPage: LocaleCase = {
     primaryAction: "Conversemos",
     cvAction: "Descargar CV (PDF)",
     cvPath: "/cv/carlos-alcala-cv-es.pdf",
+    reportLink: "Este sitio se prueba en cada pull request · ver el reporte",
   },
   instrument: {
     name: "Suite quality.spec.ts, ejecución de pruebas",
@@ -409,6 +500,56 @@ export const spanishPage: LocaleCase = {
       "CI/CD",
       "Gestión de pruebas",
     ],
+  },
+  contact: {
+    head: {
+      code: "TC-05",
+      codeTitle: "Caso de prueba 05",
+      title: "Contacto",
+    },
+    copyLabels: {
+      idle: "copiar",
+      copied: "copiado",
+      selected: "seleccionado, presiona Ctrl+C",
+    },
+    announcements: {
+      copied: "Dirección de correo copiada.",
+      selected:
+        "No se pudo copiar. La dirección está seleccionada: presiona Ctrl+C, o Cmd+C en Mac.",
+    },
+    rows: [
+      {
+        term: "LinkedIn",
+        link: "linkedin.com/in/alcarcis",
+        url: profileUrls.linkedIn,
+      },
+      { term: "GitHub", link: "github.com/alcarcis", url: profileUrls.gitHub },
+      {
+        term: "CV",
+        link: "Descargar CV (PDF)",
+        url: "/cv/carlos-alcala-cv-es.pdf",
+      },
+    ],
+    report: {
+      title: "Reporte · Cómo se prueba este sitio",
+      facts: [
+        { term: "E2E", fact: "Playwright · en cada pull request" },
+        { term: "Accesibilidad", fact: "axe · se exigen 0 violaciones" },
+        {
+          term: "Rendimiento",
+          fact: `Lighthouse · ≥ ${lighthouseMinimum} en las cuatro categorías`,
+        },
+        {
+          term: "Despliegue",
+          fact: "Cloudflare Pages · vista previa por pull request",
+        },
+      ],
+      source: {
+        term: "Código",
+        link: sourceRepository.linkText,
+        url: sourceRepository.url,
+      },
+    },
   },
   footer: {
     privacyNote: "Sin cookies, sin rastreo",

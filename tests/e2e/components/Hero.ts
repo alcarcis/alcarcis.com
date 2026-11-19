@@ -10,6 +10,8 @@ export class Hero {
   readonly sub: Locator;
   readonly primaryAction: Locator;
   readonly cvLinks: Locator;
+  /** The note under the actions that leads to the report on how this site is tested. */
+  readonly reportLink: Locator;
   readonly instrument: Instrument;
 
   constructor(
@@ -34,7 +36,11 @@ export class Hero {
       name: hero.primaryAction,
       exact: true,
     });
-    this.cvLinks = page.getByRole("link", { name: hero.cvAction });
+    this.cvLinks = this.region.getByRole("link", { name: hero.cvAction });
+    this.reportLink = this.region.getByRole("link", {
+      name: hero.reportLink,
+      exact: true,
+    });
     this.instrument = new Instrument(this.region, instrument);
   }
 

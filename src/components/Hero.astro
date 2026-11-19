@@ -55,6 +55,24 @@ const cv = cvDownloadFor(locale, isInPublicDir(process.cwd()));
         </a>
       )}
     </div>
+    {/* The suite's own note: this site is tested, and the report says how. The separator is
+        read, not shown: the arrow stands for it on screen. */}
+    <a class="report-link" href="#report">
+      <span>{t("hero.reportNote")}</span>
+      <span class="visually-hidden"> · </span>
+      <span class="report-action">
+        <svg
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <path d="M2.5 8h10M9 4.5 12.5 8 9 11.5"></path>
+        </svg>
+        {t("hero.reportAction")}
+      </span>
+    </a>
   </div>
   <Instrument locale={locale} />
 </section>
@@ -171,6 +189,49 @@ const cv = cvDownloadFor(locale, isInPublicDir(process.cwd()));
       border-color: var(--link);
       background: var(--panel);
     }
+  }
+
+  /* A quiet bordered note under the actions, in the grid's mono voice; only its action is
+     underlined, as a link. */
+  .report-link {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px var(--space-3);
+    margin-block-start: var(--space-8);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--rule);
+    background: var(--ground);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: var(--type-ui-size);
+    line-height: var(--type-ui-leading);
+    letter-spacing: var(--type-ui-tracking);
+    text-decoration: none;
+    transition: border-color var(--duration-quick) var(--ease-out);
+
+    svg {
+      inline-size: 0.875rem;
+      block-size: 0.875rem;
+    }
+
+    &:hover {
+      border-color: var(--dots);
+
+      .report-action {
+        text-decoration-thickness: 2px;
+      }
+    }
+  }
+
+  .report-action {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--link);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
   }
 
   @media (width < 60em) {
