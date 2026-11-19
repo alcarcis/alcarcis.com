@@ -4,9 +4,10 @@
  * stored override before the first paint; this script only handles changes.
  */
 
+import { themeStorageKey } from "../lib/theme";
+
 type Theme = "light" | "dark";
 
-const storageKey = "theme";
 const root = document.documentElement;
 const colorSchemeMeta = document.querySelector<HTMLMetaElement>(
   'meta[name="color-scheme"]',
@@ -20,7 +21,7 @@ const systemTheme = (): Theme => (systemDark.matches ? "dark" : "light");
 
 function storedTheme(): Theme | null {
   try {
-    const value = window.localStorage.getItem(storageKey);
+    const value = window.localStorage.getItem(themeStorageKey);
     return isTheme(value) ? value : null;
   } catch {
     return null;
@@ -29,8 +30,8 @@ function storedTheme(): Theme | null {
 
 function storeTheme(theme: Theme | null): void {
   try {
-    if (theme === null) window.localStorage.removeItem(storageKey);
-    else window.localStorage.setItem(storageKey, theme);
+    if (theme === null) window.localStorage.removeItem(themeStorageKey);
+    else window.localStorage.setItem(themeStorageKey, theme);
   } catch {
     // Storage can be blocked; the choice then lasts as long as the page.
   }
@@ -58,7 +59,9 @@ for (const toggle of document.querySelectorAll("[data-theme-toggle]")) {
   });
 }
 
-// Another tab changed the choice.
+// Another tab changed the choice, or the site's storage was cleared (a null key).
 window.addEventListener("storage", (event) => {
-  if (event.key === storageKey || event.key === null) applyTheme(storedTheme());
+  if (event.key === themeStorageKey || event.key === null) {
+    applyTheme(storedTheme());
+  }
 });

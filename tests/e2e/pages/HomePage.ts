@@ -1,8 +1,9 @@
 import type { Locator, Page } from "@playwright/test";
+import { Hero } from "../components/Hero";
 import { LanguageSwitch } from "../components/LanguageSwitch";
 import { SeoLinks } from "../components/SeoLinks";
 import { SiteHeader } from "../components/SiteHeader";
-import type { HeaderCopy } from "../data/locales";
+import type { HeaderCopy, LocaleCase } from "../data/locales";
 
 type NavigationOptions = NonNullable<Parameters<Page["goto"]>[1]>;
 
@@ -39,6 +40,10 @@ export class HomePage {
 
   header(copy: HeaderCopy): SiteHeader {
     return new SiteHeader(this.page, copy);
+  }
+
+  hero(locale: LocaleCase): Hero {
+    return new Hero(this.page, locale);
   }
 
   languageSwitch(accessibleName: string): LanguageSwitch {
