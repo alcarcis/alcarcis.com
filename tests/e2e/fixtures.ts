@@ -11,6 +11,8 @@ import {
 
 interface Fixtures {
   homePage: HomePage;
+  /** The home page in a second tab of the same browser context, so both share storage. */
+  otherTab: HomePage;
   accessibilityScanner: AccessibilityScanner;
   consoleErrors: ConsoleErrorCollector;
 }
@@ -18,6 +20,9 @@ interface Fixtures {
 export const test = base.extend<Fixtures>({
   homePage: async ({ page }, use) => {
     await use(new HomePage(page));
+  },
+  otherTab: async ({ context }, use) => {
+    await use(new HomePage(await context.newPage()));
   },
   accessibilityScanner: async ({ page }, use) => {
     await use(new AccessibilityScanner(page));

@@ -3,6 +3,7 @@ import "../styles/tokens.css";
 import "../styles/base.css";
 import { Font } from "astro:assets";
 import SiteHeader from "../components/SiteHeader.astro";
+import { themeStorageKey } from "../lib/theme";
 import {
   defaultLocale,
   locales,
@@ -37,9 +38,9 @@ const alternateLinks = [
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
-    <script is:inline>
+    <script is:inline define:vars={{ themeStorageKey }}>
       try {
-        const theme = localStorage.getItem("theme");
+        const theme = localStorage.getItem(themeStorageKey);
         if (theme === "light" || theme === "dark") {
           document.documentElement.dataset.theme = theme;
           document

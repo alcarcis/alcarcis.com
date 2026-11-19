@@ -1,7 +1,11 @@
 import { colorSchemes, oppositeOf } from "./data/colorSchemes";
 import { englishPage, localeCases } from "./data/locales";
 import { expect, test } from "./fixtures";
-import { blockLocalStorage, storedTheme } from "./support/storage";
+import {
+  blockLocalStorage,
+  clearSiteStorage,
+  storedTheme,
+} from "./support/storage";
 
 for (const systemScheme of colorSchemes) {
   const otherScheme = oppositeOf(systemScheme);
@@ -65,6 +69,39 @@ for (const systemScheme of colorSchemes) {
 
       await expect(homePage.document).toHaveCSS("color-scheme", otherScheme);
       expect(consoleErrors.report()).toHaveNoConsoleErrors();
+    });
+
+    test(`switching to ${otherScheme} in one tab switches another open tab too`, async ({
+      homePage,
+      otherTab,
+    }) => {
+      const { themeToggle } = homePage.header(englishPage.header);
+      await homePage.open(englishPage.language.path);
+      await otherTab.open(englishPage.language.path);
+
+      await themeToggle.switchTo(otherScheme);
+
+      await expect(otherTab.document).toHaveCSS("color-scheme", otherScheme);
+      await expect(
+        otherTab.header(englishPage.header).themeToggle.offering(systemScheme),
+      ).toBeVisible();
+    });
+
+    test("clearing the site's storage returns every open tab to the system theme", async ({
+      homePage,
+      otherTab,
+      page,
+    }) => {
+      const { themeToggle } = homePage.header(englishPage.header);
+      await homePage.open(englishPage.language.path);
+      await otherTab.open(englishPage.language.path);
+      await themeToggle.switchTo(otherScheme);
+      await expect(otherTab.document).toHaveCSS("color-scheme", otherScheme);
+
+      await clearSiteStorage(page);
+
+      await expect(homePage.document).toHaveCSS("color-scheme", systemScheme);
+      await expect(otherTab.document).toHaveCSS("color-scheme", systemScheme);
     });
 
     for (const locale of localeCases) {
