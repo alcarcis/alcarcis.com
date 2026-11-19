@@ -55,8 +55,10 @@ jobs:
       - *setup-node
       - *setup-pnpm
       - *install
-      - name: Install Playwright Chromium with system dependencies
-        run: pnpm exec playwright install --with-deps chromium
+      # The runner image already has Chromium's system libraries; --with-deps only added
+      # fonts the site does not use, fetched from an Ubuntu mirror whose speed varies a lot.
+      - name: Install Playwright's Chromium headless shell
+        run: pnpm exec playwright install --only-shell chromium
       - name: Run Playwright tests
         run: pnpm test:e2e
       - name: Upload the Playwright report
