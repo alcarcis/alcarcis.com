@@ -18,6 +18,29 @@ export interface HeaderCopy {
   readonly themeToggle: ThemeToggleNames;
 }
 
+export interface HeroCopy {
+  readonly eyebrow: string;
+  readonly sub: string;
+  readonly primaryAction: string;
+  readonly cvAction: string;
+  readonly cvPath: string;
+}
+
+export interface StageStateNames {
+  readonly passed: string;
+  readonly running: string;
+  readonly pending: string;
+}
+
+export interface InstrumentCopy {
+  readonly name: string;
+  readonly stagesName: string;
+  readonly stageStates: StageStateNames;
+  readonly sceneLabel: string;
+  /** What the scene shows at each stage, in stage order. */
+  readonly captions: readonly string[];
+}
+
 export interface LocaleCase {
   readonly language: LanguageOption;
   readonly canonicalUrl: string;
@@ -26,7 +49,11 @@ export interface LocaleCase {
   readonly languageSwitchName: string;
   readonly switchTarget: LanguageOption;
   readonly header: HeaderCopy;
+  readonly hero: HeroCopy;
+  readonly instrument: InstrumentCopy;
 }
+
+export const contactEmailHref = "mailto:hola@alcarcis.com";
 
 export interface AlternateLink {
   readonly hreflang: string;
@@ -67,6 +94,26 @@ export const englishPage: LocaleCase = {
       toLight: "Switch to light theme",
     },
   },
+  hero: {
+    eyebrow: "Quality Engineering · Agentic QA · Web, API & mobile",
+    sub: "From requirements to production.",
+    primaryAction: "Let's talk",
+    cvAction: "Download CV (PDF)",
+    cvPath: "/cv/carlos-alcala-cv-en.pdf",
+  },
+  instrument: {
+    name: "Suite quality.spec.ts, test run",
+    stagesName: "Stages",
+    stageStates: { passed: "passed", running: "running", pending: "pending" },
+    sceneLabel: "Scene · QA at every stage",
+    captions: [
+      "acceptance criteria made testable",
+      "risks mapped before code",
+      "tests written with the code",
+      "the gate blocks DEF-01",
+      "monitored, clean run",
+    ],
+  },
 };
 
 export const spanishPage: LocaleCase = {
@@ -84,6 +131,30 @@ export const spanishPage: LocaleCase = {
       toDark: "Cambiar al tema oscuro",
       toLight: "Cambiar al tema claro",
     },
+  },
+  hero: {
+    eyebrow: "Ingeniería de calidad · QA agéntico · Web, API y móvil",
+    sub: "De los requisitos a producción.",
+    primaryAction: "Conversemos",
+    cvAction: "Descargar CV (PDF)",
+    cvPath: "/cv/carlos-alcala-cv-es.pdf",
+  },
+  instrument: {
+    name: "Suite quality.spec.ts, ejecución de pruebas",
+    stagesName: "Etapas",
+    stageStates: {
+      passed: "superada",
+      running: "en curso",
+      pending: "pendiente",
+    },
+    sceneLabel: "Escena · QA en cada etapa",
+    captions: [
+      "criterios de aceptación verificables",
+      "riesgos mapeados antes del código",
+      "pruebas escritas con el código",
+      "la puerta de calidad bloquea DEF-01",
+      "monitoreado, ejecución limpia",
+    ],
   },
 };
 

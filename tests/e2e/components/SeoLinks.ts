@@ -9,11 +9,13 @@ export class SeoLinks {
   readonly canonical: Locator;
   readonly alternates: Locator;
   readonly icon: Locator;
+  readonly fontPreloads: Locator;
 
   constructor(private readonly page: Page) {
     this.canonical = page.locator('head link[rel="canonical"]');
     this.alternates = page.locator(alternateLinkSelector());
     this.icon = page.locator('head link[rel="icon"]');
+    this.fontPreloads = page.locator('head link[rel="preload"][as="font"]');
   }
 
   alternate(hreflang: string): Locator {

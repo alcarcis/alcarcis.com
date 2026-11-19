@@ -1,0 +1,482 @@
+---
+import RerunIcon from "../assets/icons/rerun.svg";
+import { useTranslations, type Locale } from "../i18n/ui";
+import { buildInfo } from "../lib/build-info";
+import { breakOnlyBetween } from "../lib/typography";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+/* Terminal vocabulary stays English on every page, as a real test log would; this marks it
+   for assistive technology and translation on pages in other languages. */
+const terminalLang = locale === "en" ? undefined : "en";
+
+const stageNames = ["requirements", "design", "code", "ci/cd", "production"];
+const lastStage = stageNames.length - 1;
+
+type TokenKind = "fn" | "str" | "kw" | "id" | "punct";
+const spec: readonly (readonly [TokenKind, string])[] = [
+  ["fn", "test"],
+  ["punct", "("],
+  ["str", "'quality, end to end'"],
+  ["punct", ", "],
+  ["kw", "async"],
+  ["punct", " () => {\n  "],
+  ["kw", "for"],
+  ["punct", " ("],
+  ["kw", "const"],
+  ["punct", " "],
+  ["id", "stage"],
+  ["punct", " "],
+  ["kw", "of"],
+  ["punct", " "],
+  ["id", "development"],
+  ["punct", ")\n    "],
+  ["kw", "await"],
+  ["punct", " "],
+  ["fn", "expect"],
+  ["punct", "("],
+  ["id", "stage"],
+  ["punct", ")."],
+  ["fn", "toHaveQuality"],
+  ["punct", "();\n});"],
+];
+const specText = spec
+  .map(([, text]) => text)
+  .join("")
+  .replace(/\s+/g, " ");
+
+/* The scene's last frame, drawn in text so it shows before (and without) the renderer: a calm
+   production signal, then the run's verdict. 33 cells, as the renderer draws it. */
+const signal = "_.-~'~-.".repeat(3);
+
+const info = buildInfo();
+const testCount =
+  info.tests === null
+    ? null
+    : `${info.tests} playwright ${info.tests === 1 ? "test" : "tests"}`;
+const dataRows = [
+  { term: "COMMIT", value: info.commit },
+  { term: "BUILT", value: info.built, datetime: info.built },
+  { term: "TESTS", value: testCount },
+  {
+    term: "BUDGET",
+    value: breakOnlyBetween("lighthouse ≥ 95 · axe 0 violations"),
+  },
+].filter((row) => row.value !== null);
+---
+
+<aside class="instrument" aria-label={t("instrument.label")} data-instrument>
+  <svg class="marker" viewBox="0 0 20 20" aria-hidden="true">
+    <circle class="marker-ground" cx="10" cy="10" r="9.5"></circle>
+    <path
+      class="marker-quarters"
+      d="M10 10V1.5A8.5 8.5 0 0 1 18.5 10ZM10 10v8.5A8.5 8.5 0 0 1 1.5 10Z"
+    ></path>
+    <circle class="marker-ring" cx="10" cy="10" r="8.5"></circle>
+  </svg>
+
+  <div class="bar">
+    <span class="title" lang={terminalLang}>
+      <span class="suite">Suite</span> · quality.spec.ts
+    </span>
+    <span class="status" lang={terminalLang} data-run-status>
+      Passed
+    </span>
+    <button
+      class="control"
+      type="button"
+      aria-label={t("instrument.rerun")}
+      data-rerun
+      hidden
+    >
+      <span aria-hidden="true">[</span>
+      <RerunIcon width={13} height={13} aria-hidden="true" />
+      Rerun<span aria-hidden="true">]</span>
+    </button>
+  </div>
+
+  <div class="scene" aria-hidden="true" data-scene>
+    <span class="scene-label">{t("instrument.sceneLabel")}</span>
+    {/* Spaces are explicit: the HTML compressor drops whitespace at line breaks. */}
+    <p class="scene-still" data-scene-still>
+      <span>
+        <span class="signal">{signal}</span>
+        {"   "}
+        <span class="verdict">PASSED</span>
+      </span>
+    </p>
+    <span class="scene-caption" data-scene-caption>
+      <span>
+        <span class="caption-number">0{lastStage + 1}</span>{" "}
+        <span class="caption-stage">{stageNames[lastStage]}</span>
+        {" · "}
+        <span class="caption-action">{t("instrument.caption.production")}</span>
+      </span>
+    </span>
+  </div>
+
+  <div class="body">
+    <pre
+      class="spec"
+      aria-hidden="true"
+    ><code data-spec>{spec.map(([kind, text]) => kind === "punct" ? text : <span class={kind}>{text}</span>)}</code></pre>
+    <p class="visually-hidden" lang="en">
+      {specText}
+    </p>
+
+    <ol class="stages" aria-label={t("instrument.stages")}>
+      {stageNames.map((name) => (
+        <li class="stage" data-stage>
+          <span class="stage-name" lang={terminalLang}>
+            {name}
+          </span>
+          <span class="leader" aria-hidden="true" />
+          <span class="stage-run" aria-hidden="true">
+            running…
+          </span>
+          <svg
+            class="check"
+            viewBox="0 0 18 18"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="square"
+            aria-hidden="true"
+          >
+            <rect class="check-box" x="4.5" y="4.5" width="9" height="9" />
+            <path d="M4 9.5l3.2 3L14 5.5" />
+          </svg>{" "}
+          <span class="visually-hidden" data-stage-state>
+            {t("instrument.state.passed")}
+          </span>
+        </li>
+      ))}
+    </ol>
+
+    <dl class="data" lang={terminalLang}>
+      {dataRows.map(({ term, value, datetime }) => (
+        <div>
+          <dt>{term}</dt>
+          <dd>{datetime ? <time datetime={datetime}>{value}</time> : value}</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+</aside>
+
+<style>
+  .instrument {
+    position: relative;
+    border: 1px solid var(--rule);
+    font-family: var(--font-mono);
+    font-size: var(--type-ui-size);
+    line-height: calc(22 / 13);
+    cursor: default;
+  }
+
+  /* A calibration mark on the card's corner. */
+  .marker {
+    position: absolute;
+    inset-block-start: -10px;
+    inset-inline-end: -10px;
+    z-index: 1;
+    inline-size: 20px;
+    block-size: 20px;
+  }
+
+  .marker-ground {
+    fill: var(--ground);
+  }
+
+  .marker-quarters {
+    fill: var(--fill);
+  }
+
+  .marker-ring {
+    fill: none;
+    stroke: var(--text);
+    stroke-width: 1;
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    block-size: var(--space-10);
+    padding-inline: var(--space-4) var(--space-2);
+    border-block-end: 1px solid var(--rule);
+    background: var(--panel);
+    color: var(--text);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .title {
+    margin-inline-end: auto;
+  }
+
+  .suite {
+    color: var(--link);
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--muted);
+
+    &::before {
+      content: "";
+      inline-size: 6px;
+      block-size: 6px;
+      background: var(--pass);
+    }
+  }
+
+  .control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    block-size: var(--space-7);
+    padding: 0 var(--space-2);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      color var(--duration-quick) var(--ease-out),
+      border-color var(--duration-quick) var(--ease-out),
+      opacity var(--duration-quick) var(--ease-out);
+
+    &[hidden] {
+      display: none;
+    }
+
+    &:hover {
+      border-color: var(--dots);
+      color: var(--text);
+    }
+  }
+
+  /* The scene: what QA does at each stage, in glyphs. Its size is fixed, so nothing it draws
+     can move the page. */
+  .scene {
+    position: relative;
+    block-size: 16rem;
+    overflow: hidden;
+    border-block-end: 1px solid var(--rule);
+    background: var(--ground);
+  }
+
+  .scene-label,
+  .scene-caption {
+    position: absolute;
+    z-index: 1;
+    color: var(--muted);
+    font-size: 0.6875rem;
+    line-height: 1rem;
+  }
+
+  .scene-label {
+    inset-block-start: var(--space-3);
+    inset-inline-start: var(--space-4);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* The caption names the stage the scene is playing, the same as the running row. Its box
+     spans the scene at a fixed height. */
+  .scene-caption {
+    display: flex;
+    align-items: flex-end;
+    inset-block-end: 10px;
+    inset-inline: var(--space-4);
+    block-size: var(--space-4);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .caption-number {
+    color: var(--link);
+  }
+
+  .caption-stage {
+    color: var(--text);
+  }
+
+  /* The last frame in text: 15px Geist Mono keeps the renderer's 9px cell. */
+  .scene-still {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 0.9375rem;
+    line-height: 1;
+    letter-spacing: 0;
+    white-space: pre;
+  }
+
+  .signal {
+    color: color-mix(in srgb, var(--link) 82%, transparent);
+  }
+
+  .verdict {
+    color: var(--pass);
+  }
+
+  .body {
+    padding: var(--space-5) var(--space-5) var(--space-3);
+    background: var(--panel);
+  }
+
+  .spec {
+    min-block-size: 5.5rem;
+    margin: 0 0 var(--space-4);
+    overflow: hidden;
+    color: var(--code-punctuation);
+    font: inherit;
+    white-space: pre;
+
+    .kw {
+      color: var(--code-keyword);
+    }
+
+    .fn,
+    .id {
+      color: var(--code-function);
+    }
+
+    .str {
+      color: var(--code-string);
+    }
+  }
+
+  .stages {
+    margin: 0 0 var(--space-3);
+    padding: var(--space-1) 0 0;
+    background: var(--dotted-rule);
+    background-position: 0 0;
+    list-style: none;
+  }
+
+  .stage {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    block-size: var(--space-7);
+  }
+
+  .stage-name {
+    color: var(--text);
+  }
+
+  .leader {
+    flex: 1;
+    block-size: 3px;
+    background: var(--dotted-rule);
+  }
+
+  .stage-run {
+    display: none;
+    color: var(--muted);
+  }
+
+  /* Each stage's marker is an empty box while pending; the check draws in when it passes. */
+  .check {
+    inline-size: 18px;
+    block-size: 18px;
+    color: var(--pass);
+
+    path {
+      stroke-dasharray: 16;
+      stroke-dashoffset: 0;
+    }
+  }
+
+  .check-box {
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1;
+    opacity: 0;
+  }
+
+  .data {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    margin: 0;
+
+    & > div {
+      display: contents;
+    }
+
+    dt,
+    dd {
+      padding: 3px 0;
+      background: var(--dotted-rule);
+      background-position: 0 0;
+    }
+
+    dt {
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+    }
+
+    dd {
+      margin: 0;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  @media (width < 60em) {
+    .bar {
+      flex-wrap: wrap;
+      row-gap: 0;
+      block-size: auto;
+      min-block-size: var(--space-10);
+      padding-block: var(--space-1);
+      letter-spacing: 0.04em;
+    }
+
+    /* The suite name takes the first row; status and the run controls share the second. */
+    .title {
+      flex-basis: 100%;
+      line-height: var(--space-7);
+    }
+
+    .control {
+      min-inline-size: var(--target-min);
+      block-size: var(--target-min);
+    }
+
+    .scene {
+      block-size: 14rem;
+    }
+
+    .scene-caption {
+      block-size: var(--space-8);
+      white-space: normal;
+    }
+
+    .body {
+      padding: var(--space-4) var(--space-4) var(--space-2);
+    }
+
+    .spec {
+      font-size: 0.75rem;
+    }
+  }
+</style>

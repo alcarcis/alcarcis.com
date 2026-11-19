@@ -1,7 +1,7 @@
 ---
 import { useTranslations, type Locale } from "../i18n/ui";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { owner } from "../site";
+import Hero from "./Hero.astro";
 
 interface Props {
   locale: Locale;
@@ -16,35 +16,5 @@ const t = useTranslations(locale);
   title={t("meta.title")}
   description={t("meta.description")}
 >
-  <div class="intro">
-    <h1 class="headline">{owner.name}</h1>
-    <p class="display-line">{t("home.displayLine")}</p>
-  </div>
+  <Hero locale={locale} />
 </BaseLayout>
-
-<style>
-  .intro {
-    max-inline-size: var(--page-max-width);
-    margin-inline: auto;
-    padding: var(--space-10) var(--gutter) var(--space-16);
-  }
-
-  .headline {
-    margin-block-end: var(--space-7);
-    font-family: var(--font-display);
-    font-size: var(--type-headline-size);
-    font-weight: 600;
-    line-height: var(--type-headline-leading);
-    letter-spacing: var(--type-headline-tracking);
-    text-wrap: balance;
-  }
-
-  .display-line {
-    font-family: var(--font-display);
-    font-size: var(--type-display-line-size);
-    font-weight: 500;
-    line-height: var(--type-display-line-leading);
-    letter-spacing: var(--type-display-line-tracking);
-    text-wrap: balance;
-  }
-</style>

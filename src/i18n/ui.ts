@@ -28,6 +28,18 @@ const en = {
   "themeToggle.toDark": "Switch to dark theme",
   "themeToggle.toLight": "Switch to light theme",
   "home.displayLine": "Quality, end to end.",
+  "hero.eyebrow": "Quality Engineering · Agentic QA · Web, API & mobile",
+  "hero.sub": "From requirements to production.",
+  "hero.primaryAction": "Let's talk",
+  "hero.cvAction": "Download CV (PDF)",
+  "instrument.label": "Suite quality.spec.ts, test run",
+  "instrument.sceneLabel": "Scene · QA at every stage",
+  "instrument.stages": "Stages",
+  "instrument.state.passed": "passed",
+  "instrument.state.running": "running",
+  "instrument.state.pending": "pending",
+  "instrument.caption.production": "monitored, clean run",
+  "instrument.rerun": "Rerun: replay the test run",
 } as const;
 
 export type UiKey = keyof typeof en;
@@ -44,6 +56,18 @@ const es: Readonly<Record<UiKey, string>> = {
   "themeToggle.toDark": "Cambiar al tema oscuro",
   "themeToggle.toLight": "Cambiar al tema claro",
   "home.displayLine": "Calidad, de punta a punta.",
+  "hero.eyebrow": "Ingeniería de calidad · QA agéntico · Web, API y móvil",
+  "hero.sub": "De los requisitos a producción.",
+  "hero.primaryAction": "Conversemos",
+  "hero.cvAction": "Descargar CV (PDF)",
+  "instrument.label": "Suite quality.spec.ts, ejecución de pruebas",
+  "instrument.sceneLabel": "Escena · QA en cada etapa",
+  "instrument.stages": "Etapas",
+  "instrument.state.passed": "superada",
+  "instrument.state.running": "en curso",
+  "instrument.state.pending": "pendiente",
+  "instrument.caption.production": "monitoreado, ejecución limpia",
+  "instrument.rerun": "Rerun: repetir la ejecución",
 };
 
 const ui: Readonly<Record<Locale, Readonly<Record<UiKey, string>>>> = {
