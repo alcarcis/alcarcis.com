@@ -1,6 +1,7 @@
 import { accessibilityCanaries } from "./data/accessibilityCanaries";
 import { colorSchemes } from "./data/colorSchemes";
 import { localeCases } from "./data/locales";
+import { navLayouts } from "./data/sectionsNav";
 import { expect, test } from "./fixtures";
 import { countTargetsWithin } from "./support/accessibility";
 
@@ -57,6 +58,52 @@ test.describe("accessibility scan coverage", () => {
         });
       }
     });
+  }
+});
+
+// The header's sections nav is checked in both of its layouts: inline on a wide screen, and as
+// the open menu on a phone, where it also holds the profile links.
+const sectionsNavLayouts = [
+  { layout: "inline", viewport: navLayouts.inline, openMenu: false },
+  { layout: "open phone menu", viewport: navLayouts.phone, openMenu: true },
+] as const;
+
+test.describe("accessibility scan of the sections nav", () => {
+  for (const colorScheme of colorSchemes) {
+    for (const { layout, viewport, openMenu } of sectionsNavLayouts) {
+      test.describe(`${colorScheme} colour scheme, ${layout}`, () => {
+        test.use({ colorScheme, viewport });
+
+        for (const locale of localeCases) {
+          test(`the ${locale.language.name} page has no violations and the contrast check decides on every nav link`, async ({
+            homePage,
+            accessibilityScanner,
+          }) => {
+            await homePage.open(locale.language.path);
+            await expect(homePage.document).toHaveCSS(
+              "color-scheme",
+              colorScheme,
+            );
+            const nav = homePage.sectionsNav(locale);
+            if (openMenu) await nav.openMenu();
+
+            const report = await accessibilityScanner.scan();
+            const decided = report.targetsDecidedBy("color-contrast");
+            const undecided = report.targetsUndecidedBy("color-contrast");
+
+            expect(report).toHaveNoViolations();
+            const links = await nav.landmark.getByRole("link").all();
+            expect(links.length).toBeGreaterThan(0);
+            for (const link of links) {
+              expect(await countTargetsWithin(link, decided)).toBeGreaterThan(
+                0,
+              );
+            }
+            expect(await countTargetsWithin(nav.landmark, undecided)).toBe(0);
+          });
+        }
+      });
+    }
   }
 });
 

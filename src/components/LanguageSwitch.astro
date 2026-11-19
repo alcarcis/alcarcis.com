@@ -74,6 +74,11 @@ const options = locales.map((optionLocale) => ({
 
   .globe {
     flex: none;
+
+    /* Narrow phones: the codes alone, so the bar keeps room for the sections menu button. */
+    @media (width < 33em) {
+      display: none;
+    }
   }
 
   a {

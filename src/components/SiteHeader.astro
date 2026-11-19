@@ -4,6 +4,7 @@ import LinkedIn from "../assets/icons/linkedin.svg";
 import { useTranslations, type Locale } from "../i18n/ui";
 import { owner, profiles } from "../site";
 import LanguageSwitch from "./LanguageSwitch.astro";
+import SectionsNav from "./SectionsNav.astro";
 import ThemeToggle from "./ThemeToggle.astro";
 
 interface Props {
@@ -14,6 +15,8 @@ interface Props {
 const { locale, path = "" } = Astro.props;
 const t = useTranslations(locale);
 
+const menuId = "sections-menu";
+
 const profileLinks = [
   { href: profiles.linkedIn, label: t("header.linkedIn"), Icon: LinkedIn },
   { href: profiles.gitHub, label: t("header.gitHub"), Icon: GitHub },
@@ -21,6 +24,7 @@ const profileLinks = [
 ---
 
 <header class="site-header">
+  <span class="rule" aria-hidden="true"></span>
   <div class="bar">
     {/*
       An aria-label, not visually hidden text: Chrome joins a positioned hidden span to the name
@@ -34,15 +38,37 @@ const profileLinks = [
       <span class="monogram" aria-hidden="true"></span>
       <span class="owner-name">{owner.name}</span>
     </a>
+    <SectionsNav locale={locale} menuId={menuId} />
     <div class="tools">
       {profileLinks.map(({ href, label, Icon }) => (
-        <a class="icon-button" href={href}>
+        <a class="icon-button profile-icon" href={href}>
           <Icon width={18} height={18} aria-hidden="true" />
           <span class="visually-hidden">{label}</span>
         </a>
       ))}
       <LanguageSwitch locale={locale} path={path} />
       <ThemeToggle locale={locale} />
+      {/* Opens the sections menu below 1200 px; a native popover, so it works without script. */}
+      <button
+        class="icon-button menu-button"
+        type="button"
+        popovertarget={menuId}
+        aria-controls={menuId}
+        data-sections-menu-button
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <path d="M3 6h14M3 10h14M3 14h14"></path>
+        </svg>
+        <span class="visually-hidden">{t("sectionsNav.menu")}</span>
+      </button>
     </div>
   </div>
 </header>
@@ -53,15 +79,16 @@ const profileLinks = [
     inset-block-start: 0;
     z-index: 20;
     background: var(--ground);
+  }
 
-    &::after {
-      content: "";
-      position: absolute;
-      inset-inline: 0;
-      inset-block-end: 0;
-      block-size: 3px;
-      background: var(--dotted-rule);
-    }
+  /* The dotted rule under the bar is an element of its own, not a pseudo-element: a contrast
+     check cannot decide on text inside a box with a painted pseudo-element. */
+  .rule {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    block-size: 3px;
+    background: var(--dotted-rule);
   }
 
   .bar {
@@ -125,6 +152,13 @@ const profileLinks = [
     margin-inline-start: auto;
   }
 
+  /* The bar holds the section links from 1200 px; below it they wait behind the menu button. */
+  @media (width >= 75em) {
+    .menu-button {
+      display: none;
+    }
+  }
+
   @media (width < 60em) {
     .bar {
       gap: var(--space-3);
@@ -140,8 +174,13 @@ const profileLinks = [
     }
   }
 
-  /* Phones: the name takes two lines beside the monogram. */
+  /* Phones: the name takes two lines beside the monogram, and the profile links move into the
+     sections menu (they are in Contact too). */
   @media (width < 30em) {
+    .profile-icon {
+      display: none;
+    }
+
     .owner-name {
       inline-size: min-content;
       font-size: var(--type-ui-size);
