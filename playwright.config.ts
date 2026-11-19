@@ -8,7 +8,10 @@ export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
   forbidOnly: isCI,
+  // Retries keep a trace of a failure (trace on first retry), but a test that fails and then
+  // passes still fails the run in CI (D52).
   retries: isCI ? 2 : 0,
+  failOnFlakyTests: isCI,
   ...(isCI ? { workers: 1 } : {}),
   reporter: isCI
     ? [["github"], ["html", { open: "never" }]]
