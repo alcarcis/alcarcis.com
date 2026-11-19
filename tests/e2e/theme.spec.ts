@@ -88,10 +88,15 @@ for (const systemScheme of colorSchemes) {
     });
 
     test("clearing the site's storage returns every open tab to the system theme", async ({
+      browserName,
       homePage,
       otherTab,
       page,
     }) => {
+      test.skip(
+        browserName !== "chromium",
+        "Clearing site data goes through a DevTools Protocol session, which only Chromium offers; a localStorage.clear() call cannot stand in, since it skips the tab that calls it.",
+      );
       const { themeToggle } = homePage.header(englishPage.header);
       await homePage.open(englishPage.language.path);
       await otherTab.open(englishPage.language.path);

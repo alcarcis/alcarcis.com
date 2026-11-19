@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { breakOnlyBetween } from "../../../src/lib/typography.ts";
-
-const nbsp = " ";
+import { nbsp } from "./support.ts";
 
 describe("breakOnlyBetween", () => {
   it("keeps each part on one line and lets lines break only at the separators", () => {

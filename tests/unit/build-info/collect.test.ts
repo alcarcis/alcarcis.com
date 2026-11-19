@@ -1,7 +1,17 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { collectBuildInfo } from "../../../scripts/build-info/collect.ts";
-import { failing, headSha, listReport, sources } from "./support.ts";
+import {
+  gitHeadCommand,
+  testListCommand,
+} from "../../../scripts/build-info/run.ts";
+import {
+  failing,
+  headSha,
+  listReport,
+  sources,
+  stallingRunner,
+} from "./support.ts";
 
 describe("collectBuildInfo", () => {
   it("reads the commit, the build date and the test count", () => {
@@ -36,6 +46,21 @@ describe("collectBuildInfo", () => {
     ]);
   });
 
+  it("leaves the test count unknown and names the limit when listing stalls", () => {
+    const info = collectBuildInfo(
+      sources({
+        listTests: () => stallingRunner(testListCommand("playwright/cli.js")),
+      }),
+    );
+
+    assert.equal(info.tests, null);
+    assert.equal(info.problems.length, 1);
+    assert.match(
+      info.problems.join("\n"),
+      /^TESTS omitted: could not list the Playwright tests \(playwright test --list did not finish within 30 s and was stopped;/,
+    );
+  });
+
   it("leaves the test count unknown when the list is not readable", () => {
     const info = collectBuildInfo(sources({ listTests: () => "not json" }));
 
@@ -45,10 +70,32 @@ describe("collectBuildInfo", () => {
     ]);
   });
 
-  it("leaves the commit unknown and says why", () => {
+  it("leaves the commit unknown and says why git could not read it", () => {
     const info = collectBuildInfo(
       sources({ gitHead: failing("not a git repository") }),
     );
+
+    assert.equal(info.commit, null);
+    assert.deepEqual(info.problems, [
+      "COMMIT omitted: no CF_PAGES_COMMIT_SHA or GITHUB_SHA, and git could not read the commit (not a git repository).",
+    ]);
+  });
+
+  it("leaves the commit unknown and names the limit when git stalls", () => {
+    const info = collectBuildInfo(
+      sources({ gitHead: () => stallingRunner(gitHeadCommand) }),
+    );
+
+    assert.equal(info.commit, null);
+    assert.equal(info.problems.length, 1);
+    assert.match(
+      info.problems.join("\n"),
+      /^COMMIT omitted: no CF_PAGES_COMMIT_SHA or GITHUB_SHA, and git could not read the commit \(git rev-parse HEAD did not finish within 10 s and was stopped;/,
+    );
+  });
+
+  it("leaves the commit unknown when no source names one", () => {
+    const info = collectBuildInfo(sources({ gitHead: () => "" }));
 
     assert.equal(info.commit, null);
     assert.deepEqual(info.problems, [

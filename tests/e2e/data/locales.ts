@@ -39,6 +39,11 @@ export interface InstrumentCopy {
   readonly sceneLabel: string;
   /** What the scene shows at each stage, in stage order. */
   readonly captions: readonly string[];
+  /** The ci/cd caption once the fix merges. */
+  readonly fixCaption: string;
+  readonly skipName: string;
+  readonly rerunName: string;
+  readonly passedAnnouncement: string;
 }
 
 export interface LocaleCase {
@@ -113,6 +118,10 @@ export const englishPage: LocaleCase = {
       "the gate blocks DEF-01",
       "monitored, clean run",
     ],
+    fixCaption: "fix merged, gate opens",
+    skipName: "Skip: show the finished run",
+    rerunName: "Rerun: replay the test run",
+    passedAnnouncement: "Test run passed",
   },
 };
 
@@ -155,6 +164,10 @@ export const spanishPage: LocaleCase = {
       "la puerta de calidad bloquea DEF-01",
       "monitoreado, ejecución limpia",
     ],
+    fixCaption: "corrección integrada, la puerta se abre",
+    skipName: "Skip: mostrar la ejecución terminada",
+    rerunName: "Rerun: repetir la ejecución",
+    passedAnnouncement: "Ejecución de pruebas superada",
   },
 };
 

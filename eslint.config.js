@@ -34,5 +34,9 @@ export default defineConfig(
       sourceType: "commonjs",
       globals: { module: "readonly" },
     },
+    rules: {
+      // CommonJS files load their dependencies with require; there is no import to prefer.
+      "@typescript-eslint/no-require-imports": "off",
+    },
   },
 );

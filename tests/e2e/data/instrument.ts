@@ -1,3 +1,5 @@
+import { minimumCategoryScore } from "../../../scripts/quality-budget";
+
 /** Terminal vocabulary: the same in every language, as a real test log would be. */
 export const stageNames = [
   "requirements",
@@ -19,7 +21,11 @@ export const dataTerms = {
   budget: "BUDGET",
 } as const;
 
-export const budget = "lighthouse ≥ 95 · axe 0 violations";
+/**
+ * The thresholds the pipeline enforces: Lighthouse's minimum read from the module
+ * lighthouserc.cjs asserts, and axe's zero, which toHaveNoViolations allows by construction.
+ */
+export const budget = `lighthouse ≥ ${Math.round(minimumCategoryScore * 100)} · axe 0 violations`;
 
 export const testCountText = (count: number): string =>
   `${count} playwright ${count === 1 ? "test" : "tests"}`;

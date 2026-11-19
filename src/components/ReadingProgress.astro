@@ -1,0 +1,47 @@
+{/*
+  Reading progress: a thin copper line on a hairline track along the bottom edge, filled as far
+  as the visitor has scrolled. Decorative, CSS only: a scroll-driven animation where the browser
+  supports one and motion is welcome; otherwise the track stays empty.
+*/}
+<div class="reading-progress" aria-hidden="true">
+  <span class="fill" data-progress-fill></span>
+</div>
+
+<style>
+  .reading-progress {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: 30;
+    block-size: var(--reading-progress-height);
+    background: linear-gradient(var(--rule), var(--rule)) 0 100% / 100% 1px
+      no-repeat;
+    pointer-events: none;
+  }
+
+  .fill {
+    position: absolute;
+    inset: 0;
+    background: var(--link);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+
+    @media (prefers-reduced-motion: no-preference) {
+      /* Longhands on purpose: the CSS minifier would fold the timeline into the animation
+         shorthand, where browsers reject it. */
+      @supports (animation-timeline: scroll()) {
+        animation-name: fill-to-end;
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: scroll(root block);
+      }
+    }
+  }
+
+  @keyframes fill-to-end {
+    to {
+      transform: scaleX(1);
+    }
+  }
+</style>
