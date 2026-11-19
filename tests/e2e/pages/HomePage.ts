@@ -41,6 +41,10 @@ export class HomePage {
     return this.main.getByText(content, { exact: true });
   }
 
+  skipLink(accessibleName: string): Locator {
+    return this.page.getByRole("link", { name: accessibleName, exact: true });
+  }
+
   header(copy: HeaderCopy): SiteHeader {
     return new SiteHeader(this.page, copy);
   }

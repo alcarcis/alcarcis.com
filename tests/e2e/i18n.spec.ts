@@ -40,6 +40,20 @@ for (const locale of localeCases) {
       await expect(homePage.textInMain(locale.displayLine)).toBeVisible();
     });
 
+    test("titles the page in its language", async ({ page }) => {
+      await expect(page).toHaveTitle(locale.title);
+    });
+
+    test("names its skip link in its language and points it at the main content", async ({
+      homePage,
+    }) => {
+      await expect(homePage.main).toHaveId("main");
+      await expect(homePage.skipLink(locale.skipLinkName)).toHaveAttribute(
+        "href",
+        "#main",
+      );
+    });
+
     test("marks its own language as the current option of the switch", async ({
       homePage,
     }) => {
