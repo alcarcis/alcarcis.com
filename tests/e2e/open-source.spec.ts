@@ -32,16 +32,6 @@ for (const locale of localeCases) {
       }
     });
 
-    test("prints each README's usage in its repository's terminal", async ({
-      homePage,
-    }) => {
-      for (const { copy, terminal } of homePage.openSource(locale)
-        .repositories) {
-        await expect(terminal.window).toBeVisible();
-        expect(await terminal.visibleText()).toBe(copy.repository.usage);
-      }
-    });
-
     test("names each terminal's README source in its bar", async ({
       homePage,
     }) => {
@@ -50,6 +40,24 @@ for (const locale of localeCases) {
         await expect(terminal.window).toContainText(
           `README · ${copy.usageSource}`,
         );
+      }
+    });
+  });
+}
+
+for (const locale of localeCases) {
+  test.describe(`${locale.language.name} Open source section without JavaScript`, () => {
+    test.use({ javaScriptEnabled: false });
+
+    test("prints each README's usage in its repository's terminal", async ({
+      homePage,
+    }) => {
+      await homePage.open(locale.language.path);
+
+      for (const { copy, terminal } of homePage.openSource(locale)
+        .repositories) {
+        await expect(terminal.window).toBeVisible();
+        expect(await terminal.visibleText()).toBe(copy.repository.usage);
       }
     });
   });
