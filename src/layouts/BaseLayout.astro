@@ -6,6 +6,7 @@ import Footer from "../components/Footer.astro";
 import GlyphField from "../components/GlyphField.astro";
 import ReadingProgress from "../components/ReadingProgress.astro";
 import SiteHeader from "../components/SiteHeader.astro";
+import { languageAlternates } from "../lib/seo";
 import { themeStorageKey } from "../lib/theme";
 import {
   defaultLocale,
@@ -26,13 +27,9 @@ const { locale, title, description, path = "" } = Astro.props;
 const t = useTranslations(locale);
 
 const canonicalUrl = localizedUrl(locale, path);
-const alternateLinks = [
-  ...locales.map((hreflang) => ({
-    hreflang,
-    href: localizedUrl(hreflang, path),
-  })),
-  { hreflang: "x-default", href: localizedUrl(defaultLocale, path) },
-];
+const alternateLinks = languageAlternates(locales, defaultLocale, (hreflang) =>
+  localizedUrl(hreflang, path),
+);
 ---
 
 <!doctype html>
