@@ -1,10 +1,5 @@
 import { expect, type Clock, type Locator } from "@playwright/test";
-import {
-  runStatus,
-  sceneVerdict,
-  specSource,
-  stageNames,
-} from "../data/instrument";
+import { runStatus, specSource, stageNames } from "../data/instrument";
 import type { InstrumentCopy, StageStateNames } from "../data/locales";
 import type { CanvasBuffer } from "./GlyphField";
 
@@ -69,6 +64,7 @@ export class Instrument {
   readonly scene: Locator;
   /** The scene's last frame in text: it shows between runs until the renderer has drawn. */
   readonly textFrame: Locator;
+  readonly textFrameLines: Locator;
   readonly sceneCanvas: Locator;
 
   constructor(
@@ -101,7 +97,8 @@ export class Instrument {
     this.announcement = this.region.getByRole("status");
     this.typedCode = this.region.locator("[data-spec]");
     this.scene = this.region.locator("[data-scene]");
-    this.textFrame = this.scene.getByText(sceneVerdict, { exact: true });
+    this.textFrame = this.scene.locator("[data-scene-still]");
+    this.textFrameLines = this.textFrame.locator(":scope > span");
     this.sceneCanvas = this.scene.locator("canvas");
   }
 
@@ -194,6 +191,11 @@ export class Instrument {
           observer.observe(box);
         }),
     );
+  }
+
+  /** The scene time of the frame the renderer last drew. */
+  async drawnSceneTime(): Promise<number> {
+    return Number(await this.scene.getAttribute("data-drawn"));
   }
 
   /** The scene canvas's backing store in device pixels. */

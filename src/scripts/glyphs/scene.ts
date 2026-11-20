@@ -51,6 +51,7 @@ function type(
 const typed = (tau: number, t0: number, d: number, s: string): number =>
   Math.floor(clamp((tau - t0) / d, 0, 1) * s.length);
 
+/* A box; its sides can be junctions, where a line leaves it. */
 function box(
   g: Grid,
   c: number,
@@ -59,14 +60,15 @@ function box(
   h: number,
   a: number,
   ink: Ink,
+  [left, right] = ["│", "│"],
 ): void {
   for (let j = 1; j < w - 1; j++) {
     putSym(g, c + j, r, "─", a, ink);
     putSym(g, c + j, r + h - 1, "─", a, ink);
   }
   for (let j = 1; j < h - 1; j++) {
-    putSym(g, c, r + j, "│", a, ink);
-    putSym(g, c + w - 1, r + j, "│", a, ink);
+    putSym(g, c, r + j, left, a, ink);
+    putSym(g, c + w - 1, r + j, right, a, ink);
   }
   putSym(g, c, r, "┌", a, ink);
   putSym(g, c + w - 1, r, "┐", a, ink);
@@ -406,15 +408,72 @@ function stepGate(g: Grid, tau: number, a: number): void {
   }
 }
 
-/* 05 production: a calm signal is plotted, then the run's status: PASSED. */
-const WAVE = "_.-~'~-.";
+/* 05 production: a workflow run. Its jobs run one at a time, each once the one before it has
+   passed and the link between them has lit; the run's path then leaves the deploy job and
+   reaches production, which is marked deployed. It ends on final-frame.ts's frame. */
+const JOBS = ["build", "test", "deploy"] as const;
+const SPINNER = "-\\|/";
+const PENDING = "·";
+/** Seconds into the step at which job j starts and passes. */
+const jobStart = (j: number): number => 0.25 + j * 0.5;
+const jobDone = (j: number): number => jobStart(j) + 0.4;
+/** The path lights from the last job's pass; production is deployed once it arrives. */
+const deployAt = jobDone(JOBS.length - 1) + 0.2;
+/* The path from the deploy job down to production and back along its line, in drawing order. */
+const DEPLOY_PATH: readonly [number, number, string][] = [
+  [25, 2, "┬"],
+  [25, 3, "┘"],
+  [24, 3, "─"],
+  [23, 3, "─"],
+  [22, 3, "─"],
+];
 function stepProduction(g: Grid, tau: number, a: number): void {
-  const [x, y] = place(g, 33, 3, a);
-  const n = Math.floor(clamp(tau / 0.5, 0, 1) * 24);
-  for (let c = 0; c < n; c++)
-    putSym(g, x + c, y + 1, WAVE[c % WAVE.length] ?? "_", a * 0.82, INK.MARK);
-  const verdict = a * smoothstep(0.5, 0.62, tau);
-  type(g, x + 27, y + 1, CHECK_GLYPHS.verdict, verdict, INK.CHECK);
+  const f = a * smoothstep(0, 0.2, tau);
+  const [x, y] = place(g, 31, 4, f);
+  // A status cell: pending, a spinner while its job runs, then the check.
+  const status = (c: number, r: number, start: number, done: number): void => {
+    if (tau >= done) {
+      const tick = a * smoothstep(done, done + 0.08, tau);
+      putSym(g, c, r, CHECK_GLYPHS.tick, tick, INK.CHECK);
+    } else if (tau >= start) {
+      const turn = reduced ? 0 : Math.floor((tau - start) * 12) % 4;
+      putSym(g, c, r, SPINNER[turn] ?? "-", a, INK.MARK);
+    } else {
+      putSym(g, c, r, PENDING, f * 0.62, INK.TEXT);
+    }
+  };
+  let c = x;
+  JOBS.forEach((job, j) => {
+    const w = job.length + 4;
+    const running = tau >= jobStart(j) && tau < jobDone(j);
+    const sides: [string, string] = [
+      j > 0 ? "┤" : "│",
+      j < JOBS.length - 1 ? "├" : "│",
+    ];
+    const ink = running ? INK.MARK : INK.TEXT;
+    box(g, c, y, w, 3, running ? a : f * 0.62, ink, sides);
+    status(c + 1, y + 1, jobStart(j), jobDone(j));
+    const named = f * (tau >= jobStart(j) ? 0.82 : 0.62);
+    type(g, c + 3, y + 1, job, named, INK.TEXT);
+    if (j === JOBS.length - 1) return;
+    const lit = typed(tau, jobDone(j), 0.1, "──");
+    for (let k = 0; k < 2; k++) {
+      if (k < lit) putSym(g, c + w + k, y + 1, "─", a * 0.82, INK.MARK);
+      else putSym(g, c + w + k, y + 1, "─", f * 0.42, INK.TEXT);
+    }
+    c += w + 2;
+  });
+  const pathFrom = jobDone(JOBS.length - 1);
+  const along = clamp((tau - pathFrom) / (deployAt - pathFrom), 0, 1);
+  const reached = Math.floor(along * DEPLOY_PATH.length);
+  DEPLOY_PATH.slice(0, reached).forEach(([pc, pr, s]) =>
+    putSym(g, x + pc, y + pr, s, a * 0.82, INK.MARK),
+  );
+  const deployed = f * (tau >= deployAt ? 0.82 : 0.62);
+  type(g, x, y + 3, "production", deployed, INK.TEXT);
+  status(x + 11, y + 3, deployAt, deployAt);
+  const shown = typed(tau, deployAt + 0.05, 0.1, "deployed");
+  type(g, x + 13, y + 3, "deployed", a * 0.82, INK.TEXT, shown);
 }
 
 const STEPS = [stepCriteria, stepDesign, stepCode, stepGate, stepProduction];

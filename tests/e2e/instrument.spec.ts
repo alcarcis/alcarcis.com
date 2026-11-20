@@ -1,6 +1,7 @@
 import {
   budget,
   dataTerms,
+  finalFrameLines,
   stageNames,
   testCountText,
 } from "./data/instrument";
@@ -36,6 +37,16 @@ for (const locale of localeCases) {
       await homePage.open(locale.language.path);
 
       await instrument.expectFinalFrame();
+    });
+
+    test("draws the scene's last frame in text: the workflow run, deployed", async ({
+      homePage,
+    }) => {
+      const { instrument } = homePage.hero(locale);
+      await homePage.open(locale.language.path);
+
+      await expect(instrument.textFrame).toBeVisible();
+      await expect(instrument.textFrameLines).toHaveText(finalFrameLines);
     });
   });
 }

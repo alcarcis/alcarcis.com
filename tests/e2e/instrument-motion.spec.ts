@@ -1,6 +1,7 @@
 import { unsizedCanvas } from "./components/GlyphField";
 import { unplacedCanvas } from "./components/Instrument";
 import { emptyLine, fullLine } from "./components/ReadingProgress";
+import { beats, stepStart } from "../../src/scripts/instrument/timeline";
 import {
   finalSceneTime,
   glyphRendererUrl,
@@ -103,6 +104,31 @@ for (const locale of localeCases) {
 
       expect(runningOrder).toEqual(stageNames.map((_, index) => index));
       expect(sawTheFix).toBe(true);
+      await instrument.expectFinalFrame();
+    });
+
+    test("the scene plays the deploy while the production row runs", async ({
+      homePage,
+      frozenClock,
+    }) => {
+      const { instrument } = homePage.hero(locale);
+      const production = stageNames.length - 1;
+      await instrument.waitForSceneDrawn(frozenClock);
+      const drawnWhileRunning: number[] = [];
+
+      for (let elapsed = 0; elapsed < wholeRunMs; elapsed += stepMs) {
+        await frozenClock.runFor(stepMs);
+        const now = await instrument.snapshot();
+        if (now.stages.indexOf("running") !== production) continue;
+        expect(now.caption).toBe(instrument.captionFor(production));
+        drawnWhileRunning.push(await instrument.drawnSceneTime());
+      }
+
+      expect(drawnWhileRunning.length).toBeGreaterThan(1);
+      for (const time of drawnWhileRunning) {
+        expect(time).toBeGreaterThanOrEqual(stepStart(production));
+        expect(time).toBeLessThan(beats[production] ?? 0);
+      }
       await instrument.expectFinalFrame();
     });
 
