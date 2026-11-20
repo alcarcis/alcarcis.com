@@ -208,6 +208,31 @@ for (const locale of localeCases) {
   });
 }
 
+// On the narrowest phone the code wraps; typing it must not change how many lines it takes, or
+// the stages and facts below would move as each word lands.
+test.describe("instrument run at 320 px", () => {
+  test.use({ viewport: { width: 320, height: 800 } });
+
+  test("typing the spec keeps the code window's height", async ({
+    homePage,
+    frozenClock,
+  }) => {
+    const { instrument } = homePage.hero(englishPage);
+    await homePage.open(englishPage.language.path);
+    await instrument.scrollToShow(800);
+    const before = await instrument.codeWindowHeight();
+
+    await instrument.startRun(frozenClock);
+    for (let elapsed = 0; elapsed < 3_000; elapsed += stepMs) {
+      await frozenClock.runFor(stepMs);
+      expect(await instrument.codeWindowHeight()).toBe(before);
+    }
+    await frozenClock.runFor(wholeRunMs);
+    await instrument.expectFinalFrame();
+    expect(await instrument.codeWindowHeight()).toBe(before);
+  });
+});
+
 test.describe("instrument run budget", () => {
   test("pauses while the instrument is scrolled out of view", async ({
     homePage,

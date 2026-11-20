@@ -228,6 +228,27 @@ export class Instrument {
     });
   }
 
+  /** How far the typed code runs past the right edge of its window, in CSS pixels. */
+  async codeOverflow(): Promise<number> {
+    return this.typedCode.evaluate((code) => {
+      const window = code.parentElement;
+      return window ? window.scrollWidth - window.clientWidth : 0;
+    });
+  }
+
+  /** The height of the typed code's window. */
+  async codeWindowHeight(): Promise<number> {
+    return this.typedCode.evaluate(
+      (code) => code.parentElement?.getBoundingClientRect().height ?? 0,
+    );
+  }
+
+  /** How many times assistive technology meets the spec's last call in the instrument. */
+  async specReadCount(): Promise<number> {
+    const tree = await this.region.ariaSnapshot();
+    return tree.split("toHaveQuality").length - 1;
+  }
+
   async height(): Promise<number> {
     return this.region.evaluate(
       (instrument) => instrument.getBoundingClientRect().height,

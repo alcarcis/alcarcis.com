@@ -2,8 +2,11 @@ import { colorSchemes } from "./data/colorSchemes";
 import { localeCases } from "./data/locales";
 import { hoverCase, themedLogo } from "./data/tools";
 import { expect, test } from "./fixtures";
+import { waitForViewChecks } from "./support/pageState";
 
 const svgType = /^image\/svg\+xml\b/;
+/** Longer than any delay the page sets after load before it settles. */
+const settleMs = 1_000;
 
 for (const locale of localeCases) {
   test.describe(`${locale.language.name} Tools section`, () => {
@@ -86,12 +89,15 @@ for (const locale of localeCases) {
     test("cost the page's load nothing: no logo file is requested until the section comes near", async ({
       homePage,
       page,
+      frozenClock,
     }) => {
       const tools = homePage.tools(locale);
       tools.recordImageRequests();
       await homePage.open(locale.language.path);
-      // Settled: the page has loaded and made no request for a while, with the section far below.
-      await page.waitForLoadState("networkidle");
+      // Settled, with the section far below: the page has loaded, every timer it set for the
+      // next second has run, and the browser has checked what is in view since then.
+      await frozenClock.runFor(settleMs);
+      await waitForViewChecks(page);
 
       expect(tools.requestedImageFiles).toEqual([]);
 

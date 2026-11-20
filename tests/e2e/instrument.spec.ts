@@ -2,6 +2,7 @@ import {
   budget,
   dataTerms,
   finalFrameLines,
+  specSource,
   stageNames,
   testCountText,
 } from "./data/instrument";
@@ -58,6 +59,39 @@ for (const locale of localeCases) {
         stageNames.length,
       );
       await expect(instrument.specText).toBeAttached();
+    });
+  });
+
+  // The page's text holds the code twice, typed and as one sentence; only the sentence is for
+  // assistive technology. Reduced motion shows the whole code at once, so both are complete.
+  test.describe(`${locale.language.name} instrument for assistive technology`, () => {
+    test.use({ reducedMotion: "reduce" });
+
+    test("reads the spec once", async ({ homePage }) => {
+      const { instrument } = homePage.hero(locale);
+      await homePage.open(locale.language.path);
+
+      await expect(instrument.typedCode).toHaveText(specSource);
+      expect(await instrument.specReadCount()).toBe(1);
+    });
+  });
+
+  // 320 px is where content must reflow without loss (WCAG 1.4.10): the code wraps there
+  // instead of running out of its window.
+  test.describe(`${locale.language.name} instrument at 320 px`, () => {
+    test.use({
+      viewport: { width: 320, height: 800 },
+      reducedMotion: "reduce",
+    });
+
+    test("shows every character of the spec inside its window", async ({
+      homePage,
+    }) => {
+      const { instrument } = homePage.hero(locale);
+      await homePage.open(locale.language.path);
+
+      await expect(instrument.typedCode).toHaveText(specSource);
+      expect(await instrument.codeOverflow()).toBeLessThanOrEqual(0);
     });
   });
 
