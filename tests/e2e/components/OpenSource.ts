@@ -12,6 +12,8 @@ import { UsageTerminal } from "./UsageTerminal";
 export class RepositoryRow {
   readonly row: Locator;
   readonly terminal: UsageTerminal;
+  /** The link to the repository's page. */
+  readonly link: Locator;
 
   constructor(
     page: Page,
@@ -27,6 +29,29 @@ export class RepositoryRow {
       }),
     });
     this.terminal = new UsageTerminal(this.row);
+    this.link = this.row.getByRole("link");
+  }
+
+  /**
+   * The link's box around its text: how tall it is, and how much room it leaves above the
+   * text's first line and below its last, in CSS pixels.
+   */
+  async linkTargetRoom(): Promise<{
+    height: number;
+    above: number;
+    below: number;
+  }> {
+    return this.link.evaluate((link) => {
+      const box = link.getBoundingClientRect();
+      const range = document.createRange();
+      range.selectNodeContents(link);
+      const text = range.getBoundingClientRect();
+      return {
+        height: box.height,
+        above: text.top - box.top,
+        below: box.bottom - text.bottom,
+      };
+    });
   }
 }
 
