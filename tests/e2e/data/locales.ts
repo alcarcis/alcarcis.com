@@ -27,6 +27,8 @@ export interface ThemeToggleNames {
 
 export interface HeaderCopy {
   readonly ownerLinkName: string;
+  /** The name as the header shows it beside the mark, once the hero's own has scrolled away. */
+  readonly ownerName: string;
   readonly linkedInName: string;
   readonly gitHubName: string;
   readonly themeToggle: ThemeToggleNames;
@@ -208,6 +210,7 @@ export const englishPage: LocaleCase = {
   switchTarget: spanish,
   header: {
     ownerLinkName: "Carlos Alcalá, back to top",
+    ownerName: "Carlos Alcalá",
     linkedInName: "LinkedIn profile",
     gitHubName: "GitHub profile",
     themeToggle: {
@@ -383,6 +386,7 @@ export const spanishPage: LocaleCase = {
   switchTarget: english,
   header: {
     ownerLinkName: "Carlos Alcalá, ir al inicio",
+    ownerName: "Carlos Alcalá",
     linkedInName: "Perfil de LinkedIn",
     gitHubName: "Perfil de GitHub",
     themeToggle: {

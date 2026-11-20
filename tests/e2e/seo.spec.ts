@@ -1,4 +1,5 @@
 import type { APIRequestContext } from "@playwright/test";
+import { shareImages } from "../../src/lib/seo";
 import { Sitemap, SeoMeta } from "./components/SeoMeta";
 import {
   expectedPerson,
@@ -87,6 +88,19 @@ for (const seo of seoCases) {
       expect(image.contentType).toMatch(/^image\/png(;|$)/);
       expect(pngSize(image.bytes)).toEqual(shareImageSize);
       expect(image.bytes.byteLength).toBeLessThan(shareImageMaxBytes);
+    });
+
+    // `pnpm og` prints the tagline into the committed PNG, so a new display line must come
+    // with a new share image (issue #40).
+    test("prints the page's own display line on its share image", async ({
+      homePage,
+    }) => {
+      const { tagline } =
+        shareImages[locale.language.lang as keyof typeof shareImages];
+
+      await expect(homePage.hero(locale).displayLineParagraph).toHaveText(
+        tagline,
+      );
     });
 
     test("describes its owner as a schema.org Person", async ({

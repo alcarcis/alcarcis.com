@@ -24,8 +24,8 @@ export interface ShareCard {
   readonly tagline: string;
   readonly stages: readonly string[];
   readonly domain: string;
-  /** The favicon's SVG: the CA monogram in copper on graphite. */
-  readonly monogram: string;
+  /** The favicon's SVG: the `//_` mark, copper slashes and a pass-green cursor on graphite. */
+  readonly mark: string;
   readonly width: number;
   readonly height: number;
 }
@@ -52,7 +52,7 @@ const fontFaces = (fonts: FontSources): string => `
 /** The instrument's pass check (src/components/Instrument.astro). */
 const check = `<svg class="check" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true"><path d="M4 9.5l3.2 3L14 5.5"/></svg>`;
 
-/** The banner style: graphite ground, the copper monogram, the name, the display line, a passing run. */
+/** The banner style: graphite ground, the `//_` mark, the name, the display line, a passing run. */
 export function shareCardHtml(card: ShareCard, fonts: FontSources): string {
   const stages = card.stages
     .map((stage) => `<li>${check}<span>${escapeHtml(stage)}</span></li>`)
@@ -81,7 +81,8 @@ export function shareCardHtml(card: ShareCard, fonts: FontSources): string {
     border-radius: 17px;
     outline: 2px solid ${brand.line};
   }
-  .mark svg { display: block; width: 100%; height: 100%; }
+  /* The outer svg only: the favicon nests the mark in an inner svg that keeps its own box. */
+  .mark > svg { display: block; width: 100%; height: 100%; }
   .domain, .run { font-family: "Geist Mono", monospace; }
   .domain { font-size: 26px; font-weight: 500; color: ${brand.muted}; }
   h1 {
@@ -108,7 +109,7 @@ export function shareCardHtml(card: ShareCard, fonts: FontSources): string {
 </head>
 <body>
   <header>
-    <div class="mark">${card.monogram}</div>
+    <div class="mark">${card.mark}</div>
     <p class="domain">${escapeHtml(card.domain)}</p>
   </header>
   <main>
@@ -124,10 +125,10 @@ export function shareCardHtml(card: ShareCard, fonts: FontSources): string {
 }
 
 /**
- * The home-screen icon: the favicon's monogram, full bleed on graphite. iOS rounds the corners
+ * The home-screen icon: the favicon's mark, full bleed on graphite. iOS rounds the corners
  * itself, so the square has none and no transparency.
  */
-export function touchIconHtml(monogram: string, size: number): string {
+export function touchIconHtml(mark: string, size: number): string {
   return `<!doctype html>
 <html>
 <head>
@@ -135,9 +136,9 @@ export function touchIconHtml(monogram: string, size: number): string {
 <style>
   * { margin: 0; padding: 0; }
   html, body { width: ${size}px; height: ${size}px; background: ${brand.graphite}; }
-  svg { display: block; width: 100%; height: 100%; }
+  body > svg { display: block; width: 100%; height: 100%; }
 </style>
 </head>
-<body>${monogram}</body>
+<body>${mark}</body>
 </html>`;
 }

@@ -1,6 +1,6 @@
 // Renders the share images (public/og/<locale>.png) and the touch icon
 // (public/apple-touch-icon.png) with the Playwright Chromium the test suite already installs.
-// Run `pnpm og` after changing the name, the display line, the monogram or this template; the
+// Run `pnpm og` after changing the name, the display line, the logo or this template; the
 // PNGs are committed, so a build never needs a browser.
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -52,9 +52,7 @@ async function screenshot(
   }
 }
 
-const monogram = (
-  await readFile(fromRoot("public/favicon.svg"), "utf8")
-).trim();
+const mark = (await readFile(fromRoot("public/favicon.svg"), "utf8")).trim();
 const fonts: FontSources = {
   display: await fontDataUrl("src/assets/fonts/chillax/Chillax-Variable.woff2"),
   mono: await fontDataUrl(
@@ -72,7 +70,7 @@ try {
         tagline: image.tagline,
         stages: shareImageStages,
         domain: "alcarcis.com",
-        monogram,
+        mark,
         ...shareImageSize,
       },
       fonts,
@@ -81,7 +79,7 @@ try {
   }
   await screenshot(
     browser,
-    touchIconHtml(monogram, touchIcon.size),
+    touchIconHtml(mark, touchIcon.size),
     { width: touchIcon.size, height: touchIcon.size },
     join("public", touchIcon.path),
   );

@@ -7,6 +7,8 @@ export class Hero {
   readonly heading: Locator;
   readonly disciplines: Locator;
   readonly displayLine: Locator;
+  /** The paragraph right under the name, whatever it says: the page's own display line. */
+  readonly displayLineParagraph: Locator;
   readonly sub: Locator;
   readonly primaryAction: Locator;
   readonly cvLinks: Locator;
@@ -31,6 +33,7 @@ export class Hero {
     this.displayLine = this.region.getByText(locale.displayLine, {
       exact: true,
     });
+    this.displayLineParagraph = this.region.locator("h1 + p");
     this.sub = this.region.getByText(hero.sub, { exact: true });
     this.primaryAction = this.region.getByRole("link", {
       name: hero.primaryAction,
@@ -59,6 +62,19 @@ export class Hero {
         `- paragraph: ${quoted(hero.disciplines)}`,
         `- link ${quoted(hero.primaryAction)}`,
       ].join("\n"),
+    );
+  }
+
+  /**
+   * Scrolls straight down until the name's last line has passed the top of the viewport, so the
+   * whole heading sits behind the sticky header or above it.
+   */
+  async scrollHeadingOutOfView(): Promise<void> {
+    await this.heading.evaluate((heading) =>
+      scrollTo({
+        top: heading.getBoundingClientRect().bottom + scrollY,
+        behavior: "instant",
+      }),
     );
   }
 }

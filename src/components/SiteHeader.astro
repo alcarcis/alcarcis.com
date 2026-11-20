@@ -4,6 +4,7 @@ import LinkedIn from "../assets/icons/linkedin.svg";
 import { useTranslations, type Locale } from "../i18n/ui";
 import { owner, profiles } from "../site";
 import LanguageSwitch from "./LanguageSwitch.astro";
+import LogoMark from "./LogoMark.astro";
 import SectionsNav from "./SectionsNav.astro";
 import ThemeToggle from "./ThemeToggle.astro";
 
@@ -35,7 +36,9 @@ const profileLinks = [
       href="#top"
       aria-label={`${owner.name}, ${t("header.backToTop")}`}
     >
-      <span class="monogram" aria-hidden="true"></span>
+      <span class="mark-frame">
+        <LogoMark class="mark" blink />
+      </span>
       <span class="owner-name">{owner.name}</span>
     </a>
     <SectionsNav locale={locale} menuId={menuId} />
@@ -101,39 +104,42 @@ const profileLinks = [
     padding-inline: var(--gutter);
   }
 
-  /* Who this is, in the first viewport: monogram and name are one link back to the top. */
+  /* The mark and the name are one link back to the top. */
   .owner {
     display: flex;
     flex: none;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--space-2);
     color: var(--text);
     text-decoration: none;
+    text-underline-offset: 4px;
 
-    &:hover .monogram {
-      border-color: var(--link);
+    &:hover {
+      text-decoration-line: underline;
+      text-decoration-thickness: 1px;
+    }
+
+    &:hover .mark-frame {
+      border-color: var(--dots);
     }
   }
 
-  /* The letters come from CSS: a placeholder mark, not part of the link's name. */
-  .monogram {
+  /* The mark stands free, as Carlos drew it (D61). Its 40 px square keeps the link a full target
+     with the name hidden, and shows a border on hover, as the bar's icon buttons do. A fixed
+     size, not --target-min: on phones the bar has no room for a wider square at 320 px. */
+  .mark-frame {
     display: grid;
     flex: none;
     place-items: center;
     inline-size: 2.5rem;
     block-size: 2.5rem;
-    border: 1px solid var(--dots);
-    color: var(--link);
-    font-family: var(--font-display);
-    font-size: 1.0625rem;
-    font-weight: 600;
-    line-height: 1;
-    letter-spacing: 0.02em;
+    border: 1px solid transparent;
     transition: border-color var(--duration-quick) var(--ease-out);
+  }
 
-    &::before {
-      content: "CA";
-    }
+  .mark-frame :global(.mark) {
+    inline-size: 2rem;
+    block-size: auto;
   }
 
   .owner-name {
@@ -143,6 +149,49 @@ const profileLinks = [
     line-height: 1.125rem;
     letter-spacing: 0.01em;
     white-space: nowrap;
+  }
+
+  /* While the hero's h1 names the owner, the bar shows only the mark; the name fades in as the
+     h1 slides under the bar and out again on the way back (D62). CSS only: a view timeline on
+     the h1, shared with the header through timeline-scope on the body. The name keeps its space,
+     so nothing shifts, and the fade follows the scroll position, never a clock, so it stays
+     under reduced motion. Browsers without scroll-driven animations show the name throughout.
+     Longhands on purpose: the CSS minifier would fold the timeline into the animation
+     shorthand, where browsers reject it. */
+  @supports (timeline-scope: --hero-name) and (animation-timeline: view()) {
+    :global(body) {
+      timeline-scope: --hero-name;
+    }
+
+    :global(#hero-heading) {
+      view-timeline-name: --hero-name;
+      view-timeline-axis: block;
+      /* The h1 has left the view once it is behind the sticky bar, not once it leaves the
+         window. */
+      view-timeline-inset: var(--header-height) 0px;
+    }
+
+    .owner-name {
+      animation-name: owner-name-in;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --hero-name;
+      animation-range-start: exit 0%;
+      animation-range-end: exit 100%;
+    }
+  }
+
+  @keyframes owner-name-in {
+    from {
+      visibility: hidden;
+      opacity: 0;
+    }
+
+    to {
+      visibility: visible;
+      opacity: 1;
+    }
   }
 
   .tools {
@@ -174,7 +223,7 @@ const profileLinks = [
     }
   }
 
-  /* Phones: the name takes two lines beside the monogram, and the profile links move into the
+  /* Phones: the name takes two lines beside the mark, and the profile links move into the
      sections menu (they are in Contact too). */
   @media (width < 30em) {
     .profile-icon {
