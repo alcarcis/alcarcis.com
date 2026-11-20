@@ -1,7 +1,7 @@
 import { colorSchemes } from "./data/colorSchemes";
 import { profileUrls } from "./data/externalLinks";
 import { englishPage, localeCases } from "./data/locales";
-import { logoInks, maxBlinkMilliseconds } from "./data/logo";
+import { logoInks, maxBlinkMilliseconds, minTargetPixels } from "./data/logo";
 import { expect, test } from "./fixtures";
 
 for (const locale of localeCases) {
@@ -17,6 +17,37 @@ for (const locale of localeCases) {
 
       await expect(ownerLink).toHaveAttribute("href", "#top");
       await expect(ownerLink).toContainText(locale.heading);
+    });
+
+    test("shows only the mark while the hero names the owner", async ({
+      homePage,
+    }) => {
+      const header = homePage.header(locale.header);
+
+      await expect(header.mark).toBeVisible();
+      await expect(header.ownerName).toBeHidden();
+    });
+
+    test("names the owner beside the mark once the hero's name scrolls away, and stops at the top again", async ({
+      homePage,
+    }) => {
+      const header = homePage.header(locale.header);
+
+      await homePage.hero(locale).scrollHeadingOutOfView();
+      await expect(header.ownerName).toBeVisible();
+      await expect(header.ownerName).toHaveCSS("opacity", "1");
+
+      await homePage.scrollToTop();
+      await expect(header.ownerName).toBeHidden();
+    });
+
+    test("keeps the owner link at least 40 px each way with only the mark showing", async ({
+      homePage,
+    }) => {
+      const box = await homePage.header(locale.header).ownerLink.boundingBox();
+
+      expect(box?.width).toBeGreaterThanOrEqual(minTargetPixels);
+      expect(box?.height).toBeGreaterThanOrEqual(minTargetPixels);
     });
 
     test("links to the LinkedIn and GitHub profiles", async ({ homePage }) => {

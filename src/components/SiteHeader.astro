@@ -151,6 +151,49 @@ const profileLinks = [
     white-space: nowrap;
   }
 
+  /* While the hero's h1 names the owner, the bar shows only the mark; the name fades in as the
+     h1 slides under the bar and out again on the way back (D62). CSS only: a view timeline on
+     the h1, shared with the header through timeline-scope on the body. The name keeps its space,
+     so nothing shifts, and the fade follows the scroll position, never a clock, so it stays
+     under reduced motion. Browsers without scroll-driven animations show the name throughout.
+     Longhands on purpose: the CSS minifier would fold the timeline into the animation
+     shorthand, where browsers reject it. */
+  @supports (timeline-scope: --hero-name) and (animation-timeline: view()) {
+    :global(body) {
+      timeline-scope: --hero-name;
+    }
+
+    :global(#hero-heading) {
+      view-timeline-name: --hero-name;
+      view-timeline-axis: block;
+      /* The h1 has left the view once it is behind the sticky bar, not once it leaves the
+         window. */
+      view-timeline-inset: var(--header-height) 0px;
+    }
+
+    .owner-name {
+      animation-name: owner-name-in;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --hero-name;
+      animation-range-start: exit 0%;
+      animation-range-end: exit 100%;
+    }
+  }
+
+  @keyframes owner-name-in {
+    from {
+      visibility: hidden;
+      opacity: 0;
+    }
+
+    to {
+      visibility: visible;
+      opacity: 1;
+    }
+  }
+
   .tools {
     display: flex;
     align-items: center;

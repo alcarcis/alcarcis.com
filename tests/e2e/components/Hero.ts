@@ -64,4 +64,17 @@ export class Hero {
       ].join("\n"),
     );
   }
+
+  /**
+   * Scrolls straight down until the name's last line has passed the top of the viewport, so the
+   * whole heading sits behind the sticky header or above it.
+   */
+  async scrollHeadingOutOfView(): Promise<void> {
+    await this.heading.evaluate((heading) =>
+      scrollTo({
+        top: heading.getBoundingClientRect().bottom + scrollY,
+        behavior: "instant",
+      }),
+    );
+  }
 }

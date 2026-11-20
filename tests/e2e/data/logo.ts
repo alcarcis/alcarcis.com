@@ -15,3 +15,6 @@ export const logoInks: Readonly<Record<ColorScheme, LogoInks>> = {
 
 /** WCAG 2.2.2: blinking that starts on its own stops within five seconds. */
 export const maxBlinkMilliseconds = 5000;
+
+/** The owner link's smallest target each way, with or without the name beside the mark. */
+export const minTargetPixels = 40;
