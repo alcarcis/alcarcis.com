@@ -73,6 +73,7 @@
   --type-headline-size: clamp(3rem, 0.25rem + 6.1vw, 6rem);
   --type-headline-leading: 0.98;
   --type-headline-tracking: -0.03em;
+  /* The hero's second line, and the contact address at the same size: 30px on phones, 46px wide */
   --type-display-line-size: clamp(1.875rem, 0.25rem + 2.9vw, 2.875rem);
   --type-display-line-leading: 1.1;
   --type-display-line-tracking: -0.02em;
@@ -100,10 +101,6 @@
   /* An entry in a mono list, such as a tool's name: 14/28 */
   --type-list-size: 0.875rem;
   --type-list-leading: 2;
-  /* The contact address, the link itself at display size: 32px on phones, 64px on wide screens */
-  --type-contact-address-size: clamp(2rem, 0.75rem + 3.6vw, 4rem);
-  --type-contact-address-leading: 1.1;
-  --type-contact-address-tracking: -0.02em;
   /* A value in a row of data, such as a profile address: 14/24 */
   --type-data-size: 0.875rem;
   --type-data-leading: calc(24 / 14);

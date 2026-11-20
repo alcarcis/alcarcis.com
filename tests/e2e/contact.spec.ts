@@ -43,6 +43,27 @@ for (const locale of localeCases) {
     });
   });
 
+  for (const width of [390, 1440]) {
+    test.describe(`${locale.language.name} Contact address ${width}px wide`, () => {
+      test.use({ viewport: { width, height: 900 } });
+
+      test("is set at the size of the hero's second line", async ({
+        homePage,
+      }) => {
+        await homePage.open(locale.language.path);
+        const displayLineSize = await homePage
+          .hero(locale)
+          .displayLine.evaluate((line) =>
+            parseFloat(getComputedStyle(line).fontSize),
+          );
+
+        expect(await homePage.contact(locale).addressFontSize()).toBe(
+          displayLineSize,
+        );
+      });
+    });
+  }
+
   test.describe(`${locale.language.name} Contact copy button`, () => {
     test("copies the address, says so, then shows its label again", async ({
       homePage,
