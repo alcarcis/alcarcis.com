@@ -225,9 +225,10 @@ const cv = cvDownloadFor(locale, isInPublicDir(process.cwd()));
       display: none;
     }
 
-    /* At rest the icon speaks for the button: its words stay for assistive technology only. */
-    &:not([data-state]) :is(.label, .copy-target),
-    &[data-state] .copy-target {
+    /* An icon speaks for the button at rest and once copied, so its width holds: its words
+       stay for assistive technology only. */
+    &:not([data-state="selected"]) .label,
+    .copy-target {
       position: absolute;
       inline-size: 1px;
       block-size: 1px;
@@ -241,8 +242,9 @@ const cv = cvDownloadFor(locale, isInPublicDir(process.cwd()));
       display: none;
     }
 
-    /* The outcome shows in words and in colour: a check and the word in pass green when
-       copied, plain words when the visitor has to copy the selected address. */
+    /* The outcome shows in colour: a check in pass green in place of the copy icon when
+       copied, and words when the visitor has to copy the selected address, an instruction an
+       icon cannot give. */
     &[data-state] [data-icon="copy"] {
       display: none;
     }

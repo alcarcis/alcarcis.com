@@ -1,8 +1,9 @@
 /*
  * Contact's copy button. It writes the address to the clipboard; when the clipboard refuses the
- * write or is missing, it selects the address instead and says how to copy it. At rest the button
- * shows an icon; an outcome shows its label in words (the stylesheet swaps them by the button's
- * state) and a polite live region announces it, then both return to rest. It reads no layout.
+ * write or is missing, it selects the address instead and says how to copy it. The button's
+ * label names the outcome: the stylesheet shows a check for a copy and the words for a selection,
+ * by the button's state. A polite live region announces it, then both return to rest. It reads
+ * no layout.
  */
 
 type Outcome = "copied" | "selected";

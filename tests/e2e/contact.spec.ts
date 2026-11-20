@@ -7,6 +7,7 @@ import {
 import { contactEmailHref, localeCases } from "./data/locales";
 import { expect, test } from "./fixtures";
 import { clipboardRefusals } from "./support/clipboard";
+import { boxOf } from "./support/pageState";
 
 for (const locale of localeCases) {
   test.describe(`${locale.language.name} Contact section`, () => {
@@ -151,7 +152,7 @@ for (const locale of localeCases) {
   }
 
   test.describe(`${locale.language.name} Contact copy button`, () => {
-    test("copies the address, says so, then shows its label again", async ({
+    test("copies the address, answers with a check in place of its icon, then rests", async ({
       homePage,
       clipboard,
       frozenClock,
@@ -160,22 +161,31 @@ for (const locale of localeCases) {
       await homePage.open(locale.language.path);
       const contact = homePage.contact(locale);
 
+      const atRest = await boxOf(contact.copyButton);
+      const cvAtRest = await boxOf(contact.cvLink);
+
       await contact.copyAddress();
 
       expect(await clipboard.read()).toBe(emailAddress);
       await contact.expectReported("copied");
-      // The outcome shows in words: a check and "copied" in pass green, in place of the icon.
+      // An icon button answers with an icon: a check in pass green in place of the copy icon,
+      // its word kept as the hidden name, so neither the button nor the CV action moves.
       await expect(contact.checkIcon).toBeVisible();
       await expect(contact.copyIcon).toBeHidden();
       await expect(contact.copyLabel).toHaveText(
         locale.contact.copyLabels.copied,
       );
-      expect(await contact.isVisuallyHidden(contact.copyLabel)).toBe(false);
+      expect(await contact.isVisuallyHidden(contact.copyLabel)).toBe(true);
       // The colour eases in, so this waits for it to settle on pass green.
-      await expect(contact.copyLabel).toHaveCSS(
+      await expect(contact.checkIcon).toHaveCSS(
         "color",
         await contact.passColour(),
       );
+      const copied = await boxOf(contact.copyButton);
+      expect(Math.abs(copied.width - atRest.width)).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs((await boxOf(contact.cvLink)).x - cvAtRest.x),
+      ).toBeLessThanOrEqual(1);
       await frozenClock.runFor(reportShown.copied.stillAtMs);
       await contact.expectReported("copied");
       await frozenClock.runFor(
