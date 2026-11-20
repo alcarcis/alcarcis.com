@@ -43,13 +43,23 @@ export class RepositoryRow {
   }> {
     return this.link.evaluate((link) => {
       const box = link.getBoundingClientRect();
-      const range = document.createRange();
-      range.selectNodeContents(link);
-      const text = range.getBoundingClientRect();
+      // The text alone: the arrow icon after it sits lower than the letters.
+      const tops: number[] = [];
+      const bottoms: number[] = [];
+      const walker = document.createTreeWalker(link, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) {
+        const range = document.createRange();
+        range.selectNodeContents(walker.currentNode);
+        for (const rect of range.getClientRects()) {
+          if (rect.width === 0) continue;
+          tops.push(rect.top);
+          bottoms.push(rect.bottom);
+        }
+      }
       return {
         height: box.height,
-        above: text.top - box.top,
-        below: box.bottom - text.bottom,
+        above: Math.min(...tops) - box.top,
+        below: box.bottom - Math.max(...bottoms),
       };
     });
   }

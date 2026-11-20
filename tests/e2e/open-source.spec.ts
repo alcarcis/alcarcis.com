@@ -103,10 +103,11 @@ for (const viewport of phoneViewports) {
           expect(height, `${name} link height`).toBeGreaterThanOrEqual(
             touchTargetPx,
           );
+          // Letters snap to whole pixels inside their lines, so even room may differ by one.
           expect(
             Math.abs(above - below),
             `${name} room above and below`,
-          ).toBeLessThan(1);
+          ).toBeLessThanOrEqual(1);
         }
       });
     });
