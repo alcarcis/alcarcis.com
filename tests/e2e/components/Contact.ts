@@ -114,10 +114,12 @@ export class Certificate {
 
   /**
    * The pieces of visible text the seal's box covers: the heading's and the rows' text, read
-   * by the line boxes the page lays out, never the decoration's own.
+   * by the line boxes the page lays out, never the decoration's own. It measures once the web
+   * fonts have loaded, since a fallback face sets the lines at other widths.
    */
   async textUnderSeal(): Promise<string[]> {
-    return this.region.evaluate((certificate) => {
+    return this.region.evaluate(async (certificate) => {
+      await document.fonts.ready;
       const seal = certificate.querySelector('[data-decor="seal"]');
       if (!seal) throw new Error("The certificate has no seal.");
       const sealBox = seal.getBoundingClientRect();

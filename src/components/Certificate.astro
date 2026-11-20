@@ -2,11 +2,7 @@
 import { minimumCategoryScore } from "../../scripts/quality-budget";
 import { useTranslations, type Locale } from "../i18n/ui";
 import { buildInfo } from "../lib/build-info";
-import {
-  commitFact,
-  countedPhrase,
-  sourceRepository,
-} from "../lib/certificate";
+import { commitFact, e2ePhrase, sourceRepository } from "../lib/certificate";
 import { logoPaths, logoViewBox } from "../lib/logo";
 import { breakOnlyBetween, keepTermsTogether } from "../lib/typography";
 import CertificateSeal from "./CertificateSeal.astro";
@@ -52,13 +48,14 @@ const commit = commitFact(facts.commit);
    on one line. */
 const lighthouseMinimum = Math.round(minimumCategoryScore * 100);
 
-const e2e =
-  facts.tests === null
-    ? t("certificate.e2e")
-    : countedPhrase(
-        { one: t("certificate.e2e.one"), other: t("certificate.e2e.other") },
-        facts.tests,
-      );
+const e2e = e2ePhrase(
+  {
+    uncounted: t("certificate.e2e"),
+    one: t("certificate.e2e.one"),
+    other: t("certificate.e2e.other"),
+  },
+  facts.tests,
+);
 
 /* The repository as the row shows it: without its scheme, breakable after each slash. */
 const sourcePieces = sourceRepository

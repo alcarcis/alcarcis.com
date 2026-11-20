@@ -36,3 +36,15 @@ export interface CountedPhrases {
 /** Fills a count into the phrase for its number: "1 Playwright test", "325 Playwright tests". */
 export const countedPhrase = (phrases: CountedPhrases, count: number): string =>
   (count === 1 ? phrases.one : phrases.other).replace("{count}", String(count));
+
+/** The E2E row's phrases: counted in the singular and the plural, and the suite uncounted. */
+export interface E2ePhrases extends CountedPhrases {
+  readonly uncounted: string;
+}
+
+/**
+ * The E2E row's value: the suite's size when the build could count its tests, or the suite
+ * without a number when it could not, never a blank or a guess.
+ */
+export const e2ePhrase = (phrases: E2ePhrases, tests: number | null): string =>
+  tests === null ? phrases.uncounted : countedPhrase(phrases, tests);
