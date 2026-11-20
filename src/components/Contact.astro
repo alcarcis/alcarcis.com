@@ -104,6 +104,8 @@ const rowLists = [
         [
       </span>
       <span data-copy-label>{t("contact.copy")}</span>
+      {/* Completes the name for assistive technology; it leaves while an outcome shows. */}
+      <span class="visually-hidden copy-target">{` ${t("contact.copyTarget")}`}</span>
       <span class="bracket" aria-hidden="true">
         ]
       </span>
@@ -228,6 +230,10 @@ const rowLists = [
     &[data-state="selected"] {
       border-color: var(--dots);
       color: var(--text);
+    }
+
+    &[data-state] .copy-target {
+      display: none;
     }
   }
 
