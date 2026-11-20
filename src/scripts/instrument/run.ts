@@ -1,9 +1,10 @@
 /*
  * The instrument's run: quality.spec.ts types itself once the page is idle and the instrument
  * is in view, then the scene and the five stage rows play in sync (see timeline.ts) and the
- * run ends Passed on the deploy workflow. Skip, a click on the card or a key press shows the finished run at once;
- * Rerun replays it. The run pauses while the instrument is off-screen or the tab is hidden.
- * Under reduced motion the final frame stays put, with no typing.
+ * run ends Passed at its last stage, production, with the workflow's jobs deployed. Skip, a
+ * click on the card or a key press shows the finished run at once; Rerun replays it. The run
+ * pauses while the instrument is off-screen or the tab is hidden. Under reduced motion the
+ * final frame stays put, with no typing.
  */
 import type { GlyphScene } from "../glyph-renderer";
 import { whenIdle } from "../when-idle";
