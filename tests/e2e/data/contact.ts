@@ -17,11 +17,11 @@ export const lighthouseMinimum = Math.round(minimumCategoryScore * 100);
 
 /**
  * The page of the commit a build was made from, as the certificate links it: the commit itself,
- * not its checks, so a squash merge's still-running push run never contradicts the seal. The
- * build reads the hash as its first seven characters, which GitHub resolves.
+ * not its checks, so a squash merge's still-running push run never contradicts the seal. It
+ * names the whole hash; the row shows only its first seven characters.
  */
 export const commitUrl = (sha: string): string =>
-  `${sourceRepository.url}/commit/${sha.slice(0, 7)}`;
+  `${sourceRepository.url}/commit/${sha}`;
 
 /** The section anchors: one English set on every page, so links between pages keep their target. */
 export const anchors = { contact: "contact", report: "report" } as const;

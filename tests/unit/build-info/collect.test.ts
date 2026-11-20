@@ -20,7 +20,7 @@ describe("collectBuildInfo", () => {
     );
 
     assert.deepEqual(info, {
-      commit: headSha.slice(0, 7),
+      commit: headSha,
       built: "2026-11-18",
       tests: 3,
       problems: [],
