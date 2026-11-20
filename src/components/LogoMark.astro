@@ -1,0 +1,56 @@
+---
+import { logoPaths, logoStrokeWidth, logoViewBox } from "../lib/logo";
+
+interface Props {
+  /** Blink the cursor a few times on load, then hold it solid (the header only, D61). */
+  blink?: boolean;
+  class?: string;
+}
+
+const { blink = false, class: className } = Astro.props;
+---
+
+{/* Decoration: whatever holds the mark names it, so the mark itself stays out of the tree. */}
+<svg
+  class:list={["logo-mark", className, { blink }]}
+  viewBox={logoViewBox}
+  fill="none"
+  stroke-width={logoStrokeWidth}
+  stroke-linecap="round"
+  aria-hidden="true"
+  focusable="false"
+>
+  {logoPaths.slashes.map((d) => (
+    <path class="slash" d={d} data-logo-part="slash" />
+  ))}
+  <path class="cursor" d={logoPaths.cursor} data-logo-part="cursor" />
+</svg>
+
+<style>
+  .logo-mark {
+    display: block;
+    overflow: visible;
+  }
+
+  .slash {
+    stroke: var(--link);
+  }
+
+  .cursor {
+    stroke: var(--pass);
+  }
+
+  /* WCAG 2.2.2: four blinks at a terminal's pace end within 4.3 s, and the cursor then rests
+     solid. Reduced motion never starts them. */
+  @media (prefers-reduced-motion: no-preference) {
+    .blink .cursor {
+      animation: cursor-blink 1.06s steps(1, end) 4;
+    }
+  }
+
+  @keyframes cursor-blink {
+    50% {
+      opacity: 0;
+    }
+  }
+</style>

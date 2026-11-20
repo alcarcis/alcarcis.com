@@ -58,7 +58,7 @@ export const openGraphLocales: Readonly<Record<Locale, string>> = {
   es: "es_PE",
 };
 
-/** The home-screen icon iOS asks for, rendered by `pnpm og` from the favicon's monogram. */
+/** The home-screen icon iOS asks for, rendered by `pnpm og` from the favicon's mark. */
 export const touchIcon = { path: "/apple-touch-icon.png", size: 180 } as const;
 
 export interface SitemapEntry {
