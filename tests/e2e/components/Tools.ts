@@ -7,6 +7,7 @@ export class Tools {
   readonly region: Locator;
   readonly head: SectionHead;
   private readonly imageRequests: string[] = [];
+  private recordingImageRequests = false;
 
   constructor(
     private readonly page: Page,
@@ -64,6 +65,9 @@ export class Tools {
    * request made while it loads slips past.
    */
   recordImageRequests(): void {
+    // One listener per section object: a second call must not count each request twice.
+    if (this.recordingImageRequests) return;
+    this.recordingImageRequests = true;
     this.page.on("request", (request) => {
       const url = request.url();
       if (/\/_astro\/[^/]+\.svg$/.test(url)) this.imageRequests.push(url);
