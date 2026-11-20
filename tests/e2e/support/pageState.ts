@@ -151,11 +151,16 @@ export async function viewWatchers(page: Page): Promise<number> {
   );
 }
 
-/** Resizes the viewport and waits until the page has handled the resize event. */
+/**
+ * Resizes the viewport and waits until the page has handled the resize event. A request for the
+ * current size fires no resize event, so it returns at once.
+ */
 export async function resizeViewport(
   page: Page,
   size: { width: number; height: number },
 ): Promise<void> {
+  const current = page.viewportSize();
+  if (current?.width === size.width && current.height === size.height) return;
   const handled = page.evaluate(
     () =>
       new Promise<void>((resolve) =>
