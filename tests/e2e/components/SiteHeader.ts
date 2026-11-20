@@ -23,7 +23,10 @@ export class SiteHeader {
   readonly gitHubLink: Locator;
   readonly themeToggle: ThemeToggle;
 
-  constructor(page: Page, copy: HeaderCopy) {
+  constructor(
+    private readonly page: Page,
+    copy: HeaderCopy,
+  ) {
     this.banner = page.getByRole("banner");
     this.ownerLink = this.link(copy.ownerLinkName);
     this.ownerName = this.ownerLink.getByText(copy.ownerName, { exact: true });
@@ -34,6 +37,21 @@ export class SiteHeader {
     this.linkedInLink = this.link(copy.linkedInName);
     this.gitHubLink = this.link(copy.gitHubName);
     this.themeToggle = new ThemeToggle(this.banner, copy.themeToggle);
+  }
+
+  /** Presses Tab from the start of the page until the owner link has focus, as a keyboard visitor does. */
+  async tabToOwnerLink(): Promise<void> {
+    const maxPresses = 3;
+    for (let presses = 0; presses < maxPresses; presses++) {
+      await this.page.keyboard.press("Tab");
+      const focused = await this.ownerLink.evaluate(
+        (link) => link === document.activeElement,
+      );
+      if (focused) return;
+    }
+    throw new Error(
+      `The owner link did not take focus within ${maxPresses} Tab presses`,
+    );
   }
 
   /** Reads the cursor's animations as the page runs them. */

@@ -41,6 +41,17 @@ for (const locale of localeCases) {
       await expect(header.ownerName).toBeHidden();
     });
 
+    test("names the owner beside the mark while its link has keyboard focus at the top", async ({
+      homePage,
+    }) => {
+      const header = homePage.header(locale.header);
+
+      await header.tabToOwnerLink();
+
+      await expect(header.ownerName).toBeVisible();
+      await expect(header.ownerName).toHaveCSS("opacity", "1");
+    });
+
     test("keeps the owner link at least 40 px each way with only the mark showing", async ({
       homePage,
     }) => {

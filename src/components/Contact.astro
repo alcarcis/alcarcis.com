@@ -2,7 +2,7 @@
 import { minimumCategoryScore } from "../../scripts/quality-budget";
 import { useTranslations, type Locale } from "../i18n/ui";
 import { cvDownloadFor, isInPublicDir } from "../lib/cv";
-import { breakOnlyBetween } from "../lib/typography";
+import { breakOnlyBetween, keepTermsTogether } from "../lib/typography";
 import { contact, profiles } from "../site";
 import SectionHead from "./SectionHead.astro";
 
@@ -60,13 +60,16 @@ const contactRows: Row[] = [
 const lighthouseMinimum = Math.round(minimumCategoryScore * 100);
 
 const reportRows: Row[] = [
-  { term: "E2E", value: t("report.e2e") },
+  { term: "E2E", value: keepTermsTogether(t("report.e2e")) },
   { term: t("report.accessibility.term"), value: t("report.accessibility") },
   {
     term: t("report.performance.term"),
     value: `${breakOnlyBetween(`Lighthouse · ≥ ${lighthouseMinimum}`)} ${t("report.performance.scope")}`,
   },
-  { term: t("report.deploy.term"), value: t("report.deploy") },
+  {
+    term: t("report.deploy.term"),
+    value: keepTermsTogether(t("report.deploy")),
+  },
   { term: t("report.source.term"), value: addressLink(sourceRepository) },
 ];
 
