@@ -65,6 +65,8 @@ const listedTitles = (configArgs: readonly string[] = []): string[] => {
   return testTitles(report.suites);
 };
 
+// These title fragments must match the test titles in tests/live/ and tests/e2e/external-links.spec.ts;
+// a rename there fails here with a diff that names the title.
 const liveCheck = " answers with HTTP 200";
 
 describe("live link checks", () => {

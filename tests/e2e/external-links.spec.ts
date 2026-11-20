@@ -4,7 +4,7 @@ import { localeCases } from "./data/locales";
 import { expect, test } from "./fixtures";
 import { headCommit } from "./support/buildFacts";
 
-// Whether these URLs answer is checked daily outside the gate: tests/live/external-links.spec.ts.
+// Whether these URLs answer is checked on a schedule outside the gate: tests/live/external-links.spec.ts.
 
 for (const locale of localeCases) {
   test(`${locale.language.name} page at ${locale.language.path} links only to the expected external URLs`, async ({

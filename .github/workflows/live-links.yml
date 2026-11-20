@@ -10,11 +10,16 @@ permissions:
   contents: read
   issues: write
 
+# One run at a time, so a scheduled and a manual run cannot both open an issue.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   live-links:
     name: Live link check
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Check out the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -33,6 +38,8 @@ jobs:
       # Request-only tests: no browser to install.
       - name: Check the external links
         id: live
+        # A step timeout counts as a failure, so the report still runs; a job timeout would skip it.
+        timeout-minutes: 8
         run: pnpm test:live
       - name: Report the failure in an issue
         if: ${{ failure() && steps.live.outcome == 'failure' }}
@@ -42,13 +49,18 @@ jobs:
         run: |
           title="Live link check failed"
           run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          failed=""
           if [ -f live-results.json ]; then
             failed=$(jq -r '[.. | objects | .specs? // empty | .[] | select(.ok | not) | "- \(.title)"] | unique | .[]' live-results.json)
+          fi
+          # No report (the step timed out) or no failed spec: point at the run instead.
+          if [ -z "$failed" ]; then
+            failed="- see the run"
           fi
           {
             echo "These links did not answer with HTTP 200:"
             echo
-            echo "${failed:-- see the run}"
+            echo "$failed"
             echo
             echo "Run: $run_url"
             echo

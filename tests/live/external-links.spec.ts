@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+// The same list the gate's hermetic test asserts, so the two suites check the same links.
 import {
   expectedExternalUrls,
   isLiveCheckable,

@@ -10,6 +10,8 @@ const isCI = Boolean(process.env["CI"]);
 export default defineConfig({
   testDir: "./tests/live",
   forbidOnly: isCI,
+  // One request per URL, so a slow host does not hold the others back.
+  fullyParallel: true,
   // A retry that passes means the URL is up, so a flaky result is not a failure here.
   retries: 2,
   timeout: 30_000,
