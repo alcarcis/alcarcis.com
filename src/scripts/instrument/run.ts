@@ -259,10 +259,13 @@ function setUpRun(instrument: HTMLElement): void {
       : startShare;
   }
 
-  /* Watches the instrument come into view; observed again whenever its start ratio changes. */
+  /* Watches the instrument come into view; observed again whenever its start ratio changes,
+     until the run may start. From then on the ratio decides nothing, and the observer it has
+     keeps reporting whether the instrument is on screen. */
   let viewObserver: IntersectionObserver | null = null;
   let watchedRatio = 0;
   function watchView(): void {
+    if (startAllowed && viewObserver) return;
     const ratio = startRatio();
     if (ratio === watchedRatio) return;
     watchedRatio = ratio;

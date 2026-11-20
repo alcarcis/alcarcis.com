@@ -1,4 +1,5 @@
 import { unsizedCanvas } from "./components/GlyphField";
+import { unplacedCanvas } from "./components/Instrument";
 import { emptyLine, fullLine } from "./components/ReadingProgress";
 import {
   finalSceneTime,
@@ -11,12 +12,15 @@ import { englishPage, localeCases } from "./data/locales";
 import { expect, test } from "./fixtures";
 import {
   addRoomBelow,
+  countViewWatchers,
   missingMutationObserver,
   removeMutationObserver,
+  resizeViewport,
   scrollToBottom,
   scrollToTop,
   setDevicePixelRatio,
   setTabHidden,
+  viewWatchers,
   windowAndDocumentListeners,
 } from "./support/pageState";
 
@@ -341,6 +345,9 @@ test.describe("instrument resilience", () => {
       listenersWithoutRenderer,
     );
     expect(await homePage.glyphField.buffer()).toEqual(unsizedCanvas);
+    // The scene canvas was sized before the failure; a stale one would cover the text frame.
+    expect(await instrument.sceneCanvasBuffer()).toEqual(unsizedCanvas);
+    expect(await instrument.sceneCanvasPlacement()).toEqual(unplacedCanvas);
     await frozenClock.runFor(wholeRunMs);
     await instrument.expectFinalFrame();
     await expect(instrument.textFrame).toBeVisible();
@@ -391,6 +398,34 @@ test.describe("instrument resilience", () => {
         return instrument.sceneCanvasScale();
       })
       .toEqual({ across: 2, down: 2 });
+  });
+
+  test.describe("once the run may start", () => {
+    // Three quarters of this viewport is less than 40% of the instrument, so the start share
+    // depends on the viewport's height.
+    test.use({ viewport: startRuleCases[1].viewport });
+
+    test("keeps watching the instrument with the same observer when the viewport resizes", async ({
+      homePage,
+      page,
+      frozenClock,
+    }) => {
+      const { instrument } = homePage.hero(englishPage);
+      const { width, height } = startRuleCases[1].viewport;
+      await countViewWatchers(page, "[data-instrument]");
+      await homePage.open(englishPage.language.path);
+      await frozenClock.runFor(stepMs);
+      await instrument.scrollToShow(height);
+      await instrument.expectRunState("playing");
+      const watchersBefore = await viewWatchers(page);
+
+      await resizeViewport(page, { width, height: height + 40 });
+
+      expect(await viewWatchers(page)).toBe(watchersBefore);
+      await addRoomBelow(page, 3_000);
+      await scrollToBottom(page);
+      await instrument.expectRunState("paused");
+    });
   });
 
   for (const { rule, viewport, firstRule } of startRuleCases) {

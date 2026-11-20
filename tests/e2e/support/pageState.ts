@@ -116,3 +116,52 @@ export async function boxOf(
   if (!box) throw new Error(`${locator} is not rendered.`);
   return box;
 }
+
+/**
+ * Counts, from before the page's scripts run, the IntersectionObservers set to watch an element
+ * matching `selector`. Read the count with `viewWatchers`.
+ */
+export async function countViewWatchers(
+  page: Page,
+  selector: string,
+): Promise<void> {
+  await page.addInitScript((watched) => {
+    const Native = window.IntersectionObserver;
+    const counted = new WeakSet<IntersectionObserver>();
+    const tally = { count: 0 };
+    Object.defineProperty(window, "__viewWatchers", { value: tally });
+    window.IntersectionObserver = class extends Native {
+      override observe(target: Element): void {
+        if (!counted.has(this) && target.matches(watched)) {
+          counted.add(this);
+          tally.count++;
+        }
+        super.observe(target);
+      }
+    };
+  }, selector);
+}
+
+/** How many observers `countViewWatchers` has seen watch its element so far. */
+export async function viewWatchers(page: Page): Promise<number> {
+  return page.evaluate(
+    () =>
+      (window as unknown as { __viewWatchers: { count: number } })
+        .__viewWatchers.count,
+  );
+}
+
+/** Resizes the viewport and waits until the page has handled the resize event. */
+export async function resizeViewport(
+  page: Page,
+  size: { width: number; height: number },
+): Promise<void> {
+  const handled = page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        addEventListener("resize", () => resolve(), { once: true }),
+      ),
+  );
+  await page.setViewportSize(size);
+  await handled;
+}
