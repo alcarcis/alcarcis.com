@@ -35,8 +35,20 @@ export const certificateDecor = [
 ] as const;
 
 /**
+ * Widths to lay Contact's address line out at, and whether the address and its two actions fit
+ * on one line there; where they do not, the actions centre on a line of their own below.
+ */
+export const addressLines = [
+  { width: 320, oneLine: false },
+  { width: 390, oneLine: false },
+  { width: 860, oneLine: true },
+  { width: 1440, oneLine: true },
+] as const;
+
+/**
  * Widths to lay the certificate out at: the narrowest phone, either side of 860 px (where a
- * seal set over the card once covered its heading), the two-column breakpoint and a wide screen.
+ * seal set over the card once covered its heading), where the site's layout widens, and a
+ * wide screen.
  */
 export const certificateWidths = [320, 390, 850, 870, 960, 1024, 1440] as const;
 

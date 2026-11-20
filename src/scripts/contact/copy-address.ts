@@ -1,8 +1,8 @@
 /*
  * Contact's copy button. It writes the address to the clipboard; when the clipboard refuses the
- * write or is missing, it selects the address instead and says how to copy it. The button's label
- * shows the outcome and a polite live region announces it, then both return to rest. It reads no
- * layout, and only its colours change, which the theme rules already govern.
+ * write or is missing, it selects the address instead and says how to copy it. At rest the button
+ * shows an icon; an outcome shows its label in words (the stylesheet swaps them by the button's
+ * state) and a polite live region announces it, then both return to rest. It reads no layout.
  */
 
 type Outcome = "copied" | "selected";
@@ -14,7 +14,7 @@ const shownForMs: Readonly<Record<Outcome, number>> = {
 };
 
 function wire(address: HTMLElement): void {
-  const link = address.querySelector("a");
+  const link = address.querySelector("[data-copy-source]");
   const button = address.querySelector("button");
   const label = address.querySelector("[data-copy-label]");
   const status = address.querySelector('[role="status"]');

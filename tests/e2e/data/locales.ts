@@ -143,14 +143,21 @@ export interface CertificateCopy {
   readonly source: LinkRowCopy;
 }
 
+/** A download action: what it shows, what assistive technology reads, and where it leads. */
+export interface CvActionCopy {
+  readonly label: string;
+  readonly name: string;
+  readonly url: string;
+}
+
 export interface ContactCopy {
   readonly head: SectionHeadCopy;
   /** The copy button's label at rest, and as it reports each outcome. */
   readonly copyLabels: Readonly<Record<CopyOutcome | "idle", string>>;
   /** What the live region announces for each outcome. */
   readonly announcements: Readonly<Record<CopyOutcome, string>>;
-  /** The rows beside the address: the CV only, since the header links both profiles. */
-  readonly rows: readonly LinkRowCopy[];
+  /** The CV action beside copy: its visible words, the name they start with, and its file. */
+  readonly cv: CvActionCopy;
   readonly certificate: CertificateCopy;
 }
 
@@ -333,13 +340,11 @@ export const englishPage: LocaleCase = {
       selected:
         "Could not copy. The address is selected: press Ctrl+C, or Cmd+C on a Mac.",
     },
-    rows: [
-      {
-        term: "CV",
-        link: "Download CV (PDF)",
-        url: "/cv/carlos-alcala-cv-en.pdf",
-      },
-    ],
+    cv: {
+      label: "CV · PDF",
+      name: "Download CV · PDF",
+      url: "/cv/carlos-alcala-cv-en.pdf",
+    },
     certificate: {
       title: "Certificate · How this site is tested",
       commitTerm: "Commit",
@@ -532,13 +537,11 @@ export const spanishPage: LocaleCase = {
       selected:
         "No se pudo copiar. La dirección está seleccionada: presiona Ctrl+C, o Cmd+C en Mac.",
     },
-    rows: [
-      {
-        term: "CV",
-        link: "Descargar CV (PDF)",
-        url: "/cv/carlos-alcala-cv-es.pdf",
-      },
-    ],
+    cv: {
+      label: "CV · PDF",
+      name: "Descargar CV · PDF",
+      url: "/cv/carlos-alcala-cv-es.pdf",
+    },
     certificate: {
       title: "Certificado · Cómo se prueba este sitio",
       commitTerm: "Commit",

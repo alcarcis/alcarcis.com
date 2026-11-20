@@ -12,33 +12,8 @@ interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 
-interface RowLink {
-  readonly href: string;
-  readonly text: string;
-  readonly type?: string;
-}
-
-/** A term, and a link. */
-interface Row {
-  readonly term: string;
-  readonly value: RowLink;
-}
-
+/* The CV beside copy, only when it ships: by Contact the hero's CV button is far above. */
 const cv = cvDownloadFor(locale, isInPublicDir(process.cwd()));
-
-/* Only the CV beside the address, when it ships: the header links both profiles. */
-const rows: Row[] = cv
-  ? [
-      {
-        term: "CV",
-        value: {
-          href: cv.href,
-          text: t("hero.cvAction"),
-          type: "application/pdf",
-        },
-      },
-    ]
-  : [];
 ---
 
 <section class="contact" id="contact" aria-labelledby="contact-heading">
@@ -48,55 +23,105 @@ const rows: Row[] = cv
     headingId="contact-heading"
     title={t("contact.title")}
   />
-  <div class="columns">
-    <div class="reach">
-      {/* The script reads each outcome's label and announcement here, in this page's language. */}
-      <div
-        class="address"
-        data-copy-address
-        data-copied-label={t("contact.copied")}
-        data-copied-message={t("contact.announce.copied")}
-        data-selected-label={t("contact.selected")}
-        data-selected-message={t("contact.announce.selected")}
+  {/* The script reads each outcome's label and announcement here, in this page's language. */}
+  <div
+    class="address"
+    data-copy-address
+    data-copied-label={t("contact.copied")}
+    data-copied-message={t("contact.announce.copied")}
+    data-selected-label={t("contact.selected")}
+    data-selected-message={t("contact.announce.selected")}
+  >
+    <a
+      class="email"
+      id="contact-address"
+      href={`mailto:${contact.email}`}
+      data-copy-source
+    >
+      {contact.email}
+    </a>
+    {/* The actions stay together: when the line runs out, they move below the address. */}
+    <span class="actions" data-contact-actions>
+      <button
+        class="action copy"
+        type="button"
+        aria-describedby="contact-address"
       >
-        <a class="email" id="contact-address" href={`mailto:${contact.email}`}>
-          {contact.email}
-        </a>
-        <button class="copy" type="button" aria-describedby="contact-address">
-          <span class="bracket" aria-hidden="true">
-            [
-          </span>
-          <span data-copy-label>{t("contact.copy")}</span>
-          {/* Completes the name for assistive technology; it leaves while an outcome shows. */}
-          <span class="visually-hidden copy-target">{` ${t("contact.copyTarget")}`}</span>
-          <span class="bracket" aria-hidden="true">
-            ]
-          </span>
-        </button>
-        {/* Outside the button: a live region inside a button is not reliably announced. */}
-        <span class="visually-hidden" role="status"></span>
-      </div>
-      {rows.length > 0 && (
-        <dl class="rows">
-          {rows.map(({ term, value }) => (
-            <div class="row">
-              {/* The rule is an element of its own, so axe can judge the row's contrast. */}
-              <dt>
-                <span class="rule" aria-hidden="true" />
-                {term}
-              </dt>
-              <dd>
-                <a href={value.href} type={value.type}>
-                  {value.text}
-                </a>
-              </dd>
-            </div>
-          ))}
-        </dl>
+        <span class="bracket" aria-hidden="true">
+          [
+        </span>
+        <svg
+          class="icon"
+          data-icon="copy"
+          width="18"
+          height="18"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <rect x="7" y="7" width="10" height="10" rx="1.5"></rect>
+          <path d="M13 7V4.5A1.5 1.5 0 0 0 11.5 3h-7A1.5 1.5 0 0 0 3 4.5v7A1.5 1.5 0 0 0 4.5 13H7"></path>
+        </svg>
+        <svg
+          class="icon"
+          data-icon="check"
+          width="18"
+          height="18"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <path d="M4 10.5 8 14.5 16 5.5"></path>
+        </svg>
+        {/* At rest the icon shows and these words only name the button; an outcome shows them. */}
+        <span class="label" data-copy-label>
+          {t("contact.copy")}
+        </span>
+        <span class="copy-target">{` ${t("contact.copyTarget")}`}</span>
+        <span class="bracket" aria-hidden="true">
+          ]
+        </span>
+      </button>
+      {/* Outside the button: a live region inside a button is not reliably announced. */}
+      <span class="visually-hidden" role="status"></span>
+      {cv && (
+        <Fragment>
+          {/* A drawn middle dot, not a glyph: one character of text is too short for the
+              contrast check to judge, and the dot is for the eye only. */}
+          <span class="separator" aria-hidden="true" data-copy-separator></span>
+          <a class="action cv" href={cv.href} type="application/pdf">
+            <span class="bracket" aria-hidden="true">
+              [
+            </span>
+            <svg
+              class="icon"
+              data-icon="download"
+              width="18"
+              height="18"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path d="M10 3v10M5.5 8.5 10 13l4.5-4.5M4 17h12" />
+            </svg>
+            {/* The verb completes the name, which still holds the visible words (WCAG 2.5.3). */}
+            <span class="visually-hidden">{`${t("contact.cv.action")} `}</span>
+            <span class="cv-label">{t("contact.cv")}</span>
+            <span class="bracket" aria-hidden="true">
+              ]
+            </span>
+          </a>
+        </Fragment>
       )}
-    </div>
-    <Certificate locale={locale} />
+    </span>
   </div>
+  <Certificate locale={locale} />
 </section>
 
 <script>
@@ -104,32 +129,23 @@ const rows: Row[] = cv
 </script>
 
 <style>
+  /* One centred column at every width: the address line, then the certificate below it, with
+     room between for the seal that reaches above the certificate's corner. */
   .contact {
     max-inline-size: var(--page-max-width);
     margin-inline: auto;
     padding: 0 var(--gutter) var(--section-space-end);
   }
 
-  /* Two columns on wide screens: the ways to reach Carlos, then the certificate of how this
-     site is tested. Narrower, the certificate follows, with room above for its seal. */
-  .columns {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-14);
-    align-items: start;
-
-    @media (width >= 60em) {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-    }
-  }
-
-  /* The address is the link itself, at display size, with its copy button beside it. */
+  /* The address is the link itself, at display size, with its two actions after it. When the
+     line runs out, the address keeps a line of its own and the actions centre below it. */
   .address {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-4) var(--space-6);
-    margin-block-end: var(--space-10);
+    justify-content: center;
+    gap: var(--space-2) var(--space-6);
+    margin-block-end: var(--space-14);
   }
 
   .email {
@@ -151,24 +167,52 @@ const rows: Row[] = cv
     }
   }
 
-  .copy {
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0 var(--space-2);
+  }
+
+  /* Both actions in the site's bracket style: an icon in the header's style, in the link
+     colour, on a full target. */
+  .action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-1);
-    min-inline-size: 12ch;
+    gap: var(--space-2);
+    min-inline-size: var(--target-min);
     min-block-size: var(--target-min);
     padding-inline: var(--space-2);
     border: 1px solid transparent;
-    background: var(--ground);
     color: var(--link);
-    cursor: pointer;
     font-family: var(--font-mono);
     font-size: var(--type-ui-size);
     font-weight: 500;
     line-height: 1;
     letter-spacing: 0.04em;
     white-space: nowrap;
+  }
+
+  .icon {
+    flex: none;
+  }
+
+  .bracket {
+    opacity: 0.55;
+  }
+
+  .separator {
+    inline-size: 3px;
+    block-size: 3px;
+    border-radius: 50%;
+    background: var(--dots);
+  }
+
+  .copy {
+    background: var(--ground);
+    cursor: pointer;
     transition:
       border-color var(--duration-quick) var(--ease-out),
       color var(--duration-quick) var(--ease-out);
@@ -177,80 +221,63 @@ const rows: Row[] = cv
       border-color: var(--dots);
     }
 
-    /* The outcome shows in words and in colour: a pass when copied, plain text when the
-       visitor has to copy the selected address. */
+    [data-icon="check"] {
+      display: none;
+    }
+
+    /* At rest the icon speaks for the button: its words stay for assistive technology only. */
+    &:not([data-state]) :is(.label, .copy-target),
+    &[data-state] .copy-target {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    &[data-state] .copy-target {
+      display: none;
+    }
+
+    /* The outcome shows in words and in colour: a check and the word in pass green when
+       copied, plain words when the visitor has to copy the selected address. */
+    &[data-state] [data-icon="copy"] {
+      display: none;
+    }
+
     &[data-state="copied"] {
       border-color: currentColor;
       color: var(--pass);
+
+      [data-icon="check"] {
+        display: block;
+      }
     }
 
     &[data-state="selected"] {
       border-color: var(--dots);
       color: var(--text);
     }
-
-    &[data-state] .copy-target {
-      display: none;
-    }
   }
 
-  /* Without scripting the button could not copy, so it is not offered; the address stays a
-     link, and its text can still be selected and copied by hand. */
+  .cv-label {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  .cv:hover .cv-label {
+    text-decoration-thickness: 2px;
+  }
+
+  /* Without scripting the button could not copy, so it is not offered, nor the dot after it;
+     the address stays a link, and its text can still be selected and copied by hand. */
   @media (scripting: none) {
-    .copy {
+    .copy,
+    .separator {
       display: none;
-    }
-  }
-
-  .bracket {
-    opacity: 0.55;
-  }
-
-  /* Data rows, not boxes: each opens on a dotted rule, its term in mono capitals beside its
-     value. A list is as wide as its longest row. */
-  .rows {
-    inline-size: fit-content;
-    max-inline-size: min(100%, 35rem);
-  }
-
-  .row {
-    position: relative;
-    display: grid;
-    grid-template-columns: 8rem minmax(0, 1fr);
-    column-gap: var(--space-3);
-    padding-block: var(--space-2);
-  }
-
-  .rule {
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline: 0;
-    block-size: 3px;
-    background: var(--dotted-rule);
-  }
-
-  dt {
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: var(--type-label-size);
-    line-height: var(--type-label-leading);
-    letter-spacing: var(--type-label-tracking);
-    text-transform: uppercase;
-  }
-
-  dd {
-    font-family: var(--font-mono);
-    font-size: var(--type-data-size);
-    line-height: var(--type-data-leading);
-  }
-
-  @media (width < 60em) {
-    /* A link keeps its row's rhythm; its own box grows to a full target around its line. */
-    dd a {
-      display: inline-flex;
-      align-items: center;
-      min-block-size: var(--target-min);
-      margin-block: calc((1lh - var(--target-min)) / 2);
     }
   }
 </style>

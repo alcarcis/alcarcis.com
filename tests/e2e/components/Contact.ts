@@ -172,6 +172,11 @@ export class Certificate {
   }
 }
 
+/** A box in CSS pixels, with its centre across. */
+export interface LaidOutBox extends Box {
+  readonly centerX: number;
+}
+
 export class Contact {
   readonly region: Locator;
   readonly head: SectionHead;
@@ -179,6 +184,16 @@ export class Contact {
   readonly emailLink: Locator;
   /** The section's only button: its name is its label, which changes as it reports. */
   readonly copyButton: Locator;
+  /** The copy button's two-sheets icon, shown at rest. */
+  readonly copyIcon: Locator;
+  /** The copy button's check, shown once the address is copied. */
+  readonly checkIcon: Locator;
+  /** The copy button's words: hidden at rest, shown with an outcome. */
+  readonly copyLabel: Locator;
+  /** The dot between the copy button and the CV action, for the eye only. */
+  readonly separator: Locator;
+  /** The CV download: a bracketed icon and "CV · PDF". */
+  readonly cvLink: Locator;
   /** The polite live region that announces what the copy button did. */
   readonly announcement: Locator;
   readonly certificate: Certificate;
@@ -197,6 +212,14 @@ export class Contact {
       exact: true,
     });
     this.copyButton = this.region.getByRole("button");
+    this.copyIcon = this.copyButton.locator('svg[data-icon="copy"]');
+    this.checkIcon = this.copyButton.locator('svg[data-icon="check"]');
+    this.copyLabel = this.copyButton.locator("[data-copy-label]");
+    this.separator = this.region.locator("[data-copy-separator]");
+    this.cvLink = this.region.getByRole("link", {
+      name: copy.cv.name,
+      exact: true,
+    });
     this.announcement = this.region.getByRole("status");
     this.certificate = new Certificate(this.region, copy.certificate);
   }
@@ -230,7 +253,7 @@ export class Contact {
 
   /**
    * Asserts the section reads its head, the address as a link, the copy button and its live
-   * region, the CV row, then the certificate and its rows, and nothing more.
+   * region, the CV link, then the certificate and its rows, and nothing more.
    */
   async expectReadingOrder(): Promise<void> {
     await expect(this.region).toMatchAriaSnapshot(
@@ -239,7 +262,8 @@ export class Contact {
         `  - /url: ${contactEmailHref}`,
         `- button ${quoted(this.copy.copyLabels.idle)}`,
         "- status",
-        ...this.copy.rows.flatMap(linkRowLines),
+        `- link ${quoted(this.copy.cv.name)}:`,
+        `  - /url: ${this.copy.cv.url}`,
         ...this.certificate.snapshotLines(),
       ]),
     );
@@ -250,5 +274,65 @@ export class Contact {
     return this.emailLink.evaluate((link) =>
       parseFloat(getComputedStyle(link).fontSize),
     );
+  }
+
+  /** Whether an element is clipped to nothing on screen, as visually hidden text is. */
+  async isVisuallyHidden(element: Locator): Promise<boolean> {
+    const box = await element.boundingBox();
+    return box === null || (box.width <= 1 && box.height <= 1);
+  }
+
+  /** The theme's pass green, as the browser computes a colour. */
+  async passColour(): Promise<string> {
+    return this.page.evaluate(() => {
+      const probe = document.createElement("span");
+      probe.style.color = "var(--pass)";
+      document.body.append(probe);
+      const pass = getComputedStyle(probe).color;
+      probe.remove();
+      return pass;
+    });
+  }
+
+  /** The section's content box, the address line's parts and the certificate, as laid out. */
+  async layout(): Promise<{
+    content: LaidOutBox;
+    email: LaidOutBox;
+    actions: LaidOutBox;
+    certificate: LaidOutBox;
+  }> {
+    return this.region.evaluate((section) => {
+      const laidOut = (box: {
+        left: number;
+        top: number;
+        right: number;
+        bottom: number;
+      }) => ({
+        left: box.left,
+        top: box.top,
+        right: box.right,
+        bottom: box.bottom,
+        centerX: (box.left + box.right) / 2,
+      });
+      const rect = (selector: string) => {
+        const element = section.querySelector(selector);
+        if (!element) throw new Error(`Contact has no ${selector}.`);
+        return element.getBoundingClientRect();
+      };
+      const style = getComputedStyle(section);
+      const outer = section.getBoundingClientRect();
+      const content = laidOut({
+        left: outer.left + parseFloat(style.paddingLeft),
+        top: outer.top,
+        right: outer.right - parseFloat(style.paddingRight),
+        bottom: outer.bottom,
+      });
+      return {
+        content,
+        email: laidOut(rect("#contact-address")),
+        actions: laidOut(rect("[data-contact-actions]")),
+        certificate: laidOut(rect("#report")),
+      };
+    });
   }
 }

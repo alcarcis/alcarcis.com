@@ -100,6 +100,9 @@ const en = {
   "contact.title": "Contact",
   "contact.copy": "copy",
   "contact.copyTarget": "email address",
+  /* The CV action beside copy: its visible words, and the hidden verb that starts its name. */
+  "contact.cv": "CV · PDF",
+  "contact.cv.action": "Download",
   "contact.copied": "copied",
   "contact.selected": "selected, press Ctrl+C",
   "contact.announce.copied": "Email address copied.",
@@ -221,6 +224,8 @@ const es: Readonly<Record<UiKey, string>> = {
   "contact.title": "Contacto",
   "contact.copy": "copiar",
   "contact.copyTarget": "dirección de correo",
+  "contact.cv": "CV · PDF",
+  "contact.cv.action": "Descargar",
   "contact.copied": "copiado",
   "contact.selected": "seleccionado, presiona Ctrl+C",
   "contact.announce.copied": "Dirección de correo copiada.",
