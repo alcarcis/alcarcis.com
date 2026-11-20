@@ -635,12 +635,6 @@ const runCopy = {
       letter-spacing: 0.04em;
     }
 
-    /* The suite name takes the first row; status and the run controls share the second. */
-    .title {
-      flex-basis: 100%;
-      line-height: var(--space-7);
-    }
-
     .control {
       min-inline-size: var(--target-min);
       block-size: var(--target-min);
@@ -661,6 +655,15 @@ const runCopy = {
 
     .spec {
       font-size: 0.75rem;
+    }
+  }
+
+  /* Phones: the suite name takes the first row; status and the run controls share the second.
+     From tablets up the three fit on one row, even while a run shows Skip beside Rerun. */
+  @media (width < 36em) {
+    .title {
+      flex-basis: 100%;
+      line-height: var(--space-7);
     }
   }
 </style>
