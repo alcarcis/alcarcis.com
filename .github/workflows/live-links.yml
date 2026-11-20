@@ -1,0 +1,63 @@
+name: Live link check
+
+# Calls third-party servers, so it runs on a schedule instead of in the quality gate.
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  live-links:
+    name: Live link check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js from .nvmrc
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: Set up pnpm from packageManager with a store cache
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          cache: true
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      # Request-only tests: no browser to install.
+      - name: Check the external links
+        id: live
+        run: pnpm test:live
+      - name: Report the failure in an issue
+        if: ${{ failure() && steps.live.outcome == 'failure' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          title="Live link check failed"
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          if [ -f live-results.json ]; then
+            failed=$(jq -r '[.. | objects | .specs? // empty | .[] | select(.ok | not) | "- \(.title)"] | unique | .[]' live-results.json)
+          fi
+          {
+            echo "These links did not answer with HTTP 200:"
+            echo
+            echo "${failed:-- see the run}"
+            echo
+            echo "Run: $run_url"
+            echo
+            echo "This check runs on a schedule and never blocks merges."
+          } > issue-body.md
+          number=$(gh issue list --state open --search "in:title \"$title\"" --json number,title \
+            --jq "[.[] | select(.title == \"$title\")][0].number // empty")
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body-file issue-body.md
+          else
+            gh issue create --title "$title" --body-file issue-body.md
+          fi

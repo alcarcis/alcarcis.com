@@ -41,6 +41,8 @@ The `Quality gate` workflow (`.github/workflows/quality-gate.yml`) runs on every
 
 Branch protection on `main` requires the `Quality gate` check, so that one check stands for the whole pipeline.
 
+The gate tests only this repository. Whether the site's GitHub links still answer with HTTP 200 is checked by the separate `Live link check` workflow (`.github/workflows/live-links.yml`), daily and on demand; a failure opens or updates a `Live link check failed` issue and never blocks a merge.
+
 ### What it enforces
 
 - **Lighthouse:** performance, accessibility, best practices and SEO each score at least 0.95 on `/` and `/es/`, taking the median of three runs, with Lighthouse's default mobile emulation. The minimum lives in `scripts/quality-budget.ts`; `lighthouserc.cjs` asserts it and the page displays the same value.
@@ -66,6 +68,7 @@ Outside CI, Playwright reuses any server already listening on port 4321 instead 
 | `pnpm test:e2e`        | Builds, previews and runs the Playwright tests in Chromium |
 | `pnpm test:e2e:ui`     | Opens the same tests in Playwright's UI mode               |
 | `pnpm test:lighthouse` | Runs Lighthouse CI on `dist/` (run `pnpm build` first)     |
+| `pnpm test:live`       | Checks that the site's GitHub links answer with HTTP 200   |
 | `pnpm fonts`           | Downloads and verifies the pinned fonts                    |
 
 ## Project layout
