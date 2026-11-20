@@ -15,7 +15,7 @@ for (const locale of localeCases) {
       await homePage.contact(locale).head.expectShown();
     });
 
-    test("reads the address, its copy button, the profile and CV rows, then the report on how this site is tested", async ({
+    test("reads the address, its copy button and the CV row, then the certificate of how this site is tested", async ({
       homePage,
     }) => {
       await homePage.contact(locale).expectReadingOrder();
@@ -33,13 +33,13 @@ for (const locale of localeCases) {
       );
     });
 
-    test("keeps the English anchors of every page for itself and its report", async ({
+    test("keeps the English anchors of every page for itself and its certificate", async ({
       homePage,
     }) => {
       const contact = homePage.contact(locale);
 
       await expect(contact.region).toHaveId(anchors.contact);
-      await expect(contact.report.region).toHaveId(anchors.report);
+      await expect(contact.certificate.region).toHaveId(anchors.report);
     });
   });
 

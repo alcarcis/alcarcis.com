@@ -15,13 +15,13 @@ for (const locale of localeCases) {
     test.describe(`${locale.language.name} line breaks ${width}px wide`, () => {
       test.use({ viewport: { width, height: 800 }, reducedMotion: "reduce" });
 
-      test(`keeps "${unbreakableTerm}" on one line in the hero note and the report`, async ({
+      test(`keeps "${unbreakableTerm}" on one line in the hero note and the certificate`, async ({
         homePage,
       }) => {
         await homePage.open(locale.language.path);
         const places = [
           homePage.hero(locale).reportLink,
-          homePage.contact(locale).report.region,
+          homePage.contact(locale).certificate.region,
         ];
 
         for (const place of places) {

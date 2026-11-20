@@ -1,0 +1,425 @@
+---
+import { minimumCategoryScore } from "../../scripts/quality-budget";
+import { useTranslations, type Locale } from "../i18n/ui";
+import { buildInfo } from "../lib/build-info";
+import {
+  commitFact,
+  countedPhrase,
+  sourceRepository,
+} from "../lib/certificate";
+import { logoPaths, logoViewBox } from "../lib/logo";
+import { breakOnlyBetween, keepTermsTogether } from "../lib/typography";
+import CertificateSeal from "./CertificateSeal.astro";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+/** A fact in words; a check marks the ones the quality gate enforces. */
+interface TextValue {
+  readonly kind: "text";
+  readonly text: string;
+  readonly checked?: boolean;
+}
+
+/** A day, shown as written and given to machines as a date. */
+interface TimeValue {
+  readonly kind: "time";
+  readonly datetime: string;
+}
+
+/** A link: its text in pieces a line may break between, and words only assistive technology reads. */
+interface LinkValue {
+  readonly kind: "link";
+  readonly href: string;
+  readonly pieces: readonly string[];
+  readonly unseen?: string;
+}
+
+interface Row {
+  readonly term: string;
+  readonly value: TextValue | TimeValue | LinkValue;
+}
+
+/* This build's facts: a fact the build could not read has no row, never a blank or a guess. */
+const facts = buildInfo();
+const commit = commitFact(facts.commit);
+
+/* The score the pipeline enforces, read from the module lighthouserc.cjs asserts; "≥ 95" stays
+   on one line. */
+const lighthouseMinimum = Math.round(minimumCategoryScore * 100);
+
+const e2e =
+  facts.tests === null
+    ? t("certificate.e2e")
+    : countedPhrase(
+        { one: t("certificate.e2e.one"), other: t("certificate.e2e.other") },
+        facts.tests,
+      );
+
+/* The repository as the row shows it: without its scheme, breakable after each slash. */
+const sourcePieces = sourceRepository
+  .replace(/^https:\/\//, "")
+  .split(/(?<=\/)/);
+
+const rows: Row[] = [
+  ...(commit
+    ? [
+        {
+          term: t("certificate.commit.term"),
+          value: {
+            kind: "link",
+            href: commit.href,
+            pieces: [commit.shortSha],
+            unseen: t("certificate.commit.onGitHub"),
+          } as const,
+        },
+      ]
+    : []),
+  {
+    term: t("certificate.built.term"),
+    value: { kind: "time", datetime: facts.built },
+  },
+  {
+    term: "E2E",
+    value: { kind: "text", text: keepTermsTogether(e2e), checked: true },
+  },
+  {
+    term: t("certificate.accessibility.term"),
+    value: {
+      kind: "text",
+      text: t("certificate.accessibility"),
+      checked: true,
+    },
+  },
+  {
+    term: t("certificate.performance.term"),
+    value: {
+      kind: "text",
+      text: `${breakOnlyBetween(`Lighthouse · ≥ ${lighthouseMinimum}`)} ${t("certificate.performance.scope")}`,
+      checked: true,
+    },
+  },
+  {
+    term: t("certificate.gate.term"),
+    value: { kind: "text", text: t("certificate.gate"), checked: true },
+  },
+  {
+    term: t("certificate.deploy.term"),
+    value: { kind: "text", text: keepTermsTogether(t("certificate.deploy")) },
+  },
+  {
+    term: t("certificate.source.term"),
+    value: { kind: "link", href: sourceRepository, pieces: sourcePieces },
+  },
+];
+
+/* The site's //_ mark as a mask, so the watermark is a tint of the paper rather than an image. */
+const markSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${logoViewBox}" fill="none" stroke="black" stroke-width="4" stroke-linecap="round">${[
+  ...logoPaths.slashes,
+  logoPaths.cursor,
+]
+  .map((d) => `<path d="${d}"/>`)
+  .join("")}</svg>`;
+const watermarkMask = `url("data:image/svg+xml,${encodeURIComponent(markSvg)}")`;
+---
+
+{/* Plain content: its rows read in order, and only the commit hash and the source link. */}
+<section class="certificate" id="report" aria-labelledby="report-heading">
+  <div class="card">
+    <span class="frame" data-decor="frame" aria-hidden="true"></span>
+    <CertificateSeal locale={locale} class="certificate-seal" />
+    <div class="paper">
+      {/* Holds the seal's place in the paper: the heading and any row beside it wrap clear of it. */}
+      <span class="seal-room" aria-hidden="true"></span>
+      <span
+        class="corner top-start"
+        data-decor="corners"
+        aria-hidden="true"
+      ></span>
+      <span
+        class="corner top-end"
+        data-decor="corners"
+        aria-hidden="true"
+      ></span>
+      <span
+        class="corner bottom-start"
+        data-decor="corners"
+        aria-hidden="true"
+      ></span>
+      <span
+        class="corner bottom-end"
+        data-decor="corners"
+        aria-hidden="true"
+      ></span>
+      <span
+        class="watermark"
+        data-decor="watermark"
+        aria-hidden="true"
+        style={`--watermark-mask: ${watermarkMask}`}
+      ></span>
+      <h3 class="heading" id="report-heading">
+        <span class="code">{`${t("certificate.code")} ·`}</span>{" "}
+        <span class="title">{t("certificate.title")}</span>
+      </h3>
+      <dl class="rows">
+        {rows.map(({ term, value }) => (
+          <div class="row">
+            {/* The rule is an element of its own, so axe can judge the row's contrast. */}
+            <dt>
+              <span class="rule" aria-hidden="true" />
+              {term}
+            </dt>
+            <dd>
+              {value.kind === "text" && (
+                <Fragment>
+                  {value.checked && (
+                    <svg
+                      class="check"
+                      viewBox="0 0 12 12"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <path d="M2 6.5l2.5 2.5L10 3" />
+                    </svg>
+                  )}
+                  {value.text}
+                </Fragment>
+              )}
+              {value.kind === "time" && (
+                <time datetime={value.datetime}>{value.datetime}</time>
+              )}
+              {value.kind === "link" && (
+                <a href={value.href}>
+                  {value.pieces.map((piece, index) => (
+                    <Fragment>
+                      {index > 0 && <wbr />}
+                      {piece}
+                    </Fragment>
+                  ))}
+                  {value.unseen && (
+                    <span class="visually-hidden">{` ${value.unseen}`}</span>
+                  )}
+                </a>
+              )}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* The card answers to its own width, not the window's: its rows stack when it is narrow. */
+  .certificate {
+    container-type: inline-size;
+    max-inline-size: 40rem;
+  }
+
+  /* How big the seal is and how far past the card's corner it reaches; the heading keeps clear
+     of what it covers inside. */
+  .card {
+    --seal-size: 8rem;
+    /* Never past the page's gutter, so a phone never scrolls sideways to show it. */
+    --seal-reach-out: min(1.625rem, var(--gutter) - 2px);
+    --seal-reach-up: 1.875rem;
+    --frame-band: 9px;
+    --paper-top: var(--space-5);
+    --paper-inset: var(--space-6);
+
+    position: relative;
+    padding: var(--frame-band);
+    border: 1px solid var(--rule);
+    background: var(--panel);
+  }
+
+  /* A guilloche band around the paper: interlaced copper waves, as on a banknote or diploma.
+     The tile is a mask, so the waves take the theme's copper. */
+  .frame {
+    position: absolute;
+    inset: 0;
+    background: var(--link);
+    opacity: 0.55;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 11'%3E%3Cg fill='none' stroke='black' stroke-width='.55'%3E%3Cpath d='M0 5.5Q5.5 0 11 5.5T22 5.5'/%3E%3Cpath d='M0 5.5Q5.5 11 11 5.5T22 5.5'/%3E%3Cpath d='M0 2Q5.5 9 11 2T22 2'/%3E%3Cpath d='M0 9Q5.5 2 11 9T22 9'/%3E%3C/g%3E%3C/svg%3E")
+      0 0 / 22px 11px repeat;
+  }
+
+  /* The seal is mounted over the frame's top corner, past the card's edge. */
+  :global(.certificate-seal) {
+    position: absolute;
+    inset-block-start: calc(-1 * var(--seal-reach-up));
+    inset-inline-end: calc(-1 * var(--seal-reach-out));
+    z-index: 1;
+    inline-size: var(--seal-size);
+    block-size: var(--seal-size);
+  }
+
+  /* The paper: its own layer, so the watermark can sit behind the text and over the paper. */
+  .paper {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: var(--paper-top) var(--paper-inset) var(--space-4);
+    outline: 1px solid var(--link);
+    background: var(--panel);
+  }
+
+  /* Registration corners in copper, like the crop marks of a printed sheet. */
+  .corner {
+    position: absolute;
+    inline-size: 14px;
+    block-size: 14px;
+    border: 0 solid var(--link);
+
+    &.top-start {
+      inset-block-start: 6px;
+      inset-inline-start: 6px;
+      border-block-start-width: 2px;
+      border-inline-start-width: 2px;
+    }
+
+    &.top-end {
+      inset-block-start: 6px;
+      inset-inline-end: 6px;
+      border-block-start-width: 2px;
+      border-inline-end-width: 2px;
+    }
+
+    &.bottom-start {
+      inset-block-end: 6px;
+      inset-inline-start: 6px;
+      border-block-end-width: 2px;
+      border-inline-start-width: 2px;
+    }
+
+    &.bottom-end {
+      inset-block-end: 6px;
+      inset-inline-end: 6px;
+      border-block-end-width: 2px;
+      border-inline-end-width: 2px;
+    }
+  }
+
+  /* The //_ mark, faint behind the rows near the paper's bottom corner. A tint over the whole
+     paper, masked down to the mark, not an image: the contrast check reads it as a faint wash
+     under every row, so it can still judge all the text over it. */
+  .watermark {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--link);
+    opacity: var(--watermark-opacity);
+    mask: var(--watermark-mask) right -14px bottom var(--space-3) / 13rem auto
+      no-repeat;
+  }
+
+  /* The part of the paper the seal covers, and a little air: what is beside it wraps around. */
+  .seal-room {
+    float: inline-end;
+    inline-size: calc(
+      var(--seal-size) - var(--seal-reach-out) - var(--frame-band) - 1px -
+        var(--paper-inset) + var(--space-3)
+    );
+    block-size: calc(
+      var(--seal-size) - var(--seal-reach-up) - var(--frame-band) - 1px -
+        var(--paper-top) + var(--space-2)
+    );
+  }
+
+  /* Positioned, like the rows, so the contrast check also sees it above the watermark. */
+  .heading {
+    position: relative;
+    margin-block: var(--space-2) var(--space-4);
+    font-family: var(--font-display);
+    font-size: var(--type-lead-size);
+    font-weight: 600;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  .code {
+    color: var(--accent-text);
+    font-family: var(--font-mono);
+    font-size: var(--type-label-size);
+    font-weight: 500;
+    letter-spacing: var(--type-label-tracking);
+    text-transform: uppercase;
+    vertical-align: 0.15em;
+  }
+
+  /* Data rows: each opens on a dotted rule, its term in mono capitals beside its value. */
+  .row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 8rem minmax(0, 1fr);
+    column-gap: var(--space-3);
+    padding-block: var(--space-2);
+  }
+
+  .rule {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    block-size: 3px;
+    background: var(--dotted-rule);
+  }
+
+  dt {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: var(--type-label-size);
+    line-height: var(--type-label-leading);
+    letter-spacing: var(--type-label-tracking);
+    text-transform: uppercase;
+  }
+
+  dd {
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: var(--type-data-size);
+    line-height: var(--type-data-leading);
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  .check {
+    display: inline-block;
+    inline-size: 0.75rem;
+    block-size: 0.75rem;
+    margin-inline-end: var(--space-2);
+    vertical-align: -0.05em;
+    fill: none;
+    stroke: var(--pass);
+    stroke-width: 2;
+    stroke-linecap: square;
+  }
+
+  /* A narrow card, under 22rem inside its frame band and border: each term above its value,
+     and a smaller seal reaching out less. */
+  @container (width < 23.25rem) {
+    .card {
+      --seal-size: 6rem;
+      --seal-reach-out: 0.875rem;
+      --seal-reach-up: 1.375rem;
+      --paper-inset: var(--space-4);
+    }
+
+    .row {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (width < 60em) {
+    /* A link keeps its row's rhythm; its own box grows to a full target around its line. */
+    dd a {
+      display: inline-flex;
+      align-items: center;
+      min-block-size: var(--target-min);
+      margin-block: calc((1lh - var(--target-min)) / 2);
+    }
+  }
+</style>

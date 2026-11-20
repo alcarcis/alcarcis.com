@@ -47,6 +47,9 @@
   --code-function: var(--brand-graphite);
   --code-punctuation: var(--ink-secondary);
   --pass: var(--ink-pass);
+  /* A mark printed faintly on paper, such as the certificate's watermark: fainter on graphite,
+     where copper stands out more */
+  --watermark-opacity: 0.1;
   --focus: var(--brand-graphite);
   --selection-background: var(--brand-copper-soft);
   --selection-text: var(--brand-graphite);
@@ -177,6 +180,7 @@
     --code-function: var(--brand-ivory);
     --code-punctuation: var(--brand-muted);
     --pass: var(--brand-pass-green);
+    --watermark-opacity: 0.075;
     --focus: var(--brand-copper-soft);
     --selection-background: var(--brand-copper);
     --selection-text: var(--brand-graphite);
@@ -200,6 +204,7 @@
   --code-function: var(--brand-ivory);
   --code-punctuation: var(--brand-muted);
   --pass: var(--brand-pass-green);
+  --watermark-opacity: 0.075;
   --focus: var(--brand-copper-soft);
   --selection-background: var(--brand-copper);
   --selection-text: var(--brand-graphite);

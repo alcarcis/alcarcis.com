@@ -1,9 +1,8 @@
 ---
-import { minimumCategoryScore } from "../../scripts/quality-budget";
 import { useTranslations, type Locale } from "../i18n/ui";
 import { cvDownloadFor, isInPublicDir } from "../lib/cv";
-import { breakOnlyBetween, keepTermsTogether } from "../lib/typography";
-import { contact, profiles } from "../site";
+import { contact } from "../site";
+import Certificate from "./Certificate.astro";
 import SectionHead from "./SectionHead.astro";
 
 interface Props {
@@ -13,71 +12,33 @@ interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 
-/** This site's own repository: the report's last row, where its tests can be read. */
-const sourceRepository = "https://github.com/alcarcis/alcarcis.com";
-
 interface RowLink {
   readonly href: string;
-  /** The link's text in pieces; a line may break between them. */
-  readonly pieces: readonly string[];
+  readonly text: string;
   readonly type?: string;
 }
 
-/** A term, and a fact in words or a link. */
+/** A term, and a link. */
 interface Row {
   readonly term: string;
-  readonly value: string | RowLink;
+  readonly value: RowLink;
 }
-
-/* A web address as a row shows it: without its scheme or www, breakable after each slash. */
-const addressLink = (href: string): RowLink => ({
-  href,
-  pieces: href.replace(/^https:\/\/(?:www\.)?/, "").split(/(?<=\/)/),
-});
 
 const cv = cvDownloadFor(locale, isInPublicDir(process.cwd()));
 
-/* Profile and product names stay as they are in every language; the CV row only when it ships. */
-const contactRows: Row[] = [
-  { term: "LinkedIn", value: addressLink(profiles.linkedIn) },
-  { term: "GitHub", value: addressLink(profiles.gitHub) },
-  ...(cv
-    ? [
-        {
-          term: "CV",
-          value: {
-            href: cv.href,
-            pieces: [t("hero.cvAction")],
-            type: "application/pdf",
-          },
+/* Only the CV beside the address, when it ships: the header links both profiles. */
+const rows: Row[] = cv
+  ? [
+      {
+        term: "CV",
+        value: {
+          href: cv.href,
+          text: t("hero.cvAction"),
+          type: "application/pdf",
         },
-      ]
-    : []),
-];
-
-/* The score the pipeline enforces, read from the module lighthouserc.cjs asserts; "≥ 95" stays
-   on one line. */
-const lighthouseMinimum = Math.round(minimumCategoryScore * 100);
-
-const reportRows: Row[] = [
-  { term: "E2E", value: keepTermsTogether(t("report.e2e")) },
-  { term: t("report.accessibility.term"), value: t("report.accessibility") },
-  {
-    term: t("report.performance.term"),
-    value: `${breakOnlyBetween(`Lighthouse · ≥ ${lighthouseMinimum}`)} ${t("report.performance.scope")}`,
-  },
-  {
-    term: t("report.deploy.term"),
-    value: keepTermsTogether(t("report.deploy")),
-  },
-  { term: t("report.source.term"), value: addressLink(sourceRepository) },
-];
-
-/* Both lists share one layout: Contact's rows, then the report's. */
-const rowLists = [
-  { rows: contactRows, inReport: false },
-  { rows: reportRows, inReport: true },
-];
+      },
+    ]
+  : [];
 ---
 
 <section class="contact" id="contact" aria-labelledby="contact-heading">
@@ -87,72 +48,55 @@ const rowLists = [
     headingId="contact-heading"
     title={t("contact.title")}
   />
-  {/* The script reads each outcome's label and announcement here, in this page's language. */}
-  <div
-    class="address"
-    data-copy-address
-    data-copied-label={t("contact.copied")}
-    data-copied-message={t("contact.announce.copied")}
-    data-selected-label={t("contact.selected")}
-    data-selected-message={t("contact.announce.selected")}
-  >
-    <a class="email" id="contact-address" href={`mailto:${contact.email}`}>
-      {contact.email}
-    </a>
-    <button class="copy" type="button" aria-describedby="contact-address">
-      <span class="bracket" aria-hidden="true">
-        [
-      </span>
-      <span data-copy-label>{t("contact.copy")}</span>
-      {/* Completes the name for assistive technology; it leaves while an outcome shows. */}
-      <span class="visually-hidden copy-target">{` ${t("contact.copyTarget")}`}</span>
-      <span class="bracket" aria-hidden="true">
-        ]
-      </span>
-    </button>
-    {/* Outside the button: a live region inside a button is not reliably announced. */}
-    <span class="visually-hidden" role="status"></span>
-  </div>
-  {rowLists.map(({ rows, inReport }) => {
-    const list = (
-      <dl class="rows">
-        {rows.map(({ term, value }) => (
-          <div class="row">
-            {/* The rule is an element of its own, so axe can judge the row's contrast. */}
-            <dt>
-              <span class="rule" aria-hidden="true" />
-              {term}
-            </dt>
-            <dd>
-              {typeof value === "string" ? (
-                value
-              ) : (
+  <div class="columns">
+    <div class="reach">
+      {/* The script reads each outcome's label and announcement here, in this page's language. */}
+      <div
+        class="address"
+        data-copy-address
+        data-copied-label={t("contact.copied")}
+        data-copied-message={t("contact.announce.copied")}
+        data-selected-label={t("contact.selected")}
+        data-selected-message={t("contact.announce.selected")}
+      >
+        <a class="email" id="contact-address" href={`mailto:${contact.email}`}>
+          {contact.email}
+        </a>
+        <button class="copy" type="button" aria-describedby="contact-address">
+          <span class="bracket" aria-hidden="true">
+            [
+          </span>
+          <span data-copy-label>{t("contact.copy")}</span>
+          {/* Completes the name for assistive technology; it leaves while an outcome shows. */}
+          <span class="visually-hidden copy-target">{` ${t("contact.copyTarget")}`}</span>
+          <span class="bracket" aria-hidden="true">
+            ]
+          </span>
+        </button>
+        {/* Outside the button: a live region inside a button is not reliably announced. */}
+        <span class="visually-hidden" role="status"></span>
+      </div>
+      {rows.length > 0 && (
+        <dl class="rows">
+          {rows.map(({ term, value }) => (
+            <div class="row">
+              {/* The rule is an element of its own, so axe can judge the row's contrast. */}
+              <dt>
+                <span class="rule" aria-hidden="true" />
+                {term}
+              </dt>
+              <dd>
                 <a href={value.href} type={value.type}>
-                  {value.pieces.map((piece, index) => (
-                    <Fragment>
-                      {index > 0 && <wbr />}
-                      {piece}
-                    </Fragment>
-                  ))}
+                  {value.text}
                 </a>
-              )}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    );
-    return inReport ? (
-      <section class="report" id="report" aria-labelledby="report-heading">
-        <h3 class="report-title" id="report-heading">
-          <span class="report-code">{t("report.code")}</span> ·{" "}
-          {t("report.title")}
-        </h3>
-        {list}
-      </section>
-    ) : (
-      list
-    );
-  })}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </div>
+    <Certificate locale={locale} />
+  </div>
 </section>
 
 <script>
@@ -164,6 +108,19 @@ const rowLists = [
     max-inline-size: var(--page-max-width);
     margin-inline: auto;
     padding: 0 var(--gutter) var(--section-space-end);
+  }
+
+  /* Two columns on wide screens: the ways to reach Carlos, then the certificate of how this
+     site is tested. Narrower, the certificate follows, with room above for its seal. */
+  .columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-14);
+    align-items: start;
+
+    @media (width >= 60em) {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    }
   }
 
   /* The address is the link itself, at display size, with its copy button beside it. */
@@ -285,30 +242,6 @@ const rowLists = [
     font-family: var(--font-mono);
     font-size: var(--type-data-size);
     line-height: var(--type-data-leading);
-  }
-
-  /* The report: how this site is tested, in the same rows, its facts in the text ink. */
-  .report {
-    margin-block-start: var(--space-10);
-
-    dd {
-      color: var(--text);
-    }
-  }
-
-  .report-title {
-    margin-block-end: var(--space-2);
-    color: var(--accent-text);
-    font-family: var(--font-mono);
-    font-size: var(--type-label-size);
-    font-weight: 500;
-    line-height: var(--type-label-leading);
-    letter-spacing: var(--type-label-tracking);
-    text-transform: uppercase;
-  }
-
-  .report-code {
-    color: var(--link);
   }
 
   @media (width < 60em) {

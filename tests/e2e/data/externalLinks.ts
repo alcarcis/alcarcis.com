@@ -7,7 +7,10 @@ export const profileUrls = {
   gitHub: "https://github.com/alcarcis",
 } as const;
 
-/** Every external link a page may carry, sorted; anything else fails the external-links spec. */
+/**
+ * Every fixed external link a page may carry, sorted; with the certificate's link to the commit
+ * the build was made from, anything else fails the external-links spec.
+ */
 export const expectedExternalUrls: readonly string[] = [
   creditUrls.ccBySa30,
   creditUrls.ccBy30,
