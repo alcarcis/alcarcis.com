@@ -99,6 +99,10 @@ for (const locale of localeCases) {
       const contact = homePage.contact(locale);
 
       await expect(contact.emailLink).toBeVisible();
+      // The button is in the page and hidden by the stylesheet, not missing from it.
+      await expect(
+        contact.region.getByRole("button", { includeHidden: true }),
+      ).toHaveCount(1);
       await expect(contact.copyButton).toBeHidden();
     });
   });
