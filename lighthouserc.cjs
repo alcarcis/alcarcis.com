@@ -1,5 +1,5 @@
-// The minimum lives in a module the build shares, so the instrument's BUDGET row states exactly
-// what this enforces. Lighthouse CI loads this file with Node's require, which loads the
+// The minimum lives in a module the build shares, so the certificate's Performance row states
+// exactly what this enforces. Lighthouse CI loads this file with Node's require, which loads the
 // TypeScript module natively (type stripping and require of ES modules).
 const { minimumCategoryScore } = require("./scripts/quality-budget.ts");
 

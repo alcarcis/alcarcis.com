@@ -1,4 +1,3 @@
-import { minimumCategoryScore } from "../../../scripts/quality-budget";
 import { finalFrame } from "../../../src/scripts/glyphs/final-frame";
 import { sceneEnd } from "../../../src/scripts/instrument/timeline";
 
@@ -27,19 +26,3 @@ export const glyphRendererUrl = /glyph-renderer/;
 
 export const specSource =
   "test('quality, end to end', async () => { for (const stage of development) await expect(stage).toHaveQuality(); });";
-
-export const dataTerms = {
-  commit: "COMMIT",
-  built: "BUILT",
-  tests: "TESTS",
-  budget: "BUDGET",
-} as const;
-
-/**
- * The thresholds the pipeline enforces: Lighthouse's minimum read from the module
- * lighthouserc.cjs asserts, and axe's zero, which toHaveNoViolations allows by construction.
- */
-export const budget = `lighthouse ≥ ${Math.round(minimumCategoryScore * 100)} · axe 0 violations`;
-
-export const testCountText = (count: number): string =>
-  `${count} playwright ${count === 1 ? "test" : "tests"}`;

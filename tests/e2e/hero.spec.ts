@@ -60,12 +60,12 @@ for (const locale of localeCases) {
       homePage,
     }) => {
       const { reportLink } = homePage.hero(locale);
-      const { report } = homePage.contact(locale);
+      const { certificate } = homePage.contact(locale);
       await expect(reportLink).toHaveAttribute("href", `#${anchors.report}`);
 
       await reportLink.click();
 
-      await expect(report.region).toBeInViewport();
+      await expect(certificate.region).toBeInViewport();
     });
 
     test("preloads the headline and body fonts", async ({ homePage }) => {

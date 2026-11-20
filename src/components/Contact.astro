@@ -1,9 +1,8 @@
 ---
-import { minimumCategoryScore } from "../../scripts/quality-budget";
 import { useTranslations, type Locale } from "../i18n/ui";
 import { cvDownloadFor, isInPublicDir } from "../lib/cv";
-import { breakOnlyBetween, keepTermsTogether } from "../lib/typography";
-import { contact, profiles } from "../site";
+import { contact } from "../site";
+import Certificate from "./Certificate.astro";
 import SectionHead from "./SectionHead.astro";
 
 interface Props {
@@ -13,71 +12,8 @@ interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 
-/** This site's own repository: the report's last row, where its tests can be read. */
-const sourceRepository = "https://github.com/alcarcis/alcarcis.com";
-
-interface RowLink {
-  readonly href: string;
-  /** The link's text in pieces; a line may break between them. */
-  readonly pieces: readonly string[];
-  readonly type?: string;
-}
-
-/** A term, and a fact in words or a link. */
-interface Row {
-  readonly term: string;
-  readonly value: string | RowLink;
-}
-
-/* A web address as a row shows it: without its scheme or www, breakable after each slash. */
-const addressLink = (href: string): RowLink => ({
-  href,
-  pieces: href.replace(/^https:\/\/(?:www\.)?/, "").split(/(?<=\/)/),
-});
-
+/* The CV beside copy, only when it ships: by Contact the hero's CV button is far above. */
 const cv = cvDownloadFor(locale, isInPublicDir(process.cwd()));
-
-/* Profile and product names stay as they are in every language; the CV row only when it ships. */
-const contactRows: Row[] = [
-  { term: "LinkedIn", value: addressLink(profiles.linkedIn) },
-  { term: "GitHub", value: addressLink(profiles.gitHub) },
-  ...(cv
-    ? [
-        {
-          term: "CV",
-          value: {
-            href: cv.href,
-            pieces: [t("hero.cvAction")],
-            type: "application/pdf",
-          },
-        },
-      ]
-    : []),
-];
-
-/* The score the pipeline enforces, read from the module lighthouserc.cjs asserts; "≥ 95" stays
-   on one line. */
-const lighthouseMinimum = Math.round(minimumCategoryScore * 100);
-
-const reportRows: Row[] = [
-  { term: "E2E", value: keepTermsTogether(t("report.e2e")) },
-  { term: t("report.accessibility.term"), value: t("report.accessibility") },
-  {
-    term: t("report.performance.term"),
-    value: `${breakOnlyBetween(`Lighthouse · ≥ ${lighthouseMinimum}`)} ${t("report.performance.scope")}`,
-  },
-  {
-    term: t("report.deploy.term"),
-    value: keepTermsTogether(t("report.deploy")),
-  },
-  { term: t("report.source.term"), value: addressLink(sourceRepository) },
-];
-
-/* Both lists share one layout: Contact's rows, then the report's. */
-const rowLists = [
-  { rows: contactRows, inReport: false },
-  { rows: reportRows, inReport: true },
-];
 ---
 
 <section class="contact" id="contact" aria-labelledby="contact-heading">
@@ -96,63 +32,96 @@ const rowLists = [
     data-selected-label={t("contact.selected")}
     data-selected-message={t("contact.announce.selected")}
   >
-    <a class="email" id="contact-address" href={`mailto:${contact.email}`}>
+    <a
+      class="email"
+      id="contact-address"
+      href={`mailto:${contact.email}`}
+      data-copy-source
+    >
       {contact.email}
     </a>
-    <button class="copy" type="button" aria-describedby="contact-address">
-      <span class="bracket" aria-hidden="true">
-        [
-      </span>
-      <span data-copy-label>{t("contact.copy")}</span>
-      {/* Completes the name for assistive technology; it leaves while an outcome shows. */}
-      <span class="visually-hidden copy-target">{` ${t("contact.copyTarget")}`}</span>
-      <span class="bracket" aria-hidden="true">
-        ]
-      </span>
-    </button>
-    {/* Outside the button: a live region inside a button is not reliably announced. */}
-    <span class="visually-hidden" role="status"></span>
+    {/* The actions stay together: when the line runs out, they move below the address. */}
+    <span class="actions" data-contact-actions>
+      <button
+        class="action copy"
+        type="button"
+        aria-describedby="contact-address"
+      >
+        <span class="bracket" aria-hidden="true">
+          [
+        </span>
+        <svg
+          class="icon"
+          data-icon="copy"
+          width="18"
+          height="18"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <rect x="7" y="7" width="10" height="10" rx="1.5"></rect>
+          <path d="M13 7V4.5A1.5 1.5 0 0 0 11.5 3h-7A1.5 1.5 0 0 0 3 4.5v7A1.5 1.5 0 0 0 4.5 13H7"></path>
+        </svg>
+        <svg
+          class="icon"
+          data-icon="check"
+          width="18"
+          height="18"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <path d="M4 10.5 8 14.5 16 5.5"></path>
+        </svg>
+        {/* At rest the icon shows and these words only name the button; an outcome shows them. */}
+        <span class="label" data-copy-label>
+          {t("contact.copy")}
+        </span>
+        <span class="copy-target">{` ${t("contact.copyTarget")}`}</span>
+        <span class="bracket" aria-hidden="true">
+          ]
+        </span>
+      </button>
+      {/* Outside the button: a live region inside a button is not reliably announced. */}
+      <span class="visually-hidden" role="status"></span>
+      {cv && (
+        <Fragment>
+          {/* A drawn middle dot, not a glyph: one character of text is too short for the
+              contrast check to judge, and the dot is for the eye only. */}
+          <span class="separator" aria-hidden="true" data-copy-separator></span>
+          <a class="action cv" href={cv.href} type="application/pdf">
+            <span class="bracket" aria-hidden="true">
+              [
+            </span>
+            <svg
+              class="icon"
+              data-icon="download"
+              width="18"
+              height="18"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path d="M10 3v10M5.5 8.5 10 13l4.5-4.5M4 17h12" />
+            </svg>
+            {/* The verb completes the name, which still holds the visible words (WCAG 2.5.3). */}
+            <span class="visually-hidden">{`${t("contact.cv.action")} `}</span>
+            <span class="cv-label">{t("contact.cv")}</span>
+            <span class="bracket" aria-hidden="true">
+              ]
+            </span>
+          </a>
+        </Fragment>
+      )}
+    </span>
   </div>
-  {rowLists.map(({ rows, inReport }) => {
-    const list = (
-      <dl class="rows">
-        {rows.map(({ term, value }) => (
-          <div class="row">
-            {/* The rule is an element of its own, so axe can judge the row's contrast. */}
-            <dt>
-              <span class="rule" aria-hidden="true" />
-              {term}
-            </dt>
-            <dd>
-              {typeof value === "string" ? (
-                value
-              ) : (
-                <a href={value.href} type={value.type}>
-                  {value.pieces.map((piece, index) => (
-                    <Fragment>
-                      {index > 0 && <wbr />}
-                      {piece}
-                    </Fragment>
-                  ))}
-                </a>
-              )}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    );
-    return inReport ? (
-      <section class="report" id="report" aria-labelledby="report-heading">
-        <h3 class="report-title" id="report-heading">
-          <span class="report-code">{t("report.code")}</span> ·{" "}
-          {t("report.title")}
-        </h3>
-        {list}
-      </section>
-    ) : (
-      list
-    );
-  })}
+  <Certificate locale={locale} />
 </section>
 
 <script>
@@ -160,19 +129,23 @@ const rowLists = [
 </script>
 
 <style>
+  /* One centred column at every width: the address line, then the certificate below it, with
+     room between for the seal that reaches above the certificate's corner. */
   .contact {
     max-inline-size: var(--page-max-width);
     margin-inline: auto;
     padding: 0 var(--gutter) var(--section-space-end);
   }
 
-  /* The address is the link itself, at display size, with its copy button beside it. */
+  /* The address is the link itself, at display size, with its two actions after it. When the
+     line runs out, the address keeps a line of its own and the actions centre below it. */
   .address {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-4) var(--space-6);
-    margin-block-end: var(--space-10);
+    justify-content: center;
+    gap: var(--space-2) var(--space-6);
+    margin-block-end: var(--space-14);
   }
 
   .email {
@@ -181,10 +154,10 @@ const rowLists = [
     padding-block: max(0px, (var(--target-min) - 1lh) / 2);
     color: var(--text);
     font-family: var(--font-display);
-    font-size: var(--type-contact-address-size);
+    font-size: var(--type-display-line-size);
     font-weight: 500;
-    line-height: var(--type-contact-address-leading);
-    letter-spacing: var(--type-contact-address-tracking);
+    line-height: var(--type-display-line-leading);
+    letter-spacing: var(--type-display-line-tracking);
     text-decoration-color: var(--link);
     text-decoration-thickness: 2px;
     text-underline-offset: 0.16em;
@@ -194,24 +167,52 @@ const rowLists = [
     }
   }
 
-  .copy {
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0 var(--space-2);
+  }
+
+  /* Both actions in the site's bracket style: an icon in the header's style, in the link
+     colour, on a full target. */
+  .action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-1);
-    min-inline-size: 12ch;
+    gap: var(--space-2);
+    min-inline-size: var(--target-min);
     min-block-size: var(--target-min);
     padding-inline: var(--space-2);
     border: 1px solid transparent;
-    background: var(--ground);
     color: var(--link);
-    cursor: pointer;
     font-family: var(--font-mono);
     font-size: var(--type-ui-size);
     font-weight: 500;
     line-height: 1;
     letter-spacing: 0.04em;
     white-space: nowrap;
+  }
+
+  .icon {
+    flex: none;
+  }
+
+  .bracket {
+    opacity: 0.55;
+  }
+
+  .separator {
+    inline-size: 3px;
+    block-size: 3px;
+    border-radius: 50%;
+    background: var(--dots);
+  }
+
+  .copy {
+    background: var(--ground);
+    cursor: pointer;
     transition:
       border-color var(--duration-quick) var(--ease-out),
       color var(--duration-quick) var(--ease-out);
@@ -220,104 +221,70 @@ const rowLists = [
       border-color: var(--dots);
     }
 
-    /* The outcome shows in words and in colour: a pass when copied, plain text when the
-       visitor has to copy the selected address. */
+    [data-icon="check"] {
+      display: none;
+    }
+
+    /* An icon speaks for the button at rest and once copied, so its width holds: its words
+       stay for assistive technology only. */
+    &:not([data-state="selected"]) .label,
+    .copy-target {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    &[data-state] .copy-target {
+      display: none;
+    }
+
+    /* The outcome shows in colour: a check in pass green in place of the copy icon when
+       copied, and words when the visitor has to copy the selected address, an instruction an
+       icon cannot give. */
+    &[data-state] [data-icon="copy"] {
+      display: none;
+    }
+
     &[data-state="copied"] {
       border-color: currentColor;
       color: var(--pass);
+
+      [data-icon="check"] {
+        display: block;
+      }
     }
 
     &[data-state="selected"] {
       border-color: var(--dots);
       color: var(--text);
     }
-
-    &[data-state] .copy-target {
-      display: none;
-    }
   }
 
-  /* Without scripting the button could not copy, so it is not offered; the address stays a
-     link, and its text can still be selected and copied by hand. */
+  /* The link's own underline would run under its brackets and icon: only the words carry one. */
+  .cv {
+    text-decoration: none;
+  }
+
+  .cv-label {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  .cv:hover .cv-label {
+    text-decoration-thickness: 2px;
+  }
+
+  /* Without scripting the button could not copy, so it is not offered, nor the dot after it;
+     the address stays a link, and its text can still be selected and copied by hand. */
   @media (scripting: none) {
-    .copy {
+    .copy,
+    .separator {
       display: none;
-    }
-  }
-
-  .bracket {
-    opacity: 0.55;
-  }
-
-  /* Data rows, not boxes: each opens on a dotted rule, its term in mono capitals beside its
-     value. A list is as wide as its longest row. */
-  .rows {
-    inline-size: fit-content;
-    max-inline-size: min(100%, 35rem);
-  }
-
-  .row {
-    position: relative;
-    display: grid;
-    grid-template-columns: 8rem minmax(0, 1fr);
-    column-gap: var(--space-3);
-    padding-block: var(--space-2);
-  }
-
-  .rule {
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline: 0;
-    block-size: 3px;
-    background: var(--dotted-rule);
-  }
-
-  dt {
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: var(--type-label-size);
-    line-height: var(--type-label-leading);
-    letter-spacing: var(--type-label-tracking);
-    text-transform: uppercase;
-  }
-
-  dd {
-    font-family: var(--font-mono);
-    font-size: var(--type-data-size);
-    line-height: var(--type-data-leading);
-  }
-
-  /* The report: how this site is tested, in the same rows, its facts in the text ink. */
-  .report {
-    margin-block-start: var(--space-10);
-
-    dd {
-      color: var(--text);
-    }
-  }
-
-  .report-title {
-    margin-block-end: var(--space-2);
-    color: var(--accent-text);
-    font-family: var(--font-mono);
-    font-size: var(--type-label-size);
-    font-weight: 500;
-    line-height: var(--type-label-leading);
-    letter-spacing: var(--type-label-tracking);
-    text-transform: uppercase;
-  }
-
-  .report-code {
-    color: var(--link);
-  }
-
-  @media (width < 60em) {
-    /* A link keeps its row's rhythm; its own box grows to a full target around its line. */
-    dd a {
-      display: inline-flex;
-      align-items: center;
-      min-block-size: var(--target-min);
-      margin-block: calc((1lh - var(--target-min)) / 2);
     }
   }
 </style>

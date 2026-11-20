@@ -20,7 +20,7 @@ describe("collectBuildInfo", () => {
     );
 
     assert.deepEqual(info, {
-      commit: headSha.slice(0, 7),
+      commit: headSha,
       built: "2026-11-18",
       tests: 3,
       problems: [],
@@ -42,7 +42,7 @@ describe("collectBuildInfo", () => {
 
     assert.equal(info.tests, null);
     assert.deepEqual(info.problems, [
-      "TESTS omitted: could not list the Playwright tests (spawn ENOENT).",
+      "E2E row without a test count: could not list the Playwright tests (spawn ENOENT).",
     ]);
   });
 
@@ -57,7 +57,7 @@ describe("collectBuildInfo", () => {
     assert.equal(info.problems.length, 1);
     assert.match(
       info.problems.join("\n"),
-      /^TESTS omitted: could not list the Playwright tests \(playwright test --list did not finish within 30 s and was stopped;/,
+      /^E2E row without a test count: could not list the Playwright tests \(playwright test --list did not finish within 30 s and was stopped;/,
     );
   });
 
@@ -66,7 +66,7 @@ describe("collectBuildInfo", () => {
 
     assert.equal(info.tests, null);
     assert.deepEqual(info.problems, [
-      "TESTS omitted: the Playwright test list could not be read.",
+      "E2E row without a test count: the Playwright test list could not be read.",
     ]);
   });
 
@@ -77,7 +77,7 @@ describe("collectBuildInfo", () => {
 
     assert.equal(info.commit, null);
     assert.deepEqual(info.problems, [
-      "COMMIT omitted: no CF_PAGES_COMMIT_SHA or GITHUB_SHA, and git could not read the commit (not a git repository).",
+      "Commit row omitted: no CF_PAGES_COMMIT_SHA or GITHUB_SHA, and git could not read the commit (not a git repository).",
     ]);
   });
 
@@ -90,7 +90,7 @@ describe("collectBuildInfo", () => {
     assert.equal(info.problems.length, 1);
     assert.match(
       info.problems.join("\n"),
-      /^COMMIT omitted: no CF_PAGES_COMMIT_SHA or GITHUB_SHA, and git could not read the commit \(git rev-parse HEAD did not finish within 10 s and was stopped;/,
+      /^Commit row omitted: no CF_PAGES_COMMIT_SHA or GITHUB_SHA, and git could not read the commit \(git rev-parse HEAD did not finish within 10 s and was stopped;/,
     );
   });
 
@@ -99,7 +99,7 @@ describe("collectBuildInfo", () => {
 
     assert.equal(info.commit, null);
     assert.deepEqual(info.problems, [
-      "COMMIT omitted: no CF_PAGES_COMMIT_SHA, GITHUB_SHA or git commit.",
+      "Commit row omitted: no CF_PAGES_COMMIT_SHA, GITHUB_SHA or git commit.",
     ]);
   });
 });

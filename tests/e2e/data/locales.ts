@@ -4,7 +4,6 @@ import {
   sourceRepository,
   type CopyOutcome,
 } from "./contact";
-import { profileUrls } from "./externalLinks";
 import {
   playwrightCiReference,
   pw2xray,
@@ -127,13 +126,28 @@ export interface FactRowCopy {
   readonly fact: string;
 }
 
-export interface ReportCopy {
-  /** The heading: the report's code, then what it covers. */
+export interface CertificateCopy {
+  /** The heading: the certificate's code, then what it covers. */
   readonly title: string;
+  /** The first row's term: the commit this build was made from, its hash a link to GitHub. */
+  readonly commitTerm: string;
+  /** What the commit link adds, unseen, after the hash: "on GitHub". */
+  readonly commitLinkSuffix: string;
+  /** The second row's term: the day this build was made. */
+  readonly builtTerm: string;
+  /** The third row's value: how many tests the suite runs, and when. */
+  readonly e2eFact: (testCount: number) => string;
   /** How each part of the quality gate checks this site, in the order the page lists them. */
   readonly facts: readonly FactRowCopy[];
   /** The last row: where the site's source lives. */
   readonly source: LinkRowCopy;
+}
+
+/** A download action: what it shows, what assistive technology reads, and where it leads. */
+export interface CvActionCopy {
+  readonly label: string;
+  readonly name: string;
+  readonly url: string;
 }
 
 export interface ContactCopy {
@@ -142,9 +156,9 @@ export interface ContactCopy {
   readonly copyLabels: Readonly<Record<CopyOutcome | "idle", string>>;
   /** What the live region announces for each outcome. */
   readonly announcements: Readonly<Record<CopyOutcome, string>>;
-  /** The profile and CV rows, in order. */
-  readonly rows: readonly LinkRowCopy[];
-  readonly report: ReportCopy;
+  /** The CV action beside copy: its visible words, the name they start with, and its file. */
+  readonly cv: CvActionCopy;
+  readonly certificate: CertificateCopy;
 }
 
 export interface FooterCopy {
@@ -224,7 +238,8 @@ export const englishPage: LocaleCase = {
     primaryAction: "Let's talk",
     cvAction: "Download CV (PDF)",
     cvPath: "/cv/carlos-alcala-cv-en.pdf",
-    reportLink: "This site is tested on every pull request · see the report",
+    reportLink:
+      "This site is tested on every pull request · see the certificate",
   },
   instrument: {
     name: "Suite quality.spec.ts, test run",
@@ -325,27 +340,27 @@ export const englishPage: LocaleCase = {
       selected:
         "Could not copy. The address is selected: press Ctrl+C, or Cmd+C on a Mac.",
     },
-    rows: [
-      {
-        term: "LinkedIn",
-        link: "linkedin.com/in/alcarcis",
-        url: profileUrls.linkedIn,
-      },
-      { term: "GitHub", link: "github.com/alcarcis", url: profileUrls.gitHub },
-      {
-        term: "CV",
-        link: "Download CV (PDF)",
-        url: "/cv/carlos-alcala-cv-en.pdf",
-      },
-    ],
-    report: {
-      title: "Report · How this site is tested",
+    cv: {
+      label: "CV · PDF",
+      name: "Download CV · PDF",
+      url: "/cv/carlos-alcala-cv-en.pdf",
+    },
+    certificate: {
+      title: "Certificate · How this site is tested",
+      commitTerm: "Commit",
+      commitLinkSuffix: "on GitHub",
+      builtTerm: "Built",
+      e2eFact: (count) =>
+        `${count} Playwright ${count === 1 ? "test" : "tests"} · on every pull request`,
       facts: [
-        { term: "E2E", fact: "Playwright · on every pull request" },
         { term: "Accessibility", fact: "axe · 0 violations required" },
         {
           term: "Performance",
           fact: `Lighthouse · ≥ ${lighthouseMinimum} in all four categories`,
+        },
+        {
+          term: "Gate",
+          fact: "0 flaky tests allowed · format · lint · types · unit tests",
         },
         {
           term: "Deploy",
@@ -400,7 +415,8 @@ export const spanishPage: LocaleCase = {
     primaryAction: "Conversemos",
     cvAction: "Descargar CV (PDF)",
     cvPath: "/cv/carlos-alcala-cv-es.pdf",
-    reportLink: "Este sitio se prueba en cada pull request · ver el reporte",
+    reportLink:
+      "Este sitio se prueba en cada pull request · ver el certificado",
   },
   instrument: {
     name: "Suite quality.spec.ts, ejecución de pruebas",
@@ -521,27 +537,27 @@ export const spanishPage: LocaleCase = {
       selected:
         "No se pudo copiar. La dirección está seleccionada: presiona Ctrl+C, o Cmd+C en Mac.",
     },
-    rows: [
-      {
-        term: "LinkedIn",
-        link: "linkedin.com/in/alcarcis",
-        url: profileUrls.linkedIn,
-      },
-      { term: "GitHub", link: "github.com/alcarcis", url: profileUrls.gitHub },
-      {
-        term: "CV",
-        link: "Descargar CV (PDF)",
-        url: "/cv/carlos-alcala-cv-es.pdf",
-      },
-    ],
-    report: {
-      title: "Reporte · Cómo se prueba este sitio",
+    cv: {
+      label: "CV · PDF",
+      name: "Descargar CV · PDF",
+      url: "/cv/carlos-alcala-cv-es.pdf",
+    },
+    certificate: {
+      title: "Certificado · Cómo se prueba este sitio",
+      commitTerm: "Commit",
+      commitLinkSuffix: "en GitHub",
+      builtTerm: "Compilado",
+      e2eFact: (count) =>
+        `${count} ${count === 1 ? "prueba" : "pruebas"} de Playwright · en cada pull request`,
       facts: [
-        { term: "E2E", fact: "Playwright · en cada pull request" },
-        { term: "Accesibilidad", fact: "axe · se exigen 0 violaciones" },
+        { term: "Accesibilidad", fact: "axe · 0 incumplimientos" },
         {
           term: "Rendimiento",
           fact: `Lighthouse · ≥ ${lighthouseMinimum} en las cuatro categorías`,
+        },
+        {
+          term: "Gate",
+          fact: "0 pruebas inestables permitidas · formato · lint · tipos · pruebas unitarias",
         },
         {
           term: "Despliegue",

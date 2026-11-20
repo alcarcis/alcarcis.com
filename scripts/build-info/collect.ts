@@ -12,7 +12,8 @@ export interface BuildInfoSources {
 
 /**
  * Facts about this build, true by construction. A fact that cannot be read is null, and the
- * instrument leaves its row out instead of showing a guess; `problems` says why.
+ * certificate leaves it out instead of showing a guess (the Commit row, or the E2E row's test
+ * count); `problems` says why.
  */
 export interface BuildInfo {
   readonly commit: string | null;
@@ -33,13 +34,15 @@ function countTests(
     report = listTests();
   } catch (error) {
     problems.push(
-      `TESTS omitted: could not list the Playwright tests (${errorMessage(error)}).`,
+      `E2E row without a test count: could not list the Playwright tests (${errorMessage(error)}).`,
     );
     return null;
   }
   const count = countListedTests(report);
   if (count === null) {
-    problems.push("TESTS omitted: the Playwright test list could not be read.");
+    problems.push(
+      "E2E row without a test count: the Playwright test list could not be read.",
+    );
   }
   return count;
 }
@@ -53,13 +56,13 @@ function readCommit(
     commit = resolveCommit(sources.env, sources.gitHead);
   } catch (error) {
     problems.push(
-      `COMMIT omitted: no CF_PAGES_COMMIT_SHA or GITHUB_SHA, and git could not read the commit (${errorMessage(error)}).`,
+      `Commit row omitted: no CF_PAGES_COMMIT_SHA or GITHUB_SHA, and git could not read the commit (${errorMessage(error)}).`,
     );
     return null;
   }
   if (commit === null) {
     problems.push(
-      "COMMIT omitted: no CF_PAGES_COMMIT_SHA, GITHUB_SHA or git commit.",
+      "Commit row omitted: no CF_PAGES_COMMIT_SHA, GITHUB_SHA or git commit.",
     );
   }
   return commit;
