@@ -180,10 +180,13 @@ const cv = cvDownloadFor(locale, isInPublicDir(process.cwd()));
     }
   }
 
+  /* Full-contrast text on the ground reads heavier than dark text on the copper fill, so the
+     secondary label sets one weight lighter to sit level with the primary, not above it. */
   .button-secondary {
     border-color: var(--dots);
     background: var(--ground);
     color: var(--text);
+    font-weight: 400;
 
     &:hover {
       border-color: var(--link);
