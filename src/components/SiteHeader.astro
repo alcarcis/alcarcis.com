@@ -180,6 +180,12 @@ const profileLinks = [
       animation-range-start: exit 0%;
       animation-range-end: exit 100%;
     }
+
+    /* Keyboard focus shows the name, so the focus ring frames what the link names instead of
+       the space the hidden name keeps. */
+    .owner:focus-visible .owner-name {
+      animation-name: none;
+    }
   }
 
   @keyframes owner-name-in {
