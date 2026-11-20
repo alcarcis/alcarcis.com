@@ -316,7 +316,7 @@ export const englishPage: LocaleCase = {
   contact: {
     head: { code: "TC-05", codeTitle: "Test case 05", title: "Contact" },
     copyLabels: {
-      idle: "copy",
+      idle: "copy email address",
       copied: "copied",
       selected: "selected, press Ctrl+C",
     },
@@ -512,7 +512,7 @@ export const spanishPage: LocaleCase = {
       title: "Contacto",
     },
     copyLabels: {
-      idle: "copiar",
+      idle: "copiar dirección de correo",
       copied: "copiado",
       selected: "seleccionado, presiona Ctrl+C",
     },
