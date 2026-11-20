@@ -1,7 +1,7 @@
 ---
 import { useTranslations, type Locale } from "../i18n/ui";
 import { cvDownloadFor, isInPublicDir } from "../lib/cv";
-import { breakOnlyBetween } from "../lib/typography";
+import { breakOnlyBetween, keepTermsTogether } from "../lib/typography";
 import { contact, owner } from "../site";
 import Instrument from "./Instrument.astro";
 
@@ -58,7 +58,7 @@ const cv = cvDownloadFor(locale, isInPublicDir(process.cwd()));
     {/* The suite's own note: this site is tested, and the report says how. The separator is
         read, not shown: the arrow stands for it on screen. */}
     <a class="report-link" href="#report">
-      <span>{t("hero.reportNote")}</span>
+      <span>{keepTermsTogether(t("hero.reportNote"))}</span>
       <span class="visually-hidden"> · </span>
       <span class="report-action">
         <svg
