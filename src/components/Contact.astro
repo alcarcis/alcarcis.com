@@ -262,6 +262,11 @@ const cv = cvDownloadFor(locale, isInPublicDir(process.cwd()));
     }
   }
 
+  /* The link's own underline would run under its brackets and icon: only the words carry one. */
+  .cv {
+    text-decoration: none;
+  }
+
   .cv-label {
     text-decoration: underline;
     text-decoration-thickness: 1px;
