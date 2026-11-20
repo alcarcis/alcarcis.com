@@ -10,7 +10,8 @@ permissions:
   contents: read
   issues: write
 
-# One run at a time, so a scheduled and a manual run cannot both open an issue.
+# One run at a time, so overlapping runs cannot both open an issue; a later run finds the open
+# issue by its title and comments on it.
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
@@ -39,6 +40,8 @@ jobs:
       - name: Check the external links
         id: live
         # A step timeout counts as a failure, so the report still runs; a job timeout would skip it.
+        # The checks run in parallel, at most 30 s per attempt and three attempts, so they need
+        # under 2 minutes; 8 leaves room for a slow runner inside the job's 15.
         timeout-minutes: 8
         run: pnpm test:live
       - name: Report the failure in an issue
@@ -51,9 +54,9 @@ jobs:
           run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           failed=""
           if [ -f live-results.json ]; then
-            failed=$(jq -r '[.. | objects | .specs? // empty | .[] | select(.ok | not) | "- \(.title)"] | unique | .[]' live-results.json)
+            failed=$(jq -r '[.. | objects | .specs? // empty | .[] | select(.ok | not) | "- \(.title)"] | unique | .[]' live-results.json) || failed=""
           fi
-          # No report (the step timed out) or no failed spec: point at the run instead.
+          # No report, a truncated one (the step timed out) or no failed spec: point at the run instead.
           if [ -z "$failed" ]; then
             failed="- see the run"
           fi

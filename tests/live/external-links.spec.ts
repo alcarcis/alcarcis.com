@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
-// The same list the gate's hermetic test asserts, so the two suites check the same links.
 import {
   expectedExternalUrls,
   isLiveCheckable,
 } from "../e2e/data/externalLinks";
+
+// The URL list is shared with tests/e2e/external-links.spec.ts, which asserts that the pages link
+// only to these URLs, so both suites check the same links.
 
 // The commit link is left out of the live check: it names this build's commit, which GitHub
 // knows only once it is pushed.
