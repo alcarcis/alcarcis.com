@@ -47,10 +47,8 @@ const spec: readonly (readonly [TokenKind, string])[] = [
   ["fn", "toHaveQuality"],
   ["punct", "();\n});"],
 ];
-const specText = spec
-  .map(([, text]) => text)
-  .join("")
-  .replace(/\s+/g, " ");
+const specSource = spec.map(([, text]) => text).join("");
+const specText = specSource.replace(/\s+/g, " ");
 
 /* One row per fact the build could read; the budget states what lighthouserc.cjs enforces. */
 const dataRows = instrumentRows(buildInfo(), minimumCategoryScore);
@@ -150,6 +148,7 @@ const runCopy = {
     <pre
       class="spec"
       aria-hidden="true"
+      data-full={specSource}
     ><code data-spec>{spec.map(([kind, text]) => kind === "punct" ? text : <span class={kind}>{text}</span>)}</code></pre>
     <p class="visually-hidden" lang="en">
       {specText}
@@ -429,13 +428,28 @@ const runCopy = {
     background: var(--panel);
   }
 
+  /* A line wider than the window (narrow phones, large text) wraps at a space instead of being
+     cut off. The whole spec, set invisibly in the same cell, holds the height its wrapped lines
+     take, so typing never changes how tall the code is. */
   .spec {
+    display: grid;
     min-block-size: 5.5rem;
     margin: 0 0 var(--space-4);
     overflow: hidden;
     color: var(--code-punctuation);
     font: inherit;
-    white-space: pre;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+
+    &::before,
+    & > code {
+      grid-area: 1 / 1;
+    }
+
+    &::before {
+      content: attr(data-full);
+      visibility: hidden;
+    }
 
     .kw {
       color: var(--code-keyword);

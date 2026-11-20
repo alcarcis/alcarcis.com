@@ -76,6 +76,25 @@ for (const locale of localeCases) {
     });
   });
 
+  // 320 px is where content must reflow without loss (WCAG 1.4.10): the code wraps there
+  // instead of running out of its window.
+  test.describe(`${locale.language.name} instrument at 320 px`, () => {
+    test.use({
+      viewport: { width: 320, height: 800 },
+      reducedMotion: "reduce",
+    });
+
+    test("shows every character of the spec inside its window", async ({
+      homePage,
+    }) => {
+      const { instrument } = homePage.hero(locale);
+      await homePage.open(locale.language.path);
+
+      await expect(instrument.typedCode).toHaveText(specSource);
+      expect(await instrument.codeOverflow()).toBeLessThanOrEqual(0);
+    });
+  });
+
   test.describe(`${locale.language.name} instrument without JavaScript`, () => {
     test.use({ javaScriptEnabled: false });
 
