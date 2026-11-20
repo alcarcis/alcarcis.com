@@ -138,6 +138,17 @@ export class UsageTerminal {
   }
 
   /**
+   * Scrolls the page at once so the terminal's top edge sits `pixels` above the viewport's
+   * bottom edge, as if it had just scrolled into view from below.
+   */
+  async scrollToPeekIn(pixels: number): Promise<void> {
+    await this.window.evaluate((terminal, shown) => {
+      const { top } = terminal.getBoundingClientRect();
+      window.scrollBy({ top: top - innerHeight + shown, behavior: "instant" });
+    }, pixels);
+  }
+
+  /**
    * Typing starts on the browser's own view check, in real time; its keystrokes run on the
    * test's clock, so this moves the clock on in short steps until the first characters show.
    */

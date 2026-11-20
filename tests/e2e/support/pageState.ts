@@ -170,3 +170,21 @@ export async function resizeViewport(
   await page.setViewportSize(size);
   await handled;
 }
+
+/**
+ * Waits for the browser's next view check, after which every IntersectionObserver on the page
+ * has reported where its elements stand since the last scroll. A fresh observer reports on the
+ * same check as the page's own, and after them.
+ */
+export async function waitForViewChecks(page: Page): Promise<void> {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        const probe = new IntersectionObserver(() => {
+          probe.disconnect();
+          resolve();
+        });
+        probe.observe(document.documentElement);
+      }),
+  );
+}
