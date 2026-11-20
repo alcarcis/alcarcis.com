@@ -99,6 +99,14 @@ select {
   color: inherit;
 }
 
+/* The browser sets code in its own generic monospace; the page's code is set in its mono face. */
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-mono);
+}
+
 a {
   color: var(--link);
   text-decoration-thickness: 1px;

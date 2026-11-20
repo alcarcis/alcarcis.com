@@ -58,7 +58,52 @@ export class UsageTerminal {
    * (a NetworkError on the Linux runner, which has no Courier New) though the lines render fine.
    */
   async clippedWidth(): Promise<number> {
-    return this.lines.evaluate(async (pre) => {
+    await this.waitForLinesFace();
+    return this.lines.evaluate((pre) =>
+      Math.max(0, pre.scrollWidth - pre.clientWidth),
+    );
+  }
+
+  /**
+   * The string literals and comments that would fit on one line but wrap onto more than one,
+   * once the face the lines render in has loaded. Where the lines wrap, on phones, each of these
+   * should move down whole rather than split mid-way; one wider than the window may wrap inside
+   * itself, so it is not counted.
+   */
+  async tokensSplitAcrossLines(): Promise<string[]> {
+    await this.waitForLinesFace();
+    return this.lines.evaluate((pre) => {
+      const style = getComputedStyle(pre);
+      const lineWidth =
+        pre.clientWidth -
+        parseFloat(style.paddingInlineStart) -
+        parseFloat(style.paddingInlineEnd);
+      // Rects on one rendered line can differ by sub-pixels, so a new line starts only past
+      // half a line height.
+      const newLineGap = parseFloat(style.lineHeight) / 2;
+
+      return [...pre.querySelectorAll(".string, .comment")]
+        .filter((token) => {
+          const range = document.createRange();
+          range.selectNodeContents(token);
+          const rects = [...range.getClientRects()].filter(
+            (rect) => rect.width > 0,
+          );
+          const naturalWidth = rects.reduce((sum, rect) => sum + rect.width, 0);
+          if (naturalWidth > lineWidth) return false;
+
+          const tops = rects.map((rect) => rect.top).sort((a, b) => a - b);
+          return tops.some(
+            (top, index) => index > 0 && top - tops[index - 1]! > newLineGap,
+          );
+        })
+        .map((token) => token.textContent ?? "");
+    });
+  }
+
+  /** Waits until the first family of the lines' font has loaded (see `clippedWidth`). */
+  private async waitForLinesFace(): Promise<void> {
+    await this.lines.evaluate(async (pre) => {
       const { fontFamily, fontSize } = getComputedStyle(pre);
       const family = /^\s*("[^"]*"|[^,]+)/.exec(fontFamily)?.[1]?.trim();
       if (!family) {
@@ -69,7 +114,6 @@ export class UsageTerminal {
       if (faces.length === 0 || !document.fonts.check(font)) {
         throw new Error(`The lines' face ${family} did not load.`);
       }
-      return Math.max(0, pre.scrollWidth - pre.clientWidth);
     });
   }
 

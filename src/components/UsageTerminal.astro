@@ -126,11 +126,20 @@ const terminalLang = locale === "en" ? undefined : "en";
     }
   }
 
-  /* Phones: long lines wrap inside the window instead of running out of it. */
+  /* Phones: long lines wrap inside the window instead of running out of it. A string or a
+     comment moves down whole when the rest of its line has no room for it, so a path or a note
+     never splits mid-way; only one wider than the window wraps inside itself. */
   @media (width < 60em) {
     .lines {
       white-space: pre-wrap;
       overflow-wrap: anywhere;
+
+      .string,
+      .comment {
+        display: inline-block;
+        max-inline-size: 100%;
+        vertical-align: top;
+      }
     }
   }
 </style>
