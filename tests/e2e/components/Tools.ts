@@ -6,6 +6,8 @@ import { quoted, SectionHead } from "./SectionHead";
 export class Tools {
   readonly region: Locator;
   readonly head: SectionHead;
+  private readonly imageRequests: string[] = [];
+  private recordingImageRequests = false;
 
   constructor(
     private readonly page: Page,
@@ -57,14 +59,24 @@ export class Tools {
     }
   }
 
-  /** The image files of this site the page has requested so far, by address. */
-  async requestedImageFiles(): Promise<string[]> {
-    return this.page.evaluate(() =>
-      performance
-        .getEntriesByType("resource")
-        .map((entry) => entry.name)
-        .filter((name) => /\/_astro\/[^/]+\.svg$/.test(name)),
-    );
+  /**
+   * Records, from now on, every image file of this site the page asks for, at the moment the
+   * request is issued rather than once it has finished. Start it before the page opens, so no
+   * request made while it loads slips past.
+   */
+  recordImageRequests(): void {
+    // One listener per section object: a second call must not count each request twice.
+    if (this.recordingImageRequests) return;
+    this.recordingImageRequests = true;
+    this.page.on("request", (request) => {
+      const url = request.url();
+      if (/\/_astro\/[^/]+\.svg$/.test(url)) this.imageRequests.push(url);
+    });
+  }
+
+  /** The image files `recordImageRequests` has seen requested so far, by address. */
+  get requestedImageFiles(): readonly string[] {
+    return [...this.imageRequests];
   }
 
   /** Every tool on the page, group by group. */

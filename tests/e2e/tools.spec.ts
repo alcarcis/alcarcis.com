@@ -85,15 +85,19 @@ for (const locale of localeCases) {
 
     test("cost the page's load nothing: no logo file is requested until the section comes near", async ({
       homePage,
+      page,
     }) => {
-      await homePage.open(locale.language.path);
       const tools = homePage.tools(locale);
+      tools.recordImageRequests();
+      await homePage.open(locale.language.path);
+      // Settled: the page has loaded and made no request for a while, with the section far below.
+      await page.waitForLoadState("networkidle");
 
-      expect(await tools.requestedImageFiles()).toEqual([]);
+      expect(tools.requestedImageFiles).toEqual([]);
 
       await tools.scrollIntoView();
       await tools.waitForLogos();
-      expect((await tools.requestedImageFiles()).length).toBeGreaterThan(0);
+      expect(tools.requestedImageFiles.length).toBeGreaterThan(0);
     });
   });
 

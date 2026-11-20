@@ -161,12 +161,32 @@ export async function resizeViewport(
 ): Promise<void> {
   const current = page.viewportSize();
   if (current?.width === size.width && current.height === size.height) return;
-  const handled = page.evaluate(
-    () =>
-      new Promise<void>((resolve) =>
-        addEventListener("resize", () => resolve(), { once: true }),
-      ),
-  );
+  // The listener is in place before the resize is requested, so the event cannot be missed.
+  await page.evaluate(() => {
+    (globalThis as { __resized?: Promise<void> }).__resized = new Promise<void>(
+      (resolve) => addEventListener("resize", () => resolve(), { once: true }),
+    );
+  });
   await page.setViewportSize(size);
-  await handled;
+  await page.evaluate(
+    () => (globalThis as { __resized?: Promise<void> }).__resized,
+  );
+}
+
+/**
+ * Waits for the browser's next view check, after which every IntersectionObserver on the page
+ * has reported where its elements stand since the last scroll. A fresh observer reports on the
+ * same check as the page's own, and after them.
+ */
+export async function waitForViewChecks(page: Page): Promise<void> {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        const probe = new IntersectionObserver(() => {
+          probe.disconnect();
+          resolve();
+        });
+        probe.observe(document.documentElement);
+      }),
+  );
 }

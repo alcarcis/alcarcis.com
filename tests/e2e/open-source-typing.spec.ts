@@ -1,6 +1,6 @@
 import { localeCases } from "./data/locales";
 import { expect, test } from "./fixtures";
-import { boxOf, scrollToTop } from "./support/pageState";
+import { boxOf, scrollToTop, waitForViewChecks } from "./support/pageState";
 
 /** Longer than any usage takes to type: each one types in under five seconds. */
 const wholeTypingMs = 5_000;
@@ -93,6 +93,39 @@ for (const locale of localeCases) {
           .repository(repository.name);
 
         await terminal.scrollIntoView("end");
+        await terminal.waitForFirstKeystrokes(frozenClock);
+        await frozenClock.runFor(wholeTypingMs);
+
+        await terminal.expectTypingState("done");
+        expect(await terminal.visibleText()).toBe(repository.usage);
+      });
+    });
+
+    test.describe(`${locale.language.name} ${repository.name} usage typing in a very short window`, () => {
+      // Short enough that the terminal is more than five windows tall: it never shows a fifth of
+      // itself, so only covering half the window can start it.
+      test.use({ viewport: { width: 1280, height: 30 } });
+
+      test("types once the terminal covers half the window, however tall it is", async ({
+        homePage,
+        page,
+        frozenClock,
+      }) => {
+        await homePage.open(locale.language.path);
+        const { terminal } = homePage
+          .openSource(locale)
+          .repository(repository.name);
+        const windowHeight = page.viewportSize()?.height ?? 0;
+        expect((await boxOf(terminal.window)).height).toBeGreaterThan(
+          5 * windowHeight,
+        );
+        await terminal.expectTypingState("waiting");
+
+        await terminal.scrollToPeekIn(2);
+        await waitForViewChecks(page);
+        await terminal.expectTypingState("waiting");
+
+        await terminal.scrollIntoView();
         await terminal.waitForFirstKeystrokes(frozenClock);
         await frozenClock.runFor(wholeTypingMs);
 

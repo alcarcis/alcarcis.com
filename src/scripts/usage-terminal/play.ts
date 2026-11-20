@@ -19,17 +19,26 @@ type TypingState = "waiting" | "typing" | "done" | "still";
 
 /*
  * Typing starts once 60% of the terminal is in view, or, for a terminal too tall for that, once
- * it covers half the viewport. The observer reports at each of these shares as the terminal
- * scrolls in, and its entries carry both rectangles, so deciding reads no layout.
+ * it covers half the viewport. One observer watches the share in view. The other watches only
+ * the viewport's middle line: a terminal at least half the viewport tall covers half of it
+ * exactly when it reaches that line, however tall it is, and a shorter one reaching it is
+ * already wholly in view. Both decide from the entries the browser hands them, so deciding
+ * reads no layout.
  */
 const startShare = 0.6;
-const startCover = 0.5;
-const startThresholds = [0, 0.2, 0.4, startShare];
-
-const inViewToStart = (entry: IntersectionObserverEntry): boolean =>
-  entry.intersectionRatio >= startShare ||
-  (entry.rootBounds !== null &&
-    entry.intersectionRect.height >= entry.rootBounds.height * startCover);
+const startWatches: readonly {
+  readonly options: IntersectionObserverInit;
+  readonly inView: (entry: IntersectionObserverEntry) => boolean;
+}[] = [
+  {
+    options: { threshold: startShare },
+    inView: (entry) => entry.intersectionRatio >= startShare,
+  },
+  {
+    options: { rootMargin: "-50% 0px -50% 0px" },
+    inView: (entry) => entry.isIntersecting,
+  },
+];
 
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -118,15 +127,20 @@ function prepareTyping(terminal: HTMLElement, code: HTMLElement): Typing {
 function setUpTyping(terminals: readonly HTMLElement[]): void {
   const typings = new Map<Element, Typing>();
 
-  const startObserver = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (!inViewToStart(entry)) continue;
-        startObserver.unobserve(entry.target);
-        typings.get(entry.target)?.play();
-      }
-    },
-    { threshold: startThresholds },
+  /* Whichever observer sees a waiting terminal far enough in view first starts it, and both
+     stop watching it. */
+  const startObservers = startWatches.map(
+    ({ options, inView }) =>
+      new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          const terminal = entry.target as HTMLElement;
+          if (!inView(entry) || terminal.dataset["typing"] !== "waiting") {
+            continue;
+          }
+          for (const observer of startObservers) observer.unobserve(terminal);
+          typings.get(terminal)?.play();
+        }
+      }, options),
   );
 
   /* The first report says where each terminal is as the page loads: one on screen stays as it
@@ -141,7 +155,7 @@ function setUpTyping(terminals: readonly HTMLElement[]): void {
         continue;
       }
       typings.set(terminal, prepareTyping(terminal, code));
-      startObserver.observe(terminal);
+      for (const observer of startObservers) observer.observe(terminal);
     }
   });
   for (const terminal of terminals) firstLook.observe(terminal);
@@ -149,7 +163,7 @@ function setUpTyping(terminals: readonly HTMLElement[]): void {
   reducedMotion.addEventListener("change", () => {
     if (!reducedMotion.matches) return;
     firstLook.disconnect();
-    startObserver.disconnect();
+    for (const observer of startObservers) observer.disconnect();
     for (const typing of typings.values()) typing.finish();
   });
 }

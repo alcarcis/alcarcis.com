@@ -88,4 +88,18 @@ for (const locale of localeCases) {
       });
     }
   });
+
+  test.describe(`${locale.language.name} Contact without JavaScript`, () => {
+    test.use({ javaScriptEnabled: false });
+
+    test("offers no copy button it cannot run, only the address link", async ({
+      homePage,
+    }) => {
+      await homePage.open(locale.language.path);
+      const contact = homePage.contact(locale);
+
+      await expect(contact.emailLink).toBeVisible();
+      await expect(contact.copyButton).toBeHidden();
+    });
+  });
 }

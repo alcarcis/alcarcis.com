@@ -12,6 +12,8 @@ import { UsageTerminal } from "./UsageTerminal";
 export class RepositoryRow {
   readonly row: Locator;
   readonly terminal: UsageTerminal;
+  /** The link to the repository's page. */
+  readonly link: Locator;
 
   constructor(
     page: Page,
@@ -27,6 +29,39 @@ export class RepositoryRow {
       }),
     });
     this.terminal = new UsageTerminal(this.row);
+    this.link = this.row.getByRole("link");
+  }
+
+  /**
+   * The link's box around its text: how tall it is, and how much room it leaves above the
+   * text's first line and below its last, in CSS pixels.
+   */
+  async linkTargetRoom(): Promise<{
+    height: number;
+    above: number;
+    below: number;
+  }> {
+    return this.link.evaluate((link) => {
+      const box = link.getBoundingClientRect();
+      // The text alone: the arrow icon after it sits lower than the letters.
+      const tops: number[] = [];
+      const bottoms: number[] = [];
+      const walker = document.createTreeWalker(link, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) {
+        const range = document.createRange();
+        range.selectNodeContents(walker.currentNode);
+        for (const rect of range.getClientRects()) {
+          if (rect.width === 0) continue;
+          tops.push(rect.top);
+          bottoms.push(rect.bottom);
+        }
+      }
+      return {
+        height: box.height,
+        above: Math.min(...tops) - box.top,
+        below: box.bottom - Math.max(...bottoms),
+      };
+    });
   }
 }
 

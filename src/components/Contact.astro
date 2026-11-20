@@ -228,6 +228,14 @@ const rowLists = [
     }
   }
 
+  /* Without scripting the button could not copy, so it is not offered; the address stays a
+     link, and its text can still be selected and copied by hand. */
+  @media (scripting: none) {
+    .copy {
+      display: none;
+    }
+  }
+
   .bracket {
     opacity: 0.55;
   }

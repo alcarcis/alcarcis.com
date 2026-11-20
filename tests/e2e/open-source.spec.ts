@@ -63,6 +63,9 @@ for (const locale of localeCases) {
   });
 }
 
+/** The smallest touch target on phones: 2.75rem. */
+const touchTargetPx = 44;
+
 /** Phone widths, where the lines wrap inside the window: a common Android width and an iPhone's. */
 const phoneViewports = [
   { width: 360, height: 780 },
@@ -86,6 +89,25 @@ for (const viewport of phoneViewports) {
             `${copy.repository.name} tokens split across lines`,
           ).toEqual([]);
           expect(await terminal.clippedWidth()).toBe(0);
+        }
+      });
+
+      test("give each repository link a full touch target, its text centred in it", async ({
+        homePage,
+      }) => {
+        await homePage.open(locale.language.path);
+
+        for (const row of homePage.openSource(locale).repositories) {
+          const { height, above, below } = await row.linkTargetRoom();
+          const name = row.copy.repository.name;
+          expect(height, `${name} link height`).toBeGreaterThanOrEqual(
+            touchTargetPx,
+          );
+          // Letters snap to whole pixels inside their lines, so even room may differ by one.
+          expect(
+            Math.abs(above - below),
+            `${name} room above and below`,
+          ).toBeLessThanOrEqual(1);
         }
       });
     });

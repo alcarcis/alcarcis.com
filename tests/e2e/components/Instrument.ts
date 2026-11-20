@@ -47,6 +47,8 @@ const bootStepMs = 10;
 
 export class Instrument {
   readonly region: Locator;
+  /** The bar's title: the suite and the spec it runs. */
+  readonly barTitle: Locator;
   readonly status: Locator;
   readonly stages: Locator;
   readonly specText: Locator;
@@ -75,6 +77,7 @@ export class Instrument {
       name: copy.name,
       exact: true,
     });
+    this.barTitle = this.region.getByText(/· quality\.spec\.ts$/i);
     this.status = this.region.getByText(anyRunStatus);
     this.stages = this.region.getByRole("list", {
       name: copy.stagesName,

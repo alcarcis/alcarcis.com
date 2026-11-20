@@ -182,8 +182,13 @@ const rows = repositories.map((repository, index) => ({
       max-inline-size: none;
     }
 
+    /* A full target around the address, its lines centred in it. The room above reaches into
+       the description's margin, so the address keeps its place under the description; the
+       room below stays, so the terminal sits as far from a one-line address as a wrapped one. */
     .link {
-      min-block-size: var(--target-min);
+      --target-room: max(0px, (var(--target-min) - 1lh) / 2);
+      padding-block: var(--target-room);
+      margin-block-start: calc(-1 * var(--target-room));
     }
   }
 </style>

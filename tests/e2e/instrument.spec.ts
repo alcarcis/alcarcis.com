@@ -7,6 +7,7 @@ import {
 } from "./data/instrument";
 import { englishPage, localeCases } from "./data/locales";
 import { expect, test } from "./fixtures";
+import { boxOf } from "./support/pageState";
 import {
   headCommit,
   headCommitDay,
@@ -14,7 +15,38 @@ import {
   todayUtc,
 } from "./support/buildFacts";
 
+/** Where the bar has room for its title, status and run controls on one row, and where not. */
+const barLayouts = [
+  { layout: "tablet", viewport: { width: 768, height: 900 }, oneRow: true },
+  { layout: "phone", viewport: { width: 390, height: 844 }, oneRow: false },
+] as const;
+
 for (const locale of localeCases) {
+  for (const { layout, viewport, oneRow } of barLayouts) {
+    test.describe(`${locale.language.name} instrument bar on a ${layout}`, () => {
+      test.use({ viewport, reducedMotion: "reduce" });
+
+      test(`shows the status and Rerun ${oneRow ? "beside" : "below"} the title`, async ({
+        homePage,
+      }) => {
+        const { instrument } = homePage.hero(locale);
+        await homePage.open(locale.language.path);
+        const title = await boxOf(instrument.barTitle);
+        const middle = (box: { y: number; height: number }): number =>
+          box.y + box.height / 2;
+
+        for (const control of [instrument.status, instrument.rerun]) {
+          const box = await boxOf(control);
+          if (oneRow) {
+            expect(Math.abs(middle(box) - middle(title))).toBeLessThan(1);
+          } else {
+            expect(box.y).toBeGreaterThanOrEqual(title.y + title.height);
+          }
+        }
+      });
+    });
+  }
+
   test.describe(`${locale.language.name} instrument`, () => {
     test("names its five stages and the spec it runs", async ({ homePage }) => {
       const { instrument } = homePage.hero(locale);
