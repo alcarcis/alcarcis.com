@@ -38,8 +38,6 @@ export interface RunFrame {
   readonly stages: readonly StageState[];
   /** The stage the scene's caption names; null while the spec types. */
   readonly caption: { readonly stage: number; readonly fixed: boolean } | null;
-  /** The data rows come back when the scene ends. */
-  readonly rowsRevealed: boolean;
   readonly done: boolean;
 }
 
@@ -68,7 +66,6 @@ export function runFrameAt(
       sceneTime: 0,
       stages: Array<StageState>(stageCount).fill("pending"),
       caption: null,
-      rowsRevealed: false,
       done: false,
     };
   }
@@ -89,7 +86,6 @@ export function runFrameAt(
       fixed:
         captioned === ciCdStage && passed === ciCdStage && sceneTime >= fixAt,
     },
-    rowsRevealed: sceneTime >= sceneEnd,
     done: elapsedMs >= sceneStartMs + sceneEnd * 1000 + finishDelayMs,
   };
 }

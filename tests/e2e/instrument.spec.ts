@@ -1,20 +1,7 @@
-import {
-  budget,
-  dataTerms,
-  finalFrameLines,
-  specSource,
-  stageNames,
-  testCountText,
-} from "./data/instrument";
+import { finalFrameLines, specSource, stageNames } from "./data/instrument";
 import { englishPage, localeCases } from "./data/locales";
 import { expect, test } from "./fixtures";
 import { boxOf } from "./support/pageState";
-import {
-  headCommit,
-  headCommitDay,
-  listedTestCount,
-  todayUtc,
-} from "./support/buildFacts";
 
 /** Where the bar has room for its title, status and run controls on one row, and where not. */
 const barLayouts = [
@@ -117,49 +104,17 @@ for (const locale of localeCases) {
   });
 }
 
-test.describe("instrument data rows", () => {
-  test.beforeEach(async ({ homePage }) => {
+// The facts of the build (its commit, date, tests and budget) live in Contact's certificate; the
+// instrument ends on the deploy workflow.
+test.describe("instrument end", () => {
+  test("ends on the deploy workflow, with no fact rows", async ({
+    homePage,
+  }) => {
+    const { instrument } = homePage.hero(englishPage);
     await homePage.open(englishPage.language.path);
-  });
 
-  test("COMMIT is the commit this build was made from", async ({
-    homePage,
-  }) => {
-    const { instrument } = homePage.hero(englishPage);
-
-    await expect(instrument.dataValue(dataTerms.commit)).toHaveText(
-      headCommit().slice(0, 7),
-    );
-  });
-
-  test("BUILT is a UTC date between that commit and today", async ({
-    homePage,
-  }) => {
-    const { instrument } = homePage.hero(englishPage);
-
-    const built =
-      (await instrument.dataValue(dataTerms.built).textContent()) ?? "";
-
-    expect(built).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(built >= headCommitDay(), "BUILT must not predate its commit").toBe(
-      true,
-    );
-    expect(built <= todayUtc(), "BUILT must not be in the future").toBe(true);
-  });
-
-  test("TESTS is the number of tests this suite lists", async ({
-    homePage,
-  }) => {
-    const { instrument } = homePage.hero(englishPage);
-
-    await expect(instrument.dataValue(dataTerms.tests)).toHaveText(
-      testCountText(listedTestCount()),
-    );
-  });
-
-  test("BUDGET states the enforced thresholds", async ({ homePage }) => {
-    const { instrument } = homePage.hero(englishPage);
-
-    await expect(instrument.dataValue(dataTerms.budget)).toHaveText(budget);
+    await expect(instrument.stages).toBeVisible();
+    await expect(instrument.region.getByRole("term")).toHaveCount(0);
+    await expect(instrument.region.getByRole("definition")).toHaveCount(0);
   });
 });

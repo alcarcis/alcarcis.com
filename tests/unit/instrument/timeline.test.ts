@@ -96,9 +96,7 @@ describe("runFrameAt", () => {
     assert.equal(frame.done, false);
   });
 
-  it("reveals the data rows when the scene ends and finishes 450 ms later", () => {
-    assert.equal(atSceneTime(sceneEnd - 0.01).rowsRevealed, false);
-    assert.equal(atSceneTime(sceneEnd).rowsRevealed, true);
+  it("finishes 450 ms after the scene ends and holds its last frame", () => {
     assert.equal(frameAt(doneMs - 1).done, false);
     assert.equal(frameAt(doneMs).done, true);
     assert.equal(frameAt(doneMs + 60_000).sceneTime, sceneEnd);

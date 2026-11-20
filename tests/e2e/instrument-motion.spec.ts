@@ -209,7 +209,7 @@ for (const locale of localeCases) {
 }
 
 // On the narrowest phone the code wraps; typing it must not change how many lines it takes, or
-// the stages and facts below would move as each word lands.
+// the stages below would move as each word lands.
 test.describe("instrument run at 320 px", () => {
   test.use({ viewport: { width: 320, height: 800 } });
 

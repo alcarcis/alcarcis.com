@@ -1,11 +1,9 @@
 /*
  * The instrument's run: quality.spec.ts types itself once the page is idle and the instrument
  * is in view, then the scene and the five stage rows play in sync (see timeline.ts) and the
- * run ends Passed. Skip, a click on the card or a key press shows the finished run at once;
+ * run ends Passed on the deploy workflow. Skip, a click on the card or a key press shows the finished run at once;
  * Rerun replays it. The run pauses while the instrument is off-screen or the tab is hidden.
  * Under reduced motion the final frame stays put, with no typing.
- *
- * A replay is the presentation only: the COMMIT, BUILT, TESTS and BUDGET rows never change.
  */
 import type { GlyphScene } from "../glyph-renderer";
 import { whenIdle } from "../when-idle";
@@ -58,7 +56,6 @@ function setUpRun(instrument: HTMLElement): void {
   const skip = find<HTMLButtonElement>("[data-skip]");
   const rerun = find<HTMLButtonElement>("[data-rerun]");
   const live = find<HTMLElement>("[data-run-live]");
-  const rows = find<HTMLElement>("[data-rows]");
   const caption = find<HTMLElement>("[data-scene-caption]");
   const captionParts = [
     ".caption-number",
@@ -66,8 +63,8 @@ function setUpRun(instrument: HTMLElement): void {
     ".caption-action",
   ].map((selector) => caption?.querySelector<HTMLElement>(selector) ?? null);
   const stages = [...instrument.querySelectorAll<HTMLElement>("[data-stage]")];
-  if (!code || !status || !skip || !rerun || !live || !rows || !caption) return;
-  const el = { code, status, skip, rerun, live, rows, caption };
+  if (!code || !status || !skip || !rerun || !live || !caption) return;
+  const el = { code, status, skip, rerun, live, caption };
   const copy = JSON.parse(instrument.dataset["runCopy"] ?? "{}") as RunCopy;
 
   /* The spec's text nodes and their full text; typing reveals them in order. */
@@ -145,7 +142,6 @@ function setUpRun(instrument: HTMLElement): void {
     else caret.remove();
     frame.stages.forEach((stageState, index) => setStage(index, stageState));
     showCaption(frame.caption);
-    el.rows.toggleAttribute("data-pending", firstRun && !frame.rowsRevealed);
     drawScene(frame.sceneTime);
   }
 
@@ -192,7 +188,6 @@ function setUpRun(instrument: HTMLElement): void {
     caret.remove();
     stages.forEach((_, index) => setStage(index, "passed"));
     showCaption({ stage: stages.length - 1, fixed: false });
-    el.rows.removeAttribute("data-pending");
     drawScene(sceneEnd);
     setRunning(false);
     const skipHadFocus = document.activeElement === el.skip;

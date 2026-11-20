@@ -105,14 +105,6 @@ export class Instrument {
     this.sceneCanvas = this.scene.locator("canvas");
   }
 
-  /** The value a data row shows next to its term, such as COMMIT. */
-  dataValue(term: string): Locator {
-    return this.region
-      .getByRole("term")
-      .filter({ hasText: new RegExp(`^${term}$`) })
-      .locator("xpath=following-sibling::*[1]");
-  }
-
   /** The caption the scene shows while stage `index` plays (0-based). */
   captionFor(index: number, fixed = false): string {
     const action = fixed ? this.copy.fixCaption : this.copy.captions[index];
