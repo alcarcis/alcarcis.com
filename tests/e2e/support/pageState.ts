@@ -161,14 +161,16 @@ export async function resizeViewport(
 ): Promise<void> {
   const current = page.viewportSize();
   if (current?.width === size.width && current.height === size.height) return;
-  const handled = page.evaluate(
-    () =>
-      new Promise<void>((resolve) =>
-        addEventListener("resize", () => resolve(), { once: true }),
-      ),
-  );
+  // The listener is in place before the resize is requested, so the event cannot be missed.
+  await page.evaluate(() => {
+    (globalThis as { __resized?: Promise<void> }).__resized = new Promise<void>(
+      (resolve) => addEventListener("resize", () => resolve(), { once: true }),
+    );
+  });
   await page.setViewportSize(size);
-  await handled;
+  await page.evaluate(
+    () => (globalThis as { __resized?: Promise<void> }).__resized,
+  );
 }
 
 /**
