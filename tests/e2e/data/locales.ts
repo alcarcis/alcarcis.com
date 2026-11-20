@@ -231,7 +231,8 @@ export const englishPage: LocaleCase = {
     primaryAction: "Let's talk",
     cvAction: "Download CV (PDF)",
     cvPath: "/cv/carlos-alcala-cv-en.pdf",
-    reportLink: "This site is tested on every pull request · see the report",
+    reportLink:
+      "This site is tested on every pull request · see the certificate",
   },
   instrument: {
     name: "Suite quality.spec.ts, test run",
@@ -409,7 +410,8 @@ export const spanishPage: LocaleCase = {
     primaryAction: "Conversemos",
     cvAction: "Descargar CV (PDF)",
     cvPath: "/cv/carlos-alcala-cv-es.pdf",
-    reportLink: "Este sitio se prueba en cada pull request · ver el reporte",
+    reportLink:
+      "Este sitio se prueba en cada pull request · ver el certificado",
   },
   instrument: {
     name: "Suite quality.spec.ts, ejecución de pruebas",
