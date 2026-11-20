@@ -50,7 +50,9 @@ export default defineConfig({
       provider: fontProviders.local(),
       name: "Geist Mono",
       cssVariable: "--font-mono",
-      fallbacks: ["monospace"],
+      // Liberation Mono has Courier New's metrics, so Linux keeps the
+      // same width when Courier New is missing.
+      fallbacks: ["Liberation Mono", "monospace"],
       options: {
         variants: [
           {
