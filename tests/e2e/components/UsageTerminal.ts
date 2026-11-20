@@ -58,7 +58,38 @@ export class UsageTerminal {
    * (a NetworkError on the Linux runner, which has no Courier New) though the lines render fine.
    */
   async clippedWidth(): Promise<number> {
-    return this.lines.evaluate(async (pre) => {
+    await this.waitForLinesFace();
+    return this.lines.evaluate((pre) =>
+      Math.max(0, pre.scrollWidth - pre.clientWidth),
+    );
+  }
+
+  /**
+   * The string literals and comments that wrap onto more than one line, once the face the lines
+   * render in has loaded. Where the lines wrap, on phones, each of these should move down whole
+   * rather than split mid-way.
+   */
+  async tokensSplitAcrossLines(): Promise<string[]> {
+    await this.waitForLinesFace();
+    return this.lines.evaluate((pre) =>
+      [...pre.querySelectorAll(".string, .comment")]
+        .filter((token) => {
+          const range = document.createRange();
+          range.selectNodeContents(token);
+          const tops = new Set(
+            [...range.getClientRects()]
+              .filter((rect) => rect.width > 0)
+              .map((rect) => Math.round(rect.top)),
+          );
+          return tops.size > 1;
+        })
+        .map((token) => token.textContent ?? ""),
+    );
+  }
+
+  /** Waits until the first family of the lines' font has loaded (see `clippedWidth`). */
+  private async waitForLinesFace(): Promise<void> {
+    await this.lines.evaluate(async (pre) => {
       const { fontFamily, fontSize } = getComputedStyle(pre);
       const family = /^\s*("[^"]*"|[^,]+)/.exec(fontFamily)?.[1]?.trim();
       if (!family) {
@@ -69,7 +100,6 @@ export class UsageTerminal {
       if (faces.length === 0 || !document.fonts.check(font)) {
         throw new Error(`The lines' face ${family} did not load.`);
       }
-      return Math.max(0, pre.scrollWidth - pre.clientWidth);
     });
   }
 

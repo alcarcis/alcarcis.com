@@ -63,6 +63,35 @@ for (const locale of localeCases) {
   });
 }
 
+/** Phone widths, where the lines wrap inside the window: a common Android width and an iPhone's. */
+const phoneViewports = [
+  { width: 360, height: 780 },
+  { width: 390, height: 844 },
+] as const;
+
+for (const viewport of phoneViewports) {
+  for (const locale of localeCases) {
+    test.describe(`${locale.language.name} Open source terminals ${viewport.width}px wide`, () => {
+      test.use({ viewport, reducedMotion: "reduce" });
+
+      test("wrap a long line before a string or a comment, never inside one", async ({
+        homePage,
+      }) => {
+        await homePage.open(locale.language.path);
+
+        for (const { copy, terminal } of homePage.openSource(locale)
+          .repositories) {
+          expect(
+            await terminal.tokensSplitAcrossLines(),
+            `${copy.repository.name} tokens split across lines`,
+          ).toEqual([]);
+          expect(await terminal.clippedWidth()).toBe(0);
+        }
+      });
+    });
+  }
+}
+
 /**
  * The desktop layouts, where the lines neither wrap nor scroll: the narrowest viewport that gets
  * one (60em), the narrowest terminal (from 68.75em the terminal shares its row in three columns),
