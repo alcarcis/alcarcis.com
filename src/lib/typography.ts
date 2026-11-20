@@ -1,4 +1,4 @@
-const noBreakSpace = " ";
+const noBreakSpace = "\u00A0";
 
 /**
  * Joins the words of each part with no-break spaces, so a line can wrap only at a separator:
