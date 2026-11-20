@@ -6,8 +6,8 @@
  */
 
 /** Scene seconds at which each stage's step completes. */
-export const beats = [1.2, 2.5, 3.8, 6.1, 6.9] as const;
-export const sceneEnd = 7.2;
+export const beats = [1.2, 2.5, 3.8, 6.1, 8.1] as const;
+export const sceneEnd = 8.4;
 /** The stage whose gate catches a defect and lets it through once its fix merges. */
 export const ciCdStage = 3;
 /** Seconds into the ci/cd step at which the fix merges; the scene's gate opens from then. */

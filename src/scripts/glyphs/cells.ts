@@ -5,14 +5,13 @@
 
 const RAMP = " .:-=+*#%@";
 /**
- * What the scene draws in the pass ink: a tick on a criterion or a test, a commit, the gate and
- * the run's verdict. The atlas holds exactly these glyphs in that ink.
+ * What the scene draws in the pass ink: a tick on a criterion, a test or a job, a commit and
+ * the gate. The atlas holds exactly these glyphs in that ink.
  */
 export const CHECK_GLYPHS = {
   tick: "✓",
   commit: "●",
   gate: "║",
-  verdict: "PASSED",
 } as const;
 const checkGlyphs = [...new Set(Object.values(CHECK_GLYPHS).join(""))].join("");
 /* The scene's glyphs: drawing symbols, the characters its notes are typed in, and the pass
@@ -20,7 +19,7 @@ const checkGlyphs = [...new Set(Object.values(CHECK_GLYPHS).join(""))].join("");
    clipped to a cell. */
 const SYM = [
   ...new Set(
-    "\\/|()@#%┌┐└┘│─║●✓_~'[].,-=:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" +
+    "\\/|()@#%┌┐└┘├┤┬│─║●✓·_~'[].,-=:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" +
       checkGlyphs,
   ),
 ];
@@ -282,6 +281,10 @@ export function putSym(
   }
 }
 
+/** The atlas level (0–3) a symbol's alpha draws at; -1 when too faint to draw. */
+export const symLevel = (a: number): number =>
+  a >= 0.95 ? 3 : a >= 0.74 ? 2 : a >= 0.54 ? 1 : a >= 0.3 ? 0 : -1;
+
 export function blit(g: Grid): void {
   if (!atlas || !g.N) return;
   const { N, mask, sym, sA, sInk, val, ink, code, prev } = g;
@@ -291,9 +294,7 @@ export function blit(g: Grid): void {
     let cd = 0;
     const s = sym[i] ?? 0;
     if (s) {
-      const a = (sA[i] ?? 0) * m;
-      const l =
-        a >= 0.95 ? 3 : a >= 0.74 ? 2 : a >= 0.54 ? 1 : a >= 0.3 ? 0 : -1;
+      const l = symLevel((sA[i] ?? 0) * m);
       if (l >= 0) cd = s | ((sInk[i] ?? 0) << 7) | (l << 9);
     }
     if (!cd) {

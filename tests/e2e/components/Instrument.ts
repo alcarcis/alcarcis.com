@@ -1,11 +1,7 @@
 import { expect, type Clock, type Locator } from "@playwright/test";
-import {
-  runStatus,
-  sceneVerdict,
-  specSource,
-  stageNames,
-} from "../data/instrument";
+import { runStatus, specSource, stageNames } from "../data/instrument";
 import type { InstrumentCopy, StageStateNames } from "../data/locales";
+import type { CanvasBuffer } from "./GlyphField";
 
 export type StageState = keyof StageStateNames;
 
@@ -24,6 +20,22 @@ export interface CanvasScale {
   readonly across: number;
   readonly down: number;
 }
+
+/** Where the renderer put the scene canvas: its inline size and offset, "" when unset. */
+export interface CanvasPlacement {
+  readonly width: string;
+  readonly height: string;
+  readonly left: string;
+  readonly top: string;
+}
+
+/** A canvas the renderer never sized, or took back down. */
+export const unplacedCanvas: CanvasPlacement = {
+  width: "",
+  height: "",
+  left: "",
+  top: "",
+};
 
 /** How often the clock moves on while waiting for the renderer. */
 const rendererStepMs = 100;
@@ -52,6 +64,7 @@ export class Instrument {
   readonly scene: Locator;
   /** The scene's last frame in text: it shows between runs until the renderer has drawn. */
   readonly textFrame: Locator;
+  readonly textFrameLines: Locator;
   readonly sceneCanvas: Locator;
 
   constructor(
@@ -84,7 +97,8 @@ export class Instrument {
     this.announcement = this.region.getByRole("status");
     this.typedCode = this.region.locator("[data-spec]");
     this.scene = this.region.locator("[data-scene]");
-    this.textFrame = this.scene.getByText(sceneVerdict, { exact: true });
+    this.textFrame = this.scene.locator("[data-scene-still]");
+    this.textFrameLines = this.textFrame.locator(":scope > span");
     this.sceneCanvas = this.scene.locator("canvas");
   }
 
@@ -177,6 +191,28 @@ export class Instrument {
           observer.observe(box);
         }),
     );
+  }
+
+  /** The scene time of the frame the renderer last drew. */
+  async drawnSceneTime(): Promise<number> {
+    return Number(await this.scene.getAttribute("data-drawn"));
+  }
+
+  /** The scene canvas's backing store in device pixels. */
+  async sceneCanvasBuffer(): Promise<CanvasBuffer> {
+    return this.sceneCanvas.evaluate((canvas: HTMLCanvasElement) => ({
+      width: canvas.width,
+      height: canvas.height,
+    }));
+  }
+
+  async sceneCanvasPlacement(): Promise<CanvasPlacement> {
+    return this.sceneCanvas.evaluate((canvas: HTMLCanvasElement) => ({
+      width: canvas.style.width,
+      height: canvas.style.height,
+      left: canvas.style.left,
+      top: canvas.style.top,
+    }));
   }
 
   async sceneCanvasScale(): Promise<CanvasScale> {

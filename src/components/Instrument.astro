@@ -4,6 +4,7 @@ import { useTranslations, type Locale } from "../i18n/ui";
 import { minimumCategoryScore } from "../../scripts/quality-budget";
 import { buildInfo } from "../lib/build-info";
 import { instrumentRows } from "../lib/instrument-rows";
+import { finalFrame } from "../scripts/glyphs/final-frame";
 
 interface Props {
   locale: Locale;
@@ -50,10 +51,6 @@ const specText = spec
   .map(([, text]) => text)
   .join("")
   .replace(/\s+/g, " ");
-
-/* The scene's last frame, drawn in text so it shows before (and without) the renderer: a calm
-   production signal, then the run's verdict. 33 cells, as the renderer draws it. */
-const signal = "_.-~'~-.".repeat(3);
 
 /* One row per fact the build could read; the budget states what lighthouserc.cjs enforces. */
 const dataRows = instrumentRows(buildInfo(), minimumCategoryScore);
@@ -129,12 +126,15 @@ const runCopy = {
       {t("instrument.sceneLabel")}
     </span>
     {/* Spaces are explicit: the HTML compressor drops whitespace at line breaks. */}
-    <p class="scene-still">
-      <span>
-        <span class="signal">{signal}</span>
-        {"   "}
-        <span class="verdict">PASSED</span>
-      </span>
+    {/* The renderer's last frame in text, so it shows before (and without) the renderer. */}
+    <p class="scene-still" data-scene-still>
+      {finalFrame.map((line) => (
+        <span>
+          {line.map(([ink, text]) => (
+            <span class={`frame-${ink}`}>{text}</span>
+          ))}
+        </span>
+      ))}
     </p>
     <span class="scene-caption" data-scene-caption>
       <span>
@@ -377,16 +377,20 @@ const runCopy = {
     color: var(--text);
   }
 
-  /* The last frame in text: 15px Geist Mono keeps the renderer's 9px cell. */
+  /* The last frame in text: 15px Geist Mono and 16px lines keep the renderer's 9 × 16 cell. */
   .scene-still {
     position: absolute;
     inset: 0;
     display: grid;
-    place-items: center;
+    place-content: center;
     font-size: 0.9375rem;
-    line-height: 1;
+    line-height: 1rem;
     letter-spacing: 0;
     white-space: pre;
+
+    & > span {
+      display: block;
+    }
   }
 
   /* The text frame steps aside while a run plays and once the renderer has drawn. */
@@ -395,12 +399,29 @@ const runCopy = {
     visibility: hidden;
   }
 
-  .signal {
-    color: color-mix(in srgb, var(--link) 82%, transparent);
+  /* The renderer's inks: boxes and names in text ink, the run's path in the accent, checks in
+     pass green. Mixed into the ground, not made transparent: box lines overlap between rows,
+     and a translucent overlap would show. Geist Mono has no check mark, so the check keeps one
+     cell in the fallback face. */
+  .frame-box {
+    color: color-mix(in srgb, var(--text) 62%, var(--ground));
   }
 
-  .verdict {
+  .frame-name {
+    color: color-mix(in srgb, var(--text) 82%, var(--ground));
+  }
+
+  .frame-link {
+    color: color-mix(in srgb, var(--link) 82%, var(--ground));
+  }
+
+  .frame-check {
+    display: inline-block;
+    inline-size: 1ch;
+    overflow: hidden;
     color: var(--pass);
+    text-align: center;
+    vertical-align: top;
   }
 
   .body {

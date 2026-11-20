@@ -1,4 +1,5 @@
 import { minimumCategoryScore } from "../../../scripts/quality-budget";
+import { finalFrame } from "../../../src/scripts/glyphs/final-frame";
 import { sceneEnd } from "../../../src/scripts/instrument/timeline";
 
 /** Terminal vocabulary: the same in every language, as a real test log would be. */
@@ -12,8 +13,11 @@ export const stageNames = [
 
 export const runStatus = { passed: "Passed", running: "Running" } as const;
 
-/** The verdict the scene's text frame shows, before (and without) the glyph renderer. */
-export const sceneVerdict = "PASSED";
+/** The scene's last frame, line by line, as its text frame shows it before (and without) the
+    glyph renderer: every job of the workflow run checked, and production deployed. */
+export const finalFrameLines = finalFrame.map((line) =>
+  line.map(([, text]) => text).join(""),
+);
 
 /** The scene time of the run's last frame, the one shown under reduced motion. */
 export const finalSceneTime = sceneEnd;

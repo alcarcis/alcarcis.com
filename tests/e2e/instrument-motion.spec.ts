@@ -1,5 +1,7 @@
 import { unsizedCanvas } from "./components/GlyphField";
+import { unplacedCanvas } from "./components/Instrument";
 import { emptyLine, fullLine } from "./components/ReadingProgress";
+import { beats, stepStart } from "../../src/scripts/instrument/timeline";
 import {
   finalSceneTime,
   glyphRendererUrl,
@@ -11,12 +13,15 @@ import { englishPage, localeCases } from "./data/locales";
 import { expect, test } from "./fixtures";
 import {
   addRoomBelow,
+  countViewWatchers,
   missingMutationObserver,
   removeMutationObserver,
+  resizeViewport,
   scrollToBottom,
   scrollToTop,
   setDevicePixelRatio,
   setTabHidden,
+  viewWatchers,
   windowAndDocumentListeners,
 } from "./support/pageState";
 
@@ -99,6 +104,31 @@ for (const locale of localeCases) {
 
       expect(runningOrder).toEqual(stageNames.map((_, index) => index));
       expect(sawTheFix).toBe(true);
+      await instrument.expectFinalFrame();
+    });
+
+    test("the scene plays the deploy while the production row runs", async ({
+      homePage,
+      frozenClock,
+    }) => {
+      const { instrument } = homePage.hero(locale);
+      const production = stageNames.length - 1;
+      await instrument.waitForSceneDrawn(frozenClock);
+      const drawnWhileRunning: number[] = [];
+
+      for (let elapsed = 0; elapsed < wholeRunMs; elapsed += stepMs) {
+        await frozenClock.runFor(stepMs);
+        const now = await instrument.snapshot();
+        if (now.stages.indexOf("running") !== production) continue;
+        expect(now.caption).toBe(instrument.captionFor(production));
+        drawnWhileRunning.push(await instrument.drawnSceneTime());
+      }
+
+      expect(drawnWhileRunning.length).toBeGreaterThan(1);
+      for (const time of drawnWhileRunning) {
+        expect(time).toBeGreaterThanOrEqual(stepStart(production));
+        expect(time).toBeLessThan(beats[production] ?? 0);
+      }
       await instrument.expectFinalFrame();
     });
 
@@ -341,6 +371,9 @@ test.describe("instrument resilience", () => {
       listenersWithoutRenderer,
     );
     expect(await homePage.glyphField.buffer()).toEqual(unsizedCanvas);
+    // The scene canvas was sized before the failure; a stale one would cover the text frame.
+    expect(await instrument.sceneCanvasBuffer()).toEqual(unsizedCanvas);
+    expect(await instrument.sceneCanvasPlacement()).toEqual(unplacedCanvas);
     await frozenClock.runFor(wholeRunMs);
     await instrument.expectFinalFrame();
     await expect(instrument.textFrame).toBeVisible();
@@ -391,6 +424,34 @@ test.describe("instrument resilience", () => {
         return instrument.sceneCanvasScale();
       })
       .toEqual({ across: 2, down: 2 });
+  });
+
+  test.describe("once the run may start", () => {
+    // Three quarters of this viewport is less than 40% of the instrument, so the start share
+    // depends on the viewport's height.
+    test.use({ viewport: startRuleCases[1].viewport });
+
+    test("keeps watching the instrument with the same observer when the viewport resizes", async ({
+      homePage,
+      page,
+      frozenClock,
+    }) => {
+      const { instrument } = homePage.hero(englishPage);
+      const { width, height } = startRuleCases[1].viewport;
+      await countViewWatchers(page, "[data-instrument]");
+      await homePage.open(englishPage.language.path);
+      await frozenClock.runFor(stepMs);
+      await instrument.scrollToShow(height);
+      await instrument.expectRunState("playing");
+      const watchersBefore = await viewWatchers(page);
+
+      await resizeViewport(page, { width, height: height + 40 });
+
+      expect(await viewWatchers(page)).toBe(watchersBefore);
+      await addRoomBelow(page, 3_000);
+      await scrollToBottom(page);
+      await instrument.expectRunState("paused");
+    });
   });
 
   for (const { rule, viewport, firstRule } of startRuleCases) {
