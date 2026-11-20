@@ -1,0 +1,78 @@
+name: Live link check
+
+# Calls third-party servers, so it runs on a schedule instead of in the quality gate.
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+# One run at a time, so overlapping runs cannot both open an issue; a later run finds the open
+# issue by its title and comments on it.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  live-links:
+    name: Live link check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js from .nvmrc
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: Set up pnpm from packageManager with a store cache
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          cache: true
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      # Request-only tests: no browser to install.
+      - name: Check the external links
+        id: live
+        # A step timeout counts as a failure, so the report still runs; a job timeout would skip it.
+        # The checks run in parallel, at most 30 s per attempt and three attempts, so they need
+        # under 2 minutes; 8 leaves room for a slow runner inside the job's 15.
+        timeout-minutes: 8
+        run: pnpm test:live
+      - name: Report the failure in an issue
+        if: ${{ failure() && steps.live.outcome == 'failure' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          title="Live link check failed"
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          failed=""
+          if [ -f live-results.json ]; then
+            failed=$(jq -r '[.. | objects | .specs? // empty | .[] | select(.ok | not) | "- \(.title)"] | unique | .[]' live-results.json) || failed=""
+          fi
+          # No report, a truncated one (the step timed out) or no failed spec: point at the run instead.
+          if [ -z "$failed" ]; then
+            failed="- see the run"
+          fi
+          {
+            echo "These links did not answer with HTTP 200:"
+            echo
+            echo "$failed"
+            echo
+            echo "Run: $run_url"
+            echo
+            echo "This check runs on a schedule and never blocks merges."
+          } > issue-body.md
+          number=$(gh issue list --state open --search "in:title \"$title\"" --json number,title \
+            --jq "[.[] | select(.title == \"$title\")][0].number // empty")
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body-file issue-body.md
+          else
+            gh issue create --title "$title" --body-file issue-body.md
+          fi
