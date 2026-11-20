@@ -65,26 +65,40 @@ export class UsageTerminal {
   }
 
   /**
-   * The string literals and comments that wrap onto more than one line, once the face the lines
-   * render in has loaded. Where the lines wrap, on phones, each of these should move down whole
-   * rather than split mid-way.
+   * The string literals and comments that would fit on one line but wrap onto more than one,
+   * once the face the lines render in has loaded. Where the lines wrap, on phones, each of these
+   * should move down whole rather than split mid-way; one wider than the window may wrap inside
+   * itself, so it is not counted.
    */
   async tokensSplitAcrossLines(): Promise<string[]> {
     await this.waitForLinesFace();
-    return this.lines.evaluate((pre) =>
-      [...pre.querySelectorAll(".string, .comment")]
+    return this.lines.evaluate((pre) => {
+      const style = getComputedStyle(pre);
+      const lineWidth =
+        pre.clientWidth -
+        parseFloat(style.paddingInlineStart) -
+        parseFloat(style.paddingInlineEnd);
+      // Rects on one rendered line can differ by sub-pixels, so a new line starts only past
+      // half a line height.
+      const newLineGap = parseFloat(style.lineHeight) / 2;
+
+      return [...pre.querySelectorAll(".string, .comment")]
         .filter((token) => {
           const range = document.createRange();
           range.selectNodeContents(token);
-          const tops = new Set(
-            [...range.getClientRects()]
-              .filter((rect) => rect.width > 0)
-              .map((rect) => Math.round(rect.top)),
+          const rects = [...range.getClientRects()].filter(
+            (rect) => rect.width > 0,
           );
-          return tops.size > 1;
+          const naturalWidth = rects.reduce((sum, rect) => sum + rect.width, 0);
+          if (naturalWidth > lineWidth) return false;
+
+          const tops = rects.map((rect) => rect.top).sort((a, b) => a - b);
+          return tops.some(
+            (top, index) => index > 0 && top - tops[index - 1]! > newLineGap,
+          );
         })
-        .map((token) => token.textContent ?? ""),
-    );
+        .map((token) => token.textContent ?? "");
+    });
   }
 
   /** Waits until the first family of the lines' font has loaded (see `clippedWidth`). */
