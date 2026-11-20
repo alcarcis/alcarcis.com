@@ -12,7 +12,7 @@ export interface BuildInfoSources {
 
 /**
  * Facts about this build, true by construction. A fact that cannot be read is null, and the
- * instrument leaves its row out instead of showing a guess; `problems` says why.
+ * certificate leaves its row out instead of showing a guess; `problems` says why.
  */
 export interface BuildInfo {
   readonly commit: string | null;
