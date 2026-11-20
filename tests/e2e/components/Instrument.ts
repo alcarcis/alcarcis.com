@@ -228,6 +228,12 @@ export class Instrument {
     });
   }
 
+  /** How many times assistive technology meets the spec's last call in the instrument. */
+  async specReadCount(): Promise<number> {
+    const tree = await this.region.ariaSnapshot();
+    return tree.split("toHaveQuality").length - 1;
+  }
+
   async height(): Promise<number> {
     return this.region.evaluate(
       (instrument) => instrument.getBoundingClientRect().height,

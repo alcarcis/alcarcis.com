@@ -2,6 +2,7 @@ import {
   budget,
   dataTerms,
   finalFrameLines,
+  specSource,
   stageNames,
   testCountText,
 } from "./data/instrument";
@@ -58,6 +59,20 @@ for (const locale of localeCases) {
         stageNames.length,
       );
       await expect(instrument.specText).toBeAttached();
+    });
+  });
+
+  // The page's text holds the code twice, typed and as one sentence; only the sentence is for
+  // assistive technology. Reduced motion shows the whole code at once, so both are complete.
+  test.describe(`${locale.language.name} instrument for assistive technology`, () => {
+    test.use({ reducedMotion: "reduce" });
+
+    test("reads the spec once", async ({ homePage }) => {
+      const { instrument } = homePage.hero(locale);
+      await homePage.open(locale.language.path);
+
+      await expect(instrument.typedCode).toHaveText(specSource);
+      expect(await instrument.specReadCount()).toBe(1);
     });
   });
 
