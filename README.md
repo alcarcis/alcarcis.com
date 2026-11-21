@@ -1,5 +1,7 @@
 # alcarcis.com
 
+[![Quality gate](https://github.com/alcarcis/alcarcis.com/actions/workflows/quality-gate.yml/badge.svg)](https://github.com/alcarcis/alcarcis.com/actions/workflows/quality-gate.yml)
+
 The source of Carlos Alcalá's personal site, in English (`/`) and Spanish (`/es/`), built to be served at alcarcis.com. It is a static [Astro](https://astro.build) site written in TypeScript, and it ships with its own quality gate: static checks, end-to-end and accessibility tests, and Lighthouse budgets that every pull request must pass.
 
 ## Run it locally
@@ -30,23 +32,64 @@ Why: their licence, the ITF Free Font License 2.0, allows a site to self-host th
 
 ## The quality gate
 
-The `Quality gate` workflow (`.github/workflows/quality-gate.yml`) runs on every pull request, on every push to `main`, and on demand.
+The `Quality gate` workflow (`.github/workflows/quality-gate.yml`) runs:
 
-| Job                                | What it runs                                                       |
-| ---------------------------------- | ------------------------------------------------------------------ |
-| Static checks                      | `pnpm format:check`, `pnpm lint`, `pnpm check`, `pnpm test:unit`   |
-| End-to-end and accessibility tests | `pnpm test:e2e` in Chromium, then uploads the Playwright report    |
-| Lighthouse budgets                 | `pnpm build`, then `pnpm test:lighthouse`, then uploads the report |
-| Quality gate                       | Passes only when the three jobs above all succeed                  |
+- on every pull request,
+- on every push to `main`,
+- on demand, from the Actions tab (`workflow_dispatch`).
 
-Branch protection on `main` requires the `Quality gate` check, so that one check stands for the whole pipeline.
+A new push to the same branch cancels the run still in progress for it.
 
-The gate tests only this repository. Whether the site's GitHub links still answer with HTTP 200 is checked by the separate `Live link check` workflow (`.github/workflows/live-links.yml`), daily and on demand; a failure opens or updates a `Live link check failed` issue and never blocks a merge.
+It has four jobs. The first three run in parallel; the last one collects their results.
 
-### What it enforces
+| Job                                | What it runs                                                                   | What it catches                                                       |
+| ---------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| Static checks                      | `pnpm format:check`, `pnpm lint`, `pnpm check`, `pnpm test:unit`               | Unformatted files, lint and type errors, broken scripts and site logic |
+| End-to-end and accessibility tests | `pnpm test:e2e` in Chromium, then uploads the Playwright report                | Pages that render or behave wrongly, accessibility violations         |
+| Lighthouse budgets                 | `pnpm build`, then `pnpm test:lighthouse`, then uploads the Lighthouse reports | A page that gets slower, less accessible or worse for search engines  |
+| Quality gate                       | Nothing of its own: it passes only when the three jobs above all succeed       | Any of the above, in one check                                        |
 
-- **Lighthouse:** performance, accessibility, best practices and SEO each score at least 0.95 on `/` and `/es/`, taking the median of three runs, with Lighthouse's default mobile emulation. The minimum lives in `scripts/quality-budget.ts`; `lighthouserc.cjs` asserts it and the page displays the same value.
-- **Accessibility:** axe reports zero WCAG 2.0 and 2.1 level A and AA violations on both pages, in both the light and the dark colour scheme.
+Branch protection on `main` requires the `Quality gate` check, so that one check stands for the whole pipeline. The job runs even when a job before it fails, and it fails unless every one of them reports `success`; a skipped or cancelled job counts as a failure.
+
+### What each job enforces
+
+**Static checks.** Four fast checks on the source, with no browser:
+
+- `pnpm format:check`: every file matches Prettier's formatting.
+- `pnpm lint`: ESLint finds no errors.
+- `pnpm check`: `astro check` finds no type errors in the TypeScript and Astro files.
+- `pnpm test:unit`: the unit tests in `tests/unit/` pass, run with Node's built-in test runner. They cover the build scripts (fonts, build info, the Lighthouse budget, keeping the live link checks out of the gate) and the logic in `src/lib/` and `src/scripts/`.
+
+**End-to-end and accessibility tests.** `pnpm test:e2e` builds the site, serves it with `astro preview` and runs the Playwright specs in `tests/e2e/` against both pages in desktop Chromium. The specs cover each section of the page, the header and footer, the language switch, the colour theme, SEO tags, the favicon, external links, typography and console errors.
+
+The accessibility specs (`tests/e2e/a11y.spec.ts`) use axe, an engine that checks a rendered page against accessibility rules:
+
+- Zero WCAG 2.0 and 2.1 level A and AA violations on `/` and `/es/`, in both the light and the dark colour scheme.
+- The same for the sections nav, both inline on a wide screen and as the open menu on a phone.
+- The colour-contrast rule must decide on the text of every section below the hero and on every nav link. axe silently passes text it cannot judge, such as text over a gradient, so the tests fail if any is left undecided.
+
+In CI, Playwright is stricter than on your machine (`playwright.config.ts`): it uses one worker, retries a failed test up to two times to record a trace, and still fails the run if a test passed only on a retry. A `test.only` left in a spec also fails the run.
+
+**Lighthouse budgets.** Lighthouse is Google's page audit. It scores four categories from 0 to 1: performance (how fast the page loads and responds), accessibility, best practices (security and modern-browser hygiene) and SEO (what search engines need). `pnpm test:lighthouse` runs Lighthouse CI (`lhci autorun`) on the built `dist/` folder:
+
+- Pages: `/` and `/es/`.
+- Runs: three per page; the median run counts.
+- Budget: each of the four categories scores at least 0.95, with Lighthouse's default mobile emulation.
+
+The minimum lives in `scripts/quality-budget.ts`; `lighthouserc.cjs` asserts it and the page displays the same value.
+
+### Reading a failure
+
+Open the failed run from the pull request's checks or from the Actions tab. The `Quality gate` job's log lists each job with its result, so you can see which one to open.
+
+The two test jobs upload their reports as artifacts, even when they fail. They are listed on the run's summary page and kept for 14 days:
+
+| Artifact             | Job                                | Contents                                                                         |
+| -------------------- | ---------------------------------- | -------------------------------------------------------------------------------- |
+| `playwright-report`  | End-to-end and accessibility tests | Playwright's HTML report, with a trace for each test that failed and was retried |
+| `lighthouse-reports` | Lighthouse budgets                 | The `.lighthouseci/` folder: the results of each run and the saved reports       |
+
+To browse a downloaded Playwright report, unzip it into `playwright-report/` and run `pnpm exec playwright show-report`. An axe failure lists each violated rule, its help link and the elements it found.
 
 ### Run the gate locally
 
@@ -56,6 +99,14 @@ pnpm verify
 ```
 
 `pnpm verify` runs the CI checks in order: formatting, lint, type check, unit tests, build, end-to-end tests, Lighthouse.
+
+To reproduce one job:
+
+| Job                                | Command                                                                       |
+| ---------------------------------- | ----------------------------------------------------------------------------- |
+| Static checks                      | `pnpm format:check && pnpm lint && pnpm check && pnpm test:unit`              |
+| End-to-end and accessibility tests | `pnpm test:e2e`, or `CI=1 pnpm test:e2e` to use the CI retries and one worker |
+| Lighthouse budgets                 | `pnpm build && pnpm test:lighthouse`                                          |
 
 Outside CI, Playwright reuses any server already listening on port 4321 instead of building and starting its own preview. Stop `pnpm dev` first so the tests run against the production build.
 
@@ -70,6 +121,15 @@ Outside CI, Playwright reuses any server already listening on port 4321 instead 
 | `pnpm test:lighthouse` | Runs Lighthouse CI on `dist/` (run `pnpm build` first)     |
 | `pnpm test:live`       | Checks that the site's GitHub links answer with HTTP 200   |
 | `pnpm fonts`           | Downloads and verifies the pinned fonts                    |
+
+### What is not in the gate
+
+The gate tests only this repository, so an outage on another site cannot block a merge. Whether the site's GitHub links still answer with HTTP 200 is checked by the separate `Live link check` workflow (`.github/workflows/live-links.yml`):
+
+- **What it runs:** `pnpm test:live`, the request-only specs in `tests/live/` with `playwright.live.config.ts`. No browser, no server.
+- **When:** daily, and on demand. Never on pull requests or pushes.
+- **Retries:** up to two per link; a link that answers on a retry counts as up.
+- **On failure:** it opens a `Live link check failed` issue listing the failed links, or comments on that issue if it is already open. It never blocks a merge.
 
 ## Project layout
 
